@@ -1,0 +1,8 @@
+bs4
+selenium
+undetected-chromedriver
+lxml
+flask
+chess
+airium
+airium[parse]
