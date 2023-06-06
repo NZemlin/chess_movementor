@@ -25,7 +25,7 @@ input[type=submit] { align-self: start; min-width: 10em; }
     position: relative;
     overflow-x: scroll;
     overflow-y: hidden;
-    flex-direction: column
+    flex-direction: column;
 }
 
 .moves-line {
@@ -37,10 +37,9 @@ span.move:hover {
 }
 
 span.move.selected {
-    /* text-decoration: solid underline rgb(136, 136, 9) 2px; */
     background-color: yellow;
-    border-bottom-style: solid;
-    border-color: rgb(221, 221, 40);
     border-radius: 2px;
-    border-width: 0 0 2px 0;
+    /* border-bottom-style: solid;
+    border-color: rgb(221, 221, 40); */
+    /* border-width: 0 0 2px 0; */
 }
