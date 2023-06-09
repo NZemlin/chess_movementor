@@ -7,297 +7,349 @@ import io
 import chess
 import chess.pgn
 
-def get_pgns():
-    chromeOptions = uc.ChromeOptions()
-    chromeOptions.add_argument('--headless=new')
-    chromeOptions.add_experimental_option('excludeSwitches', ['enable-logging'])
-    driver = webdriver.Chrome(options=chromeOptions)
-    driver.get('https://www.chess.com/login_check')
-
-    uname = driver.find_element(By.ID, "username")
-    uname.send_keys("NZemlin")
-    passwordF = driver.find_element(By.ID, "password")
-    passwordF.send_keys("R44NtztVqYrqSte!")
-    driver.find_element(By.NAME, "login").click()
-    time.sleep(2)
-    driver.get('https://www.chess.com/analysis/saved')
-    time.sleep(2)
-
-    analyses = []
-    content = driver.page_source
-    soup = BeautifulSoup(content, features='lxml')
-    for analysis in soup.findAll(attrs={'class': 'saved-analysis-item-component'}):
-        name = analysis.find('a')
-        pgn = analysis.find('p')
-        analyses.append([name.text, pgn.text])
-    driver.close()
-    return analyses
-
-def fix_ambiguous(board, move, piece):
-    sq_set = board.pieces(piece.piece_type, piece.color).tolist()
-    other = []
-    for i, sq in enumerate(sq_set):
-        if sq and i != move.from_square:
-            other.append(i)
-    if other == []:
+class MoveInfo():
+    def __init__(self, move, prev_board = None, parent = None, children  = [], end = False, black_variation = False, mainline_split = False):
+        self.move = move
+        self.prev_board = prev_board
+        self.end = end
+        self.black_variation = black_variation
+        self.mainline_split = mainline_split
+        self.parent= parent
+        self.children = children
+        self.fen_dict = {}
+    
+    def fix_ambiguous(self, piece):
+        sq_set = self.prev_board.pieces(piece.piece_type, piece.color).tolist()
+        other = []
+        move = self.move.move
+        for i, sq in enumerate(sq_set):
+            if sq and i != move.from_square:
+                other.append(i)
+        if other == []:
+            return ''
+        if chess.Move.from_uci(chess.square_name(other[0]) + chess.square_name(move.to_square)) in self.prev_board.legal_moves:
+            for oth in other:
+                if chess.square_file(oth) == chess.square_file(move.from_square):
+                    return str(chess.square_rank(move.from_square) + 1)
+                if chess.square_rank(oth) == chess.square_rank(move.from_square):
+                    return chr(chess.square_file(move.from_square) + 97)
+            return chr(chess.square_file(move.from_square) + 97)
         return ''
-    if chess.Move.from_uci(chess.square_name(other[0]) + chess.square_name(move.to_square)) in board.legal_moves:
-        for oth in other:
-            if chess.square_file(oth) == chess.square_file(move.from_square):
-                return str(chess.square_rank(move.from_square) + 1)
-            if chess.square_rank(oth) == chess.square_rank(move.from_square):
-                return chr(chess.square_file(move.from_square) + 97)
-        return chr(chess.square_file(move.from_square) + 97)
-    return ''
 
-def move_turn(move, black_variation, inc_per = False):
-    if move.turn() == chess.WHITE and not black_variation:
-        return None
-    ans = ''
-    if move.turn() == chess.BLACK:
-        ans += str(int(move.ply()/2) + 1)
+    def move_turn(self, inc_per = False):
+        if type(self.move) == str or (self.move.turn() == chess.WHITE and not self.black_variation and not self.mainline_split):
+            return None
+        ans = str(int(self.move.ply()/2) + int(self.move.turn() == chess.BLACK))
         if inc_per:
-            ans  += '. '
-    elif move.turn() == chess.WHITE and black_variation:
-        ans += str(int(move.ply()/2))
-        if inc_per:
-            ans  += '... '
-    if inc_per:
+            if self.move.turn() == chess.BLACK:
+                    return ans + '. '
+            elif self.move.turn() == chess.WHITE and (self.black_variation or self.mainline_split):
+                    return ans + '... '
+        else:
+            return int(ans)
+
+    def uci_to_move(self):
+        if type(self.move) == str:
+            return self.move
+        cur_board = self.move.board()
+        move = self.move.move
+        ans = self.move_turn(True)
+        if not ans:
+            ans = ''
+        if self.prev_board.is_castling(move):
+            if self.prev_board.is_kingside_castling(move):
+                ans += 'O-O'
+            else:
+                ans += 'O-O-O'
+        else:
+            promo = None
+            if move.promotion:
+                promo = str(move)[4].upper()
+            piece = self.prev_board.piece_at(chess.Square(move.from_square))
+            if piece.symbol().lower() != 'p':
+                ans += piece.symbol().upper() + self.fix_ambiguous(piece)
+            if self.prev_board.is_capture(move):
+                if piece.symbol().lower() == 'p':
+                    ans += str(move)[0]
+                ans += 'x'
+            ans += chess.square_name(move.to_square)
+            if promo:
+                ans += '=' + promo
+        if cur_board.is_checkmate():
+            ans += '#'
+        elif cur_board.is_check():
+            ans += '+'
+        if self.end:
+            ans += '\n'
         return ans
-    else:
-        return int(ans)
 
-def uci_to_move(data):
-    move, prev_board, end, black_variation = data
-    if type(move) == str:
-        return move
-    cur_board = move.board()
-    ans = move_turn(move, black_variation, True)
-    if not ans:
-        ans = ''
-    if prev_board.is_castling(move.move):
-        if prev_board.is_kingside_castling(move.move):
-            ans += 'O-O'
+    def populate_fen_dict(self):
+        if type(self.move) == str:
+            return
+        self.fen_dict['own'] = self.move.board().fen().replace(' ','_')
+        if self.parent:
+            self.fen_dict['parent'] = self.parent.board().fen().replace(' ','_')
         else:
-            ans += 'O-O-O'
-    else:
-        promo = None
-        if move.move.promotion:
-            promo = str(move.move)[4].upper()
-        piece = prev_board.piece_at(chess.Square(move.move.from_square))
-        if piece.symbol().lower() != 'p':
-            ans += piece.symbol().upper() + fix_ambiguous(prev_board, move.move, piece)
-        if prev_board.is_capture(move.move):
-            if piece.symbol().lower() == 'p':
-                ans += str(move.move)[0]
-            ans += 'x'
-        ans += chess.square_name(move.move.to_square)
-        if promo:
-            ans += '=' + promo
-    if cur_board.is_checkmate():
-        ans += '#'
-    elif cur_board.is_check():
-        ans += '+'
-    if end:
-        ans += '\n'
-    return ans
+            self.fen_dict['parent'] = None
+        if self.children:
+            self.fen_dict['child_1'] = self.children[0].board().fen().replace(' ','_')
+            if len(self.children) == 2:
+                self.fen_dict['child_2'] = self.children[1].board().fen().replace(' ','_')
+            else:
+                self.fen_dict['child_2'] = None
+        else:
+            self.fen_dict['child_1'] = None
+            self.fen_dict['child_2'] = None
 
-def insert_bars(move_list):
-    for i, cur_move in enumerate([move[0] for move in move_list[::-1]]):
-        if type(cur_move[0]) == str:
-            latest_spaces = len(move_list) - i - 1
-            newline_count = 0
-            for j, m in enumerate([move[0] for move in move_list[len(move_list) - 2 - i:0:-1]]):
-                prev_move = m[0]
-                if m[2] == '\n':
-                    newline_count += 1
-                    if newline_count == 2:
-                        break
-                if type(prev_move) == str:
-                    if prev_move == '   ':
-                        break
-                    newline_count = 0
-                    cur_spaces = latest_spaces - j - 1
-                    if move_turn(move_list[latest_spaces + 1][0][0], move_list[latest_spaces + 1][0][3]) < move_turn(move_list[cur_spaces + 1][0][0], move_list[cur_spaces + 1][0][3]):
-                        move_list[cur_spaces][0][0] = prev_move[0:len(move_list[latest_spaces][0][0])] + '|' + prev_move[len(move_list[latest_spaces][0][0]) + 1:]
-                    else:
-                        break
-    return move_list
+class PGNParser():
+    def __init__(self, pgn, move_list = []):
+        self.pgn = pgn
+        self.move_list = move_list
+        self.parse_pgn()
 
-def link_parents(move_list):
-    for i, cur_move in enumerate([move[0][0] for move in move_list[-1:0:-1]]):
-        if type(cur_move) != str:
-            index = len(move_list) - i - 1
-            cur_variation = move_list[index][0]
-            cur_move_turn = move_turn(cur_variation[0], cur_variation[3], True)
-            cur_move_turn_num = move_turn(cur_variation[0], cur_variation[3])
-            if type(move_list[index - 1][0][0]) != str:
-                if cur_move.is_mainline() and cur_move_turn:
-                    continue
-                move_list[index][1] = move_list[index - 1][0][0]
-                continue
-            cur_double = int(cur_move_turn[1].isnumeric())
-            for j, prev_move in enumerate([move[0] for move in move_list[index - 2:0:-1]]):
-                prev_index = index - j - 2
-                if type(prev_move[0]) != str:
-                    prev_move_turn = move_turn(prev_move[0], prev_move[3], True)
-                    prev_move_turn_num = move_turn(prev_move[0], prev_move[3])
-                    if not prev_move_turn:
-                        continue
-                    if len(cur_move_turn) == 5 + cur_double and cur_move_turn_num == prev_move_turn_num:
-                        move_list[index][1] = prev_move[0]
+    def link_parents(self):
+        for i, cur_move_info in enumerate(self.move_list[-1:0:-1]):
+            if type(cur_move_info.move) != str:
+                index = len(self.move_list) - i - 1
+                for prev_move_info in self.move_list[index - 1:0:-1]:
+                    if type(prev_move_info.move) != str:
+                        if cur_move_info.move in prev_move_info.children:
+                            cur_move_info.parent = prev_move_info.move
+        for move_info in self.move_list:
+            move_info.populate_fen_dict()
+
+    def insert_bars(self):
+        for i, cur_move_info in enumerate(self.move_list[::-1]):
+            index = len(self.move_list) - i - 1
+            if type(self.move_list[index - 1].move) == str:
+                cur_spaces = index - 1
+                cur_spaces_length = len(self.move_list[index - 1].move)
+                for j, prev_move in enumerate([move_info.move for move_info in self.move_list[cur_spaces - 1:0:-1]]):
+                    if cur_move_info.parent == prev_move:
                         break
-                    if len(cur_move_turn) == 3 and cur_move_turn[0] == prev_move_turn[0]:
-                        if type(move_list[prev_index - 1][0][0]) == str:
-                            move_list[index][1] = prev_move[0]
-                            break
+                    if type(prev_move) == str:
+                        prev_spaces = cur_spaces - j - 1
+                        if cur_spaces_length < len(prev_move):
+                            self.move_list[prev_spaces].move = prev_move[0:len(self.move_list[cur_spaces].move)] + '|' +\
+                                                                        prev_move[len(self.move_list[cur_spaces].move) + 1:]
                         else:
-                            move_list[index][1] = move_list[prev_index - 1][0][0]
                             break
-                
-    return move_list
 
-def parse_game(game):
-    cur_move = game.variations[0]
-    prev_board = chess.Board()
-    prev_parent_board = chess.Board()
-    parent = cur_move
-    prev_parent = cur_move
-    variations_w = []
-    variations_b = []
-    move_list = []
-    wait = 0
-    while True:
-        if variations_w:
-            wait += 1
-            if wait == 1:
-                variation_prev_w_board = prev_board
-        if cur_move.is_end():
-            if cur_move.turn() == chess.WHITE:
-                move_list.extend([[[parent, prev_parent.board(), False, False], prev_parent, [move for i, move in enumerate(parent.variations) if i < 2]],
-                                  [[cur_move, prev_board, False, False], parent, []]])
-            else:
-                move_list.append([[cur_move, prev_board, False, False], parent, []])
-            break
-        if len(cur_move.variations) > 1:
-            if cur_move.turn() == chess.WHITE:
-                variations_w = cur_move.variations[1:]
-            else:
-                variations_b = cur_move.variations[1:]
-        if cur_move.turn() == chess.WHITE:
-            move_list.extend([[[parent, prev_parent_board, False, False], prev_parent, [move for i, move in enumerate(parent.variations) if i < 2]],
-                              [[cur_move, prev_board, True, False], parent, [move for i, move in enumerate(cur_move.variations) if i < 2]]])
-            cur_line = ' '.join([uci_to_move(move[0]) for move in move_list[len(move_list) - 2:]])
-            if ((variations_w and wait == 2) or variations_b):
-                if variations_w and wait == 2:
-                    move_list = parse_variations(variations_w, variation_prev_w_board, move_list, cur_line)
-                    variations_w = []
-                    wait = 0
-                if variations_b:
-                    move_list = parse_variations(variations_b, prev_board, move_list, cur_line)
-                    variations_b = []
-        prev_board = cur_move.board()
-        if cur_move != game.variations[0]:
-            prev_parent = parent
-            prev_parent_board = prev_parent.board()
+    def parse_variations(self, variations, start_board, parent_line):
+        for i, cur_move in enumerate(variations):
+            first = cur_move
+            variation_stack = []
+            prev_boards = []
+            wait = False
+            prev_board = start_board
+            turn = int(cur_move.ply()/2) + int(cur_move.turn() == chess.BLACK)
+            spaces = parent_line.find(str(turn) + '.')
+            cur_line = ' ' * (spaces + 2 + len(str(turn)))
+            self.move_list.append(MoveInfo(cur_line))
+            while not cur_move.is_end():
+                b_v = cur_move.turn() == chess.WHITE and cur_move == first
+                if len(cur_move.variations) > 1:
+                    variation_stack.append(cur_move.variations[1:])
+                    for j in range(len(cur_move.variations[1:])):
+                        prev_boards.append(cur_move.board())
+                cur_line += MoveInfo(cur_move, prev_board, black_variation=b_v).uci_to_move() + ' '
+                if i != len(variations) - 1 and not wait and cur_move == first:
+                    wait = True
+                    c = [cur_move.variations[0], variations[i + 1]]
+                else:
+                    c = [move for k, move in enumerate(cur_move.variations) if k < 2]
+                self.move_list.append(MoveInfo(cur_move, prev_board, children=c, black_variation=b_v))
+                prev_board = cur_move.board()
+                cur_move = cur_move.next()
+            b_v = cur_move.turn() == chess.WHITE and cur_move == first
+            cur_line += MoveInfo(cur_move, prev_board, end=True, black_variation=b_v).uci_to_move()
+            c = [move for k, move in enumerate(cur_move.variations) if k < 2]
+            self.move_list.append(MoveInfo(cur_move, prev_board, children=c, end=True, black_variation=b_v))
+            for i, variation in enumerate(variation_stack[::-1]):
+                self.parse_variations(variation, prev_boards[len(variation_stack) - 1 - i], cur_line)
+
+    def parse_pgn(self):
+        cur_move = self.pgn.variations[0]
+        prev_board = chess.Board()
+        prev_parent_board = chess.Board()
         parent = cur_move
-        cur_move = cur_move.next()
-    move_list = insert_bars(move_list)
-    move_list = link_parents(move_list)
-    return move_list
-
-def parse_variations(variations, start_board, move_list, parent_line):
-    for i, cur_move in enumerate(variations):
-        first = cur_move
-        variation_stack = []
-        prev_boards = []
-        wait = False
-        prev_board = start_board
-        turn = int(cur_move.ply()/2) + int(cur_move.turn() == chess.BLACK)
-        spaces = parent_line.find(str(turn) + '.')
-        cur_line = ' ' * (spaces + 2 + len(str(turn)))
-        move_list.append([[cur_line, None, False, False], None, []])
-        while not cur_move.is_end():
-            black_variation = cur_move.turn() == chess.WHITE and cur_move == first
+        prev_parent = cur_move
+        variations_w = []
+        variations_b = []
+        wait = 0
+        while True:
+            if variations_w:
+                wait += 1
+                if wait == 1:
+                    variation_prev_w_board = prev_board
+            if cur_move.is_end():
+                if cur_move.turn() == chess.WHITE:
+                    self.move_list.append(MoveInfo(parent, prev_parent.board(), prev_parent,
+                                                   [move for i, move in enumerate(parent.variations) if i < 2]))
+                    self.move_list.append(MoveInfo(cur_move, prev_board, parent))
+                break
             if len(cur_move.variations) > 1:
-                variation_stack.append(cur_move.variations[1:])
-                for j in range(len(cur_move.variations[1:])):
-                    prev_boards.append(cur_move.board())
-            cur_line += uci_to_move([cur_move, prev_board, False, black_variation]) + ' '
-            if i != len(variations) - 1 and not wait and cur_move == first:
-                wait = True
-                children = [cur_move.variations[0], variations[i + 1]]
-            else:
-                children = [move for k, move in enumerate(cur_move.variations) if k < 2]
-            move_list.append([[cur_move, prev_board, False, black_variation], None, children])
+                if cur_move.turn() == chess.WHITE:
+                    variations_w = cur_move.variations[1:]
+                else:
+                    variations_b = cur_move.variations[1:]
+            if cur_move.turn() == chess.WHITE:
+                self.move_list.append(MoveInfo(parent, prev_parent_board, prev_parent,
+                                               [move for i, move in enumerate(parent.variations) if i < 2]))
+                cur_line = self.move_list[-1].uci_to_move()
+                both = False
+                if ((variations_w and wait == 2) or variations_b):
+                    if variations_w and wait == 2:
+                        if not variations_b:
+                            self.move_list.append(MoveInfo(cur_move, prev_board, parent,
+                                                           [move for i, move in enumerate(cur_move.variations) if i < 2],
+                                                           end=True))
+                            cur_line +=  ' ' + self.move_list[-1].uci_to_move()
+                        else:
+                            self.move_list[-1].end = True
+                            cur_line = self.move_list[-1].uci_to_move()
+                            both = True
+                        self.parse_variations(variations_w, variation_prev_w_board, cur_line)
+                        variations_w = []
+                        wait = 0
+                    if variations_b:
+                        self.move_list.append(MoveInfo(cur_move, prev_board, parent,
+                                                       [move for i, move in enumerate(cur_move.variations) if i < 2],
+                                                       end=True, mainline_split=both))
+                        if not both:
+                            cur_line +=  ' ' + self.move_list[-1].uci_to_move()
+                        else:
+                            cur_line = self.move_list[-1].uci_to_move()
+                        self.parse_variations(variations_b, prev_board, cur_line)
+                        variations_b = []
+                else:
+                    self.move_list.append(MoveInfo(cur_move, prev_board, parent,
+                                                   [move for i, move in enumerate(cur_move.variations) if i < 2],
+                                                   end=True))
+                    cur_line +=  ' ' + self.move_list[-1].uci_to_move()
             prev_board = cur_move.board()
+            if cur_move != self.pgn.variations[0]:
+                prev_parent = parent
+                prev_parent_board = prev_parent.board()
+            parent = cur_move
             cur_move = cur_move.next()
-        black_variation = cur_move.turn() == chess.WHITE and cur_move == first
-        cur_line += uci_to_move([cur_move, prev_board, True, black_variation])
-        move_list.append([[cur_move, prev_board, True, black_variation], None, [move for k, move in enumerate(cur_move.variations) if k < 2]])
-        for i, variation in enumerate(variation_stack[::-1]):
-            move_list = parse_variations(variation, prev_boards[len(variation_stack) - 1 - i], move_list, cur_line)
-    return move_list
+        self.link_parents()
+        self.insert_bars()
 
-def create_fen_dict(move):
-    d = {}
-    d['own'] = move[0][0].board().fen().replace(' ','_')
-    if move[1]:
-        d['parent'] = move[1].board().fen().replace(' ','_')
-    else:
-        d['parent'] = None
-    if move[2]:
-        d['child_1'] = move[2][0].board().fen().replace(' ','_')
-        if len(move[2]) == 2:
-            d['child_2'] = move[2][1].board().fen().replace(' ','_')
-        else:
-            d['child_2'] = None
-    else:
-        d['child_1'] = None
-        d['child_2'] = None
-    return d
+class PGNScraper():
+    def __init__(self, username, password):
+        self.username = username
+        self.password = password
+        self.chromeOptions = uc.ChromeOptions()
+        self.chromeOptions.add_argument('--headless=new')
+        self.chromeOptions.add_experimental_option('excludeSwitches', ['enable-logging'])
+        self.driver = webdriver.Chrome(options=self.chromeOptions)
+        self.driver.get('https://www.chess.com/login_check')
+        self.pgn_dict = {}
+        self.parsed_dict = {}
+        self.populate_dicts()
+        
+    def login_and_retrieve_analyses(self):
+            uname = self.driver.find_element(By.ID, "username")
+            uname.send_keys(self.username)
+            password = self.driver.find_element(By.ID, "password")
+            password.send_keys(self.password)
+            self.driver.find_element(By.NAME, "login").click()
+            time.sleep(2)
+            self.driver.get('https://www.chess.com/analysis/saved')
+            time.sleep(2)
 
-def print_moves(moves):
-    for move in [uci_to_move(move[0]) for move in moves[0:-1]]:
-        if move[len(move) - 1::] != '\n' and move[0] != ' ':
-            print(move, end = ' ')
-        else:
-            print(move, end = '')
-    print(uci_to_move(moves[-1][0]))
+    def scrape_analyses(self):
+        content = self.driver.page_source
+        soup = BeautifulSoup(content, features='lxml')
+        for analysis in soup.findAll(attrs={'class': 'saved-analysis-item-component'}):
+            name = analysis.find('a')
+            pgn = analysis.find('p')
+            self.pgn_dict[name.text] = chess.pgn.read_game(io.StringIO(pgn.text))
+        self.driver.close()
 
-def print_parsed_games(parsed_games):
-    for k,v in parsed_games.items():
-        counter = 0
-        if counter == 1:
-            break
-        print(k)
-        for move in v['moves']:
-            cur_line = str(move[0])
-            if move[0][len(move[0]) - 1::] == '\n':
-                cur_line = str(move[0][0:len(move[0]) - 1])
-            elif move[0][0] == ' ':
-                cur_line = 'spaces'
-            if move[1]:
-                cur_line += '; parent: ' + str(move[1].move)
+    def populate_dicts(self):
+        self.login_and_retrieve_analyses()
+        self.scrape_analyses()
+        for k, v in self.pgn_dict.items():
+            p = PGNParser(v, [])
+            self.parsed_dict[k] = p.move_list
+
+    def write_html(self, name):
+        moves = self.parsed_dict[name]
+        html = '''
+    <!doctype html>
+    <title>
+        {% block title %}{% endblock %}MoveMentor
+    </title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script type="text/javascript" src="{{ url_for('static', filename='openings.js')}}"></script>
+    <nav>
+        <h1>MoveMentor</h1>
+        <ul>
+            {% if g.user %}
+                <li>
+                    <span>{{ g.user['username'] }}</span>
+                <li>
+                <a href="{{ url_for('auth.logout') }}">Log Out</a>
+            {% else %}
+                <li>
+                    <a href="{{ url_for('auth.register') }}">Register</a>
+                <li>
+                <a href="{{ url_for('auth.login') }}">Log In</a>
+            {% endif %}
+        </ul>
+    </nav>
+    <section class="content">
+    '''
+        html_flashed = '''{% for message in get_flashed_messages() %}<div class="flash">{{ message }}</div>{% endfor %}'''
+        html += '''<header><h1>''' + name + '''</h1></header>''' + html_flashed + '''<div class='moves-container'>'''
+        pos = 0
+        while pos < len(moves):
+            html += '''<span class = 'moves-line'>'''
+            for move_info in moves[pos:]:
+                move_str = move_info.uci_to_move()
+                if move_str[0] == ' ':
+                    text = ''
+                    for ch in move_info.move:
+                        if ch == ' ':
+                            text += '&nbsp;'
+                        elif ch == '|':
+                            text += '|'
+                    html += '''<span> ''' + text + ''' </span>'''
+                else:
+                    turn = move_info.move_turn(True)
+                    if turn:
+                        html += '''<span>''' + turn[0:len(turn) - 1] + '''&nbsp;</span>'''
+                    html += '''<span id = ''' + str(pos) + ''' data-own = ''' + move_info.fen_dict['own']
+                    if move_info.fen_dict['parent']:
+                        html += ''' data-parent = ''' + move_info.fen_dict['parent']
+                    if move_info.fen_dict['child_1']: 
+                        html += ''' data-child-1 = ''' + move_info.fen_dict['child_1']
+                    if move_info.fen_dict['child_2']:
+                        html += ''' data-child-2 = ''' + move_info.fen_dict['child_2']
+                    if move_info.move.is_mainline():
+                        html += ''' data-mainline = True'''
+                    if turn:
+                        html += ''' class = 'move' onClick = "click_update(this)"> ''' + move_str[len(str(turn)):] + ''' </span>'''
+                    else:
+                        html += ''' class = 'move' onClick = "click_update(this)"> ''' + move_str + ''' </span>'''
+                    if move_str[len(move_str) - 1::] == '\n':
+                        pos += 1
+                        break
+                    else:
+                        html += '''<span> &nbsp; </span>'''
+                pos += 1
+            html += '''</span>'''
+        html += '''</div></section>'''
+        return html
+
+    def print_moves(self, name):
+        for move in [move_info.uci_to_move() for move_info in self.parsed_dict[name][0:-1]]:
+            if move[len(move) - 1::] != '\n' and move[0] != ' ':
+                print(move, end = ' ')
             else:
-                cur_line += '; parent: none'
-            if move[2]:
-                cur_line += '; children: '
-                for m in move[2]:
-                    cur_line += str(m.move) + ', '
-            else:
-                cur_line += '; children: none'
-            print(cur_line)
-        print('\n\n\n\n\n')
-        counter += 1
+                print(move, end = '')
+        print(self.parsed_dict[name][-1].uci_to_move())
 
-pgns = get_pgns()
-
-games = []
-for pgn in pgns:
-    games.append([pgn[0], chess.pgn.read_game(io.StringIO(pgn[1]))])
-
-parsed_games = {}
-for game in games:
-    moves = parse_game(game[1])
-    parsed_games[game[0]] = moves
+p = PGNScraper('NZemlin', 'R44NtztVqYrqSte!')

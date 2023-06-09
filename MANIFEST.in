@@ -1,0 +1,4 @@
+include movementor/schema.sql
+graft movementor/static
+graft movementor/templates
+global-exclude *.pyc

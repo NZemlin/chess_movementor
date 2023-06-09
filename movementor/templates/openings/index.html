@@ -7,14 +7,14 @@
 {% endblock %}
 
 {% block content %}
-  {% for opening in openings.values() %}
+  {% for name in openings.keys() %}
     <article class="opening">
       <header>
         <div>
-          <h1>{{ opening['name'] }}</h1>
+          <h1>{{ name }}</h1>
         </div>
-          <a class="action" href="{{ url_for('openings.view', name=opening['name']) }}">View</a>
-          <a class="action" href="{{ url_for('openings.practice', name=opening['name']) }}">Practice</a>
+          <a class="action" href="{{ url_for('openings.view', name=name) }}">View</a>
+          <a class="action" href="{{ url_for('openings.practice', name=name) }}">Practice</a>
       </header>
     </article>
     {% if not loop.last %}

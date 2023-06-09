@@ -1,7 +1,6 @@
+flask
 bs4
 selenium
 undetected-chromedriver
 lxml
-flask
 chess
-airium

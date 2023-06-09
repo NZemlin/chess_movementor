@@ -61,18 +61,6 @@ function check_key(e) {
                     click_update(element[0])
                 }
             }
-            else {
-                var fen = old[0].getAttribute('data-child-1');
-                if (fen != null) {
-                    var element = document.querySelectorAll("[data-own='" + fen + "']");
-                    if (element.length == 0) {
-                        console.log('No mainline child to current selected move')
-                    }
-                    else {
-                        click_update(element[0])
-                    }
-                }
-            }
         }
         else if (e.keyCode == '37') {
             console.log('Left arrow');
@@ -97,6 +85,29 @@ function check_key(e) {
                 }
                 else {
                     click_update(element[0])
+                }
+            }
+        }
+        else if (e.keyCode == '32') {
+            console.log('Spacebar');
+            var fen = old[0].getAttribute('data-parent');
+            if (fen != null) {
+                while(true) {
+                    var element = document.querySelectorAll("[data-own='" + fen + "']");
+                    if (element.length == 0) {
+                        console.log('No parent to current selected move');
+                    }
+                    else { 
+                        var mainline = element[0].getAttribute('data-mainline');
+                        if (mainline != null) {
+                            click_update(element[0]);
+                            break;
+                        }
+                        else {
+                            fen = element[0].getAttribute('data-parent');
+                        }
+                    }
+                    
                 }
             }
         }
