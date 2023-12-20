@@ -1,5 +1,5 @@
 from flask import (
-    Blueprint, flash, g, redirect, render_template, render_template_string, request, url_for
+    Blueprint, flash, g, redirect, render_template, render_template_string, request, url_for, send_file
 )
 from werkzeug.exceptions import abort
 
@@ -19,13 +19,28 @@ def view(name):
     if request.method == 'POST':
         return redirect(url_for('openings.index'))
     
-    return render_template_string(p.write_html(name))
+    return render_template_string(p.write_view_html(name))
 
 @bp.route('/<string:name>/practice', methods=('GET', 'POST'))
 @login_required
 def practice(name):
-    opening = p.parsed_dict[name]
     if request.method == 'POST':
         return redirect(url_for('openings.index'))
 
-    return render_template_string('Coming Soon', opening = opening)
+    return render_template_string(p.write_practice_html(name))
+
+@bp.route('/<string:name>/static/img/chesspieces/wikipedia/<string:image>', methods=('GET', 'POST'))
+@login_required
+def pic(name, image):
+    if request.method == 'POST':
+        return redirect(url_for('openings.index'))
+    
+    return send_file('./static/img/chesspieces/wikipedia/' + image, mimetype='image/png')
+
+@bp.route('/<string:name>/static/audio/<string:audio>', methods=('GET', 'POST'))
+@login_required
+def sound(name, audio):
+    if request.method == 'POST':
+        return redirect(url_for('openings.index'))
+    
+    return send_file('./static/audio/' + audio, mimetype='audio/mp3')

@@ -1,5 +1,5 @@
 html { font-family: monospace; background: #eee; padding: 1rem; }
-body { max-width: 960px; margin: 0 auto; background: white; }
+body { max-width: 80%; margin: 0 auto; background: white; }
 h1 { font-family: monospace; color: #377ba8; margin: 1rem 0; }
 a { color: #377ba8; }
 hr { border: none; border-top: 1px solid lightgray; }
@@ -20,12 +20,21 @@ nav ul li a, nav ul li span, header .action { display: block; padding: 0.5rem; }
 input.danger { color: #cc2f2e; }
 input[type=submit] { align-self: start; min-width: 10em; }
 
+.body {
+    display: flex;
+}
+
+.board {
+    width: 800px;
+}
+
 .moves-container {
     white-space: nowrap;
     position: relative;
     overflow-x: scroll;
     overflow-y: hidden;
     flex-direction: column;
+    font-size: 14px;
 }
 
 .moves-line {

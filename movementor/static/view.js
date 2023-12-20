@@ -23,9 +23,20 @@ function click_update(element) {
     console.log('Selected ' + id.toString());
     var own = separate_fen(element.getAttribute('data-own'));
     if (own != null) {
-        console.log('FEN: ' + own)
+        console.log('FEN: ' + own);
     }
+    board.position(own, false);
 }
+
+const elementIsVisibleInViewport = (el, partiallyVisible = false) => {
+    const { top, left, bottom, right } = el.getBoundingClientRect();
+    const { innerHeight, innerWidth } = window;
+    return partiallyVisible
+      ? ((top > 0 && top < innerHeight) ||
+          (bottom > 0 && bottom < innerHeight)) &&
+          ((left > 0 && left < innerWidth) || (right > 0 && right < innerWidth))
+      : top >= 0 && left >= 0 && bottom <= innerHeight && right <= innerWidth;
+  };
 
 document.onkeydown = check_key;
 
@@ -42,10 +53,14 @@ function check_key(e) {
             if (fen != null) {
                 var element = document.querySelectorAll("[data-own='" + fen + "']");
                 if (element.length == 0) {
-                    console.log('No parent to current selected move')
+                    console.log('No parent to current selected move');
                 }
                 else {
-                    click_update(element[0])
+                    click_update(element[0]);
+                    if (elementIsVisibleInViewport(element[0])) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
                 }
             }
         }
@@ -55,10 +70,14 @@ function check_key(e) {
             if (fen != null) {
                 var element = document.querySelectorAll("[data-own='" + fen + "']");
                 if (element.length == 0) {
-                    console.log('No variation to current selected move')
+                    console.log('No variation to current selected move');
                 }
                 else {
-                    click_update(element[0])
+                    click_update(element[0]);
+                    if (elementIsVisibleInViewport(element[0])) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
                 }
             }
         }
@@ -68,10 +87,14 @@ function check_key(e) {
             if (fen != null) {
                 var element = document.querySelectorAll("[data-own='" + fen + "']");
                 if (element.length == 0) {
-                    console.log('No parent to current selected move')
+                    console.log('No parent to current selected move');
                 }
                 else {
-                    click_update(element[0])
+                    click_update(element[0]);
+                    if (elementIsVisibleInViewport(element[0])) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
                 }
             }
         }
@@ -81,10 +104,17 @@ function check_key(e) {
             if (fen != null) {
                 var element = document.querySelectorAll("[data-own='" + fen + "']");
                 if (element.length == 0) {
-                    console.log('No mainline child to current selected move')
+                    console.log('No mainline child to current selected move');
                 }
                 else {
-                    click_update(element[0])
+                    click_update(element[0]);
+                    if (elementIsVisibleInViewport(element[0])) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
+                    else {
+                        console.log('Element is not currently visible')
+                    }
                 }
             }
         }
@@ -101,6 +131,10 @@ function check_key(e) {
                         var mainline = element[0].getAttribute('data-mainline');
                         if (mainline != null) {
                             click_update(element[0]);
+                            if (elementIsVisibleInViewport(element[0])) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                            }
                             break;
                         }
                         else {
@@ -113,3 +147,14 @@ function check_key(e) {
         }
     }
 }
+
+// window.addEventListener("keydown", function(e) {
+//     if(["Space","ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].indexOf(e.code) > -1) {
+//         e.preventDefault();
+//     }
+// }, false);
+
+var config = {
+    position: 'start'
+}
+var board = Chessboard('myBoard', config);

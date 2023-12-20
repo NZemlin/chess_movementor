@@ -16,8 +16,14 @@ class MoveInfo():
         self.mainline_split = mainline_split
         self.parent= parent
         self.children = children
-        self.fen_dict = {}
-    
+        self.fen_dict = {
+            'own': None,
+            'parent': None,
+            'child_1': None,
+            'child_2': None,
+        }
+        self.uci_move = self.uci_to_move(False)
+
     def fix_ambiguous(self, piece):
         sq_set = self.prev_board.pieces(piece.piece_type, piece.color).tolist()
         other = []
@@ -38,7 +44,7 @@ class MoveInfo():
 
     def move_turn(self, inc_per = False):
         if type(self.move) == str or (self.move.turn() == chess.WHITE and not self.black_variation and not self.mainline_split):
-            return None
+            return ''
         ans = str(int(self.move.ply()/2) + int(self.move.turn() == chess.BLACK))
         if inc_per:
             if self.move.turn() == chess.BLACK:
@@ -48,13 +54,14 @@ class MoveInfo():
         else:
             return int(ans)
 
-    def uci_to_move(self):
+    def uci_to_move(self, turn = True):
         if type(self.move) == str:
             return self.move
         cur_board = self.move.board()
         move = self.move.move
-        ans = self.move_turn(True)
-        if not ans:
+        if turn:
+            ans = self.move_turn(True)
+        else:
             ans = ''
         if self.prev_board.is_castling(move):
             if self.prev_board.is_kingside_castling(move):
@@ -89,17 +96,10 @@ class MoveInfo():
         self.fen_dict['own'] = self.move.board().fen().replace(' ','_')
         if self.parent:
             self.fen_dict['parent'] = self.parent.board().fen().replace(' ','_')
-        else:
-            self.fen_dict['parent'] = None
         if self.children:
             self.fen_dict['child_1'] = self.children[0].board().fen().replace(' ','_')
             if len(self.children) == 2:
                 self.fen_dict['child_2'] = self.children[1].board().fen().replace(' ','_')
-            else:
-                self.fen_dict['child_2'] = None
-        else:
-            self.fen_dict['child_1'] = None
-            self.fen_dict['child_2'] = None
 
 class PGNParser():
     def __init__(self, pgn, move_list = []):
@@ -244,7 +244,7 @@ class PGNScraper():
         self.chromeOptions.add_argument('--headless=new')
         self.chromeOptions.add_experimental_option('excludeSwitches', ['enable-logging'])
         self.driver = webdriver.Chrome(options=self.chromeOptions)
-        self.driver.get('https://www.chess.com/login_check')
+        self.driver.get('https://www.chess.com/login_and_go?returnUrl=https://www.chess.com/')
         self.pgn_dict = {}
         self.parsed_dict = {}
         self.populate_dicts()
@@ -275,7 +275,7 @@ class PGNScraper():
             p = PGNParser(v, [])
             self.parsed_dict[k] = p.move_list
 
-    def write_html(self, name):
+    def write_view_html(self, name):
         moves = self.parsed_dict[name]
         html = '''
     <!doctype html>
@@ -283,7 +283,8 @@ class PGNScraper():
         {% block title %}{% endblock %}MoveMentor
     </title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <script type="text/javascript" src="{{ url_for('static', filename='openings.js')}}"></script>
+    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css"
+      integrity="sha384-q94+BZtLrkL1/ohfjR8c6L+A6qzNH9R2hBLwyoAfu3i/WCvQjzL2RQJ3uNHDISdU" crossorigin="anonymous">
     <nav>
         <h1>MoveMentor</h1>
         <ul>
@@ -303,7 +304,7 @@ class PGNScraper():
     <section class="content">
     '''
         html_flashed = '''{% for message in get_flashed_messages() %}<div class="flash">{{ message }}</div>{% endfor %}'''
-        html += '''<header><h1>''' + name + '''</h1></header>''' + html_flashed + '''<div class='moves-container'>'''
+        html += '''<header><h1>''' + name + '''</h1></header>''' + html_flashed + '''<div class='body'><div id="myBoard" class='board'></div><div class='moves-container'>'''
         pos = 0
         while pos < len(moves):
             html += '''<span class = 'moves-line'>'''
@@ -330,6 +331,8 @@ class PGNScraper():
                         html += ''' data-child-2 = ''' + move_info.fen_dict['child_2']
                     if move_info.move.is_mainline():
                         html += ''' data-mainline = True'''
+                    if move_info.uci_move:
+                        html += ''' data-uci-move = ''' + move_info.uci_move
                     if turn:
                         html += ''' class = 'move' onClick = "click_update(this)"> ''' + move_str[len(str(turn)):] + ''' </span>'''
                     else:
@@ -341,7 +344,111 @@ class PGNScraper():
                         html += '''<span> &nbsp; </span>'''
                 pos += 1
             html += '''</span>'''
-        html += '''</div></section>'''
+        html += '''</div></div></section>
+        <script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha384-ZvpUoO/+PpLXR1lu4jmpXWu80pZlYUAfxl5NsBMWOEPSjUn/6Z/hRTt8+pR6L4N2"
+            crossorigin="anonymous"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='chessboard-1.0.0.js') }}"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.min.js"
+            integrity="sha512-5nNBISa4noe7B2/Me0iHkkt7mUvXG9xYoeXuSrr8OmCQIxd5+Qwxhjy4npBLIuxGNQKwew/9fEup/f2SUVkkXg=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.js"
+            integrity="sha512-40VRp1+fauX7g61ZdQpOiOJTkBbYwVlTLjCXHK9Svf0Mmz9K8Smg5k6LVrc0eEc9+pApf1HNL6Cim/wFqZeRkw=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='view.js')}}"></script>
+        '''
+        return html
+
+    def write_practice_html(self, name):
+        moves = self.parsed_dict[name]
+        html = '''
+    <!doctype html>
+    <title>
+        {% block title %}{% endblock %}MoveMentor
+    </title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css"
+      integrity="sha384-q94+BZtLrkL1/ohfjR8c6L+A6qzNH9R2hBLwyoAfu3i/WCvQjzL2RQJ3uNHDISdU" crossorigin="anonymous">
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.js"
+            integrity="sha512-40VRp1+fauX7g61ZdQpOiOJTkBbYwVlTLjCXHK9Svf0Mmz9K8Smg5k6LVrc0eEc9+pApf1HNL6Cim/wFqZeRkw=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <script type="module">
+</script>
+    <nav>
+        <h1>MoveMentor</h1>
+        <ul>
+            {% if g.user %}
+                <li>
+                    <span>{{ g.user['username'] }}</span>
+                <li>
+                <a href="{{ url_for('auth.logout') }}">Log Out</a>
+            {% else %}
+                <li>
+                    <a href="{{ url_for('auth.register') }}">Register</a>
+                <li>
+                <a href="{{ url_for('auth.login') }}">Log In</a>
+            {% endif %}
+        </ul>
+    </nav>
+    <section class="content">
+    '''
+        html_flashed = '''{% for message in get_flashed_messages() %}<div class="flash">{{ message }}</div>{% endfor %}'''
+        html += '''<header><h1>''' + name + '''</h1></header>''' + html_flashed + '''
+        <div class='body'>
+            <div id="myBoard" class='board'></div>
+            <button id="restartBtn">Restart</button>
+            <button id="backBtn">Go Back</button>
+            <button id="difLineBtn">Different Line</button>
+            <button id="switchBtn">Switch Colors</button>
+            <div class='moves-container'>'''
+        pos = 0
+        while pos < len(moves):
+            html += '''<span class = 'moves-line'>'''
+            for move_info in moves[pos:]:
+                move_str = move_info.uci_to_move()
+                if move_str[0] == ' ':
+                    text = ''
+                    for ch in move_info.move:
+                        if ch == ' ':
+                            text += '&nbsp;'
+                        elif ch == '|':
+                            text += '|'
+                    html += '''<span hidden> ''' + text + ''' </span>'''
+                else:
+                    turn = move_info.move_turn(True)
+                    if turn:
+                        html += '''<span hidden>''' + turn[0:len(turn) - 1] + '''&nbsp;</span>'''
+                    html += '''<span hidden id = ''' + str(pos) + ''' data-own = ''' + move_info.fen_dict['own']
+                    if move_info.fen_dict['parent']:
+                        html += ''' data-parent = ''' + move_info.fen_dict['parent']
+                    if move_info.fen_dict['child_1']: 
+                        html += ''' data-child-1 = ''' + move_info.fen_dict['child_1']
+                    if move_info.fen_dict['child_2']:
+                        html += ''' data-child-2 = ''' + move_info.fen_dict['child_2']
+                    if move_info.move.is_mainline():
+                        html += ''' data-mainline = True'''
+                    if move_info.uci_move:
+                        html += ''' data-uci-move = ''' + move_info.uci_move
+                    if turn:
+                        html += ''' class = 'move' onClick = "click_update(this)"> ''' + move_str[len(str(turn)):] + ''' </span>'''
+                    else:
+                        html += ''' class = 'move' onClick = "click_update(this)"> ''' + move_str + ''' </span>'''
+                    if move_str[len(move_str) - 1::] == '\n':
+                        pos += 1
+                        break
+                    else:
+                        html += '''<span> &nbsp; </span>'''
+                pos += 1
+            html += '''</span>'''
+        html += '''</div></div></section>
+        <script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha384-ZvpUoO/+PpLXR1lu4jmpXWu80pZlYUAfxl5NsBMWOEPSjUn/6Z/hRTt8+pR6L4N2"
+            crossorigin="anonymous"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='chessboard-1.0.0.js') }}"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.min.js"
+            integrity="sha512-5nNBISa4noe7B2/Me0iHkkt7mUvXG9xYoeXuSrr8OmCQIxd5+Qwxhjy4npBLIuxGNQKwew/9fEup/f2SUVkkXg=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <script type="module" src="{{ url_for('static', filename='practice.js')}}"></script>
+        '''
         return html
 
     def print_moves(self, name):

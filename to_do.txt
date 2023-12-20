@@ -1,8 +1,17 @@
-Implement chessboard.js and chess.js
 Implement chess.com API
+Make arrow keys/spacebar only move screen when needed while viewing an opening
+Implement sounds for pieces
+Implement practice UI
+   - Message for when a line is finished
+   - Message for when a mistake is made
+      - Display correct options?
+   - Back button
+   - Choose different line button
+   - Update move list on right
+   - Display stockfish evaluation
 
 Link Problems:
-    In list of variations for one move, if there is immedaitely another variation(s) off of that, needs a child node and 2 variation nodes, ie:
+    In list of variations for one move, if there is immediately another variation(s) off of that, needs a child node and 2 variation nodes, ie:
     4... Nxe4 5. d5
        |
        |
@@ -11,3 +20,6 @@ Link Problems:
        4... d5 5. Bb5
 
     4... d6 needs to link to 5. d5, 4... d5, and 5. Bd3
+
+    Right -> immediate mainline response to current move
+    Down -> other options to previous move
