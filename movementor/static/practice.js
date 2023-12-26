@@ -13,6 +13,11 @@ let illegal = new Audio('./static/audio/illegal.mp3');
 var move = ''
 var ownMove = ''
 var possibleMoves = []
+var finished = false
+var last_fen = ''
+var other_choices = []
+var move_number = 1
+var status = ''
 
 var config = {
     draggable: true,
@@ -30,21 +35,48 @@ game_start.autoplay = true
 game_start.play()
 
 $('#restartBtn').on('click', function() {
+    console.clear()
+    finished = false
+    last_fen = ''
+    other_choices = []
+    move_number = 1
+    status = ''
+    var element = document.getElementsByClassName('move-list-num')
+    for (let i = 0; i < element.length; i++) {
+        element[i].hidden = true
+    }
+    element = document.getElementsByClassName('move-list')
+    for (let i = 0; i < element.length; i++) {
+        element[i].innerHTML = ''
+    }
     config.position = 'start'
     board = Chessboard('myBoard', config)
     game = new Chess()
     game_start.play()
+    updateStatus()
     if (game.turn() == 'w' && config.orientation == 'black') {
-        window.setTimeout(makeComputerMove, 500)
+        window.setTimeout(makeComputerMove, 1000)
     }
-})
-
-$('#backBtn').on('click', function () {
-    
 })
   
 $('#difLineBtn').on('click', function () {
-    
+    if (other_choices.length == 0) {
+        console.log('No other lines were available')
+    }
+    else {
+        if (game.turn() == 'w' && config.orientation == 'black' || 
+            game.turn() == 'b' && config.orientation == 'white') {
+                game.undo()
+        }
+        if (game.turn() == 'w') {
+            move_number--
+        }
+        game.undo()
+        board.position(last_fen)
+        finished = false
+        possibleMoves = other_choices
+        window.setTimeout(makeComputerMove, 500)
+    }
 })
 
 $('#switchBtn').on('click', function () {
@@ -62,18 +94,11 @@ $('#switchBtn').on('click', function () {
     }
 })
 
-function separate_fen(fen) {
-    var separated = '';
-    for (let i = 0; i < fen.length; i++) {
-        if (fen[i] == '_') {
-            separated += ' ';
-        }
-        else {
-            separated += fen[i];
-        }
-    }
-    return(separated);
-}
+$('#hintBtn').on('click', function () {
+    this.innerHTML = this.innerHTML == 'Show Hints' ? 'Hide Hints' : 'Show Hints'
+    var hint_element = document.getElementById('hints')
+    hint_element.hidden = hint_element.hidden ? false : true
+})
 
 function condense_fen(fen) {
     var condensed = '';
@@ -103,70 +128,122 @@ function fix_ep(fen) {
 
 function updateAllowedMoves () {
     possibleMoves = []
-    console.log(game.fen())
-    if (game.fen() == 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1') {
-        possibleMoves = [document.getElementById('0').getAttribute('data-uci-move')]
-        return
+    if (!finished) {
+        if (game.fen() == 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1') {
+            possibleMoves = [document.getElementById('0').getAttribute('data-uci-move')]
+            return
+        }
+        else {
+            var cur = document.querySelectorAll("[data-own='" + condense_fen(game.fen()) + "']");
+            if (cur.length == 0) {
+                var cur = document.querySelectorAll("[data-own='" + condense_fen(fix_ep(game.fen())) + "']");
+            }
+            cur = cur[0]
+        }
+        var fen = cur.getAttribute('data-child-1');
+        var color = ''
+        var turn = ''
+        if (fen != null) {
+            var element = document.querySelectorAll("[data-own='" + fen + "']");
+            move = element[0].getAttribute('data-uci-move')
+            possibleMoves.push(move)
+            color = element[0].getAttribute('data-color')
+            turn = element[0].getAttribute('data-turn')
+        }
+        fen = cur.getAttribute('data-child-2')
+        while (fen != null) {
+            var element = document.querySelectorAll("[data-own='" + fen + "']");
+            move = element[0].getAttribute('data-uci-move')
+            if (color == element[0].getAttribute('data-color') && turn == element[0].getAttribute('data-turn')) {
+                possibleMoves.push(move)
+                element = document.querySelectorAll("[data-own='" + fen + "']");
+                fen = element[0].getAttribute('data-child-2')
+            }
+            else {
+                break
+            }
+        }
+        if (possibleMoves.length == 0) {
+            console.log('This line is finished')
+            document.getElementById('status').innerHTML = 'This line is finished';
+            finished = true
+            possibleMoves = game.moves()
+        }
     }
     else {
-        var cur = document.querySelectorAll("[data-own='" + condense_fen(game.fen()) + "']");
-        if (cur.length == 0) {
-            var cur = document.querySelectorAll("[data-own='" + condense_fen(fix_ep(game.fen())) + "']");
-        }
-        cur = cur[0]
+        possibleMoves = game.moves()
     }
-    var fen = cur.getAttribute('data-child-1');
-    if (fen != null) {
-        var element = document.querySelectorAll("[data-own='" + fen + "']");
-        move = element[0].getAttribute('data-uci-move')
-        possibleMoves.push(move)
-    }
-    fen = cur.getAttribute('data-child-2')
-    while (fen != null) {
-        var element = document.querySelectorAll("[data-own='" + fen + "']");
-        move = element[0].getAttribute('data-uci-move')
-        possibleMoves.push(move)
-        element = document.querySelectorAll("[data-own='" + fen + "']");
-        fen = element[0].getAttribute('data-child-2')
-    }
-    console.log(possibleMoves)
 }
-updateAllowedMoves()
+updateStatus(false)
+console.log('First moves are: ' + possibleMoves)
+
+function makeComputerMove() {
+    if (game.game_over()) {
+        return
+    }
+    console.log('Computer moves: ' + possibleMoves)
+    var randomIdx = Math.floor(Math.random() * possibleMoves.length)
+    move = possibleMoves[randomIdx]
+    other_choices = possibleMoves
+    other_choices.splice(randomIdx, 1)
+    console.log('Other choices were: ' + other_choices)
+    last_fen = game.fen()
+    var color = game.turn()
+    game.move(move)
+    board.position(game.fen())
+    var element = document.getElementById('n' + move_number)
+    element.hidden = false
+    element = document.getElementById(color + move_number)
+    element.innerHTML = move
+    if (game.turn() == 'w') {
+        move_number++
+    }
+    updateStatus(false)
+    console.log('Your moves: ' + possibleMoves)
+}
 
 function onDragStart (source, piece, position, orientation) {
-  // do not pick up pieces if the game is over
+    // do not pick up pieces if the game is over
     if (game.game_over()) {
         return false
-  }
-  // only pick up pieces for own side
+    }
+    // only pick up pieces for own side
     if ((config.orientation === 'white' && piece.search(/^b/) !== -1 && game.turn() === 'w') || 
         (config.orientation === 'black' && piece.search(/^w/) !== -1 && game.turn() === 'b')) {
         return false
-  }
-}
-
-function makeComputerMove() {
-    var randomIdx = Math.floor(Math.random() * possibleMoves.length)
-    move = possibleMoves[randomIdx]
-    game.move(move)
-    board.position(game.fen())
-    updateStatus(false)
+    }
 }
 
 function onDrop (source, target) {
     // see if the move is legal
+    var before = game.fen()
     ownMove = game.move({
         from: source,
         to: target,
         promotion: 'q' // NOTE: always promote to a queen for example simplicity
     })
-
+    var after = game.fen()
     // illegal move
-    if (ownMove === null || !(possibleMoves.includes(ownMove.san))) {
-        illegal.play(0)
+    if (ownMove === null || (!finished && !(possibleMoves.includes(ownMove.san)))) {
+        console.log('Move not in prepared opening.  Allowed moves are: ')
+        console.log(possibleMoves)
+        var hint_element = document.getElementById('hints')
+        hint_element.innerHTML = 'Allowed moves are: ' + possibleMoves
+        illegal.play()
+        if (before != after) {
+            game.undo()
+        }
         return 'snapback'
     }
     else {
+        var color = game.turn() == 'w' ? 'b' : 'w'
+        var element = document.getElementById('n' + move_number)
+        element.hidden = false
+        element = document.getElementById(color + move_number)
+        element.innerHTML = ownMove.san
+        if (game.turn() == 'w') {
+            move_number++
+        }
         updateStatus(true)
         window.setTimeout(makeComputerMove, 500)
     }
@@ -179,11 +256,14 @@ function onSnapEnd () {
 }
 
 function updateStatus (own) {
-    var status = ''
+    var hint_element = document.getElementById('hints')
+    hint_element.innerHTML = 'No hints currently'
 
-    var moveColor = 'white'
+    status = ''
+
+    var moveColor = 'White'
     if (game.turn() === 'b') {
-        moveColor = 'black'
+        moveColor = 'Black'
     }
 
     // checkmate?
@@ -220,7 +300,7 @@ function updateStatus (own) {
                 move_self.play()
             }
         }
-        else {
+        else if (move != '') {
             if (move[-2] == '=') {
                 promote.play()
             }
@@ -234,7 +314,10 @@ function updateStatus (own) {
                 move_opponent.play()
             }
         }
-    status = moveColor + ' to move'
+        status = moveColor + ' to move'
+        if (!finished) {
+            document.getElementById('status').innerHTML = status;
+        }
   }
   updateAllowedMoves()
 }

@@ -1,22 +1,16 @@
 {% extends 'base.html' %}
 
 {% block header %}
-  <h1>Your Chess.com Openings</h1>
-  {% if g.user %}
-  {% endif %}
+  <h2>Your Chess.com Openings</h2>
 {% endblock %}
 
 {% block content %}
   {% for name in openings.keys() %}
-    <article class="opening">
-      <header>
         <div>
-          <h1>{{ name }}</h1>
+          <h3>{{ name }}</h3>
         </div>
           <a class="action" href="{{ url_for('openings.view', name=name) }}">View</a>
           <a class="action" href="{{ url_for('openings.practice', name=name) }}">Practice</a>
-      </header>
-    </article>
     {% if not loop.last %}
       <hr>
     {% endif %}

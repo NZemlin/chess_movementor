@@ -8,8 +8,9 @@ import chess
 import chess.pgn
 
 class MoveInfo():
-    def __init__(self, move, prev_board = None, parent = None, children  = [], end = False, black_variation = False, mainline_split = False):
+    def __init__(self, move, color = None, prev_board = None, parent = None, children  = [], end = False, black_variation = False, mainline_split = False):
         self.move = move
+        self.color = color
         self.prev_board = prev_board
         self.end = end
         self.black_variation = black_variation
@@ -137,6 +138,7 @@ class PGNParser():
 
     def parse_variations(self, variations, start_board, parent_line):
         for i, cur_move in enumerate(variations):
+            color = 'black' if cur_move.turn() == chess.WHITE else 'white'
             first = cur_move
             variation_stack = []
             prev_boards = []
@@ -152,19 +154,20 @@ class PGNParser():
                     variation_stack.append(cur_move.variations[1:])
                     for j in range(len(cur_move.variations[1:])):
                         prev_boards.append(cur_move.board())
-                cur_line += MoveInfo(cur_move, prev_board, black_variation=b_v).uci_to_move() + ' '
+                cur_line += MoveInfo(cur_move, color, prev_board, black_variation=b_v).uci_to_move() + ' '
                 if i != len(variations) - 1 and not wait and cur_move == first:
                     wait = True
                     c = [cur_move.variations[0], variations[i + 1]]
                 else:
                     c = [move for k, move in enumerate(cur_move.variations) if k < 2]
-                self.move_list.append(MoveInfo(cur_move, prev_board, children=c, black_variation=b_v))
+                self.move_list.append(MoveInfo(cur_move, color, prev_board, children=c, black_variation=b_v))
                 prev_board = cur_move.board()
                 cur_move = cur_move.next()
+                color = 'black' if cur_move.turn() == chess.WHITE else 'white'
             b_v = cur_move.turn() == chess.WHITE and cur_move == first
-            cur_line += MoveInfo(cur_move, prev_board, end=True, black_variation=b_v).uci_to_move()
+            cur_line += MoveInfo(cur_move, color, prev_board, end=True, black_variation=b_v).uci_to_move()
             c = [move for k, move in enumerate(cur_move.variations) if k < 2]
-            self.move_list.append(MoveInfo(cur_move, prev_board, children=c, end=True, black_variation=b_v))
+            self.move_list.append(MoveInfo(cur_move, color, prev_board, children=c, end=True, black_variation=b_v))
             for i, variation in enumerate(variation_stack[::-1]):
                 self.parse_variations(variation, prev_boards[len(variation_stack) - 1 - i], cur_line)
 
@@ -184,9 +187,9 @@ class PGNParser():
                     variation_prev_w_board = prev_board
             if cur_move.is_end():
                 if cur_move.turn() == chess.WHITE:
-                    self.move_list.append(MoveInfo(parent, prev_parent.board(), prev_parent,
+                    self.move_list.append(MoveInfo(parent, 'white', prev_parent.board(), prev_parent,
                                                    [move for i, move in enumerate(parent.variations) if i < 2]))
-                    self.move_list.append(MoveInfo(cur_move, prev_board, parent))
+                    self.move_list.append(MoveInfo(cur_move, 'black', prev_board, parent))
                 break
             if len(cur_move.variations) > 1:
                 if cur_move.turn() == chess.WHITE:
@@ -194,14 +197,14 @@ class PGNParser():
                 else:
                     variations_b = cur_move.variations[1:]
             if cur_move.turn() == chess.WHITE:
-                self.move_list.append(MoveInfo(parent, prev_parent_board, prev_parent,
+                self.move_list.append(MoveInfo(parent, 'white', prev_parent_board, prev_parent,
                                                [move for i, move in enumerate(parent.variations) if i < 2]))
                 cur_line = self.move_list[-1].uci_to_move()
                 both = False
                 if ((variations_w and wait == 2) or variations_b):
                     if variations_w and wait == 2:
                         if not variations_b:
-                            self.move_list.append(MoveInfo(cur_move, prev_board, parent,
+                            self.move_list.append(MoveInfo(cur_move, 'black', prev_board, parent,
                                                            [move for i, move in enumerate(cur_move.variations) if i < 2],
                                                            end=True))
                             cur_line +=  ' ' + self.move_list[-1].uci_to_move()
@@ -213,7 +216,7 @@ class PGNParser():
                         variations_w = []
                         wait = 0
                     if variations_b:
-                        self.move_list.append(MoveInfo(cur_move, prev_board, parent,
+                        self.move_list.append(MoveInfo(cur_move, 'black', prev_board, parent,
                                                        [move for i, move in enumerate(cur_move.variations) if i < 2],
                                                        end=True, mainline_split=both))
                         if not both:
@@ -223,7 +226,7 @@ class PGNParser():
                         self.parse_variations(variations_b, prev_board, cur_line)
                         variations_b = []
                 else:
-                    self.move_list.append(MoveInfo(cur_move, prev_board, parent,
+                    self.move_list.append(MoveInfo(cur_move, 'black', prev_board, parent,
                                                    [move for i, move in enumerate(cur_move.variations) if i < 2],
                                                    end=True))
                     cur_line +=  ' ' + self.move_list[-1].uci_to_move()
@@ -278,33 +281,28 @@ class PGNScraper():
     def write_view_html(self, name):
         moves = self.parsed_dict[name]
         html = '''
-    <!doctype html>
-    <title>
-        {% block title %}{% endblock %}MoveMentor
-    </title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css"
-      integrity="sha384-q94+BZtLrkL1/ohfjR8c6L+A6qzNH9R2hBLwyoAfu3i/WCvQjzL2RQJ3uNHDISdU" crossorigin="anonymous">
-    <nav>
-        <h1>MoveMentor</h1>
-        <ul>
-            {% if g.user %}
-                <li>
-                    <span>{{ g.user['username'] }}</span>
-                <li>
-                <a href="{{ url_for('auth.logout') }}">Log Out</a>
-            {% else %}
-                <li>
-                    <a href="{{ url_for('auth.register') }}">Register</a>
-                <li>
-                <a href="{{ url_for('auth.login') }}">Log In</a>
-            {% endif %}
-        </ul>
-    </nav>
-    <section class="content">
-    '''
-        html_flashed = '''{% for message in get_flashed_messages() %}<div class="flash">{{ message }}</div>{% endfor %}'''
-        html += '''<header><h1>''' + name + '''</h1></header>''' + html_flashed + '''<div class='body'><div id="myBoard" class='board'></div><div class='moves-container'>'''
+            {% extends 'openings/view.html' %}
+
+            {% block header %}
+                <h1>Study the ''' + name + ''' Opening</h1>
+            {% endblock %}
+
+            {% block content %}
+                <div class='container'>
+                    <div class='row'>
+                        <div class='col'>
+                            <div class='row'>
+                                <div id="myBoard" class='board'></div>
+                            </div>
+                            <div class='row'>
+                                <button id="switchBtn">Switch Colors</button>
+                            </div>
+                        </div>
+                        <div class='col moves-container-view'>
+                            <div class='row'>
+                                <h2 id='status'></h2>
+                            </div>
+                            <div class='row'>'''
         pos = 0
         while pos < len(moves):
             html += '''<span class = 'moves-line'>'''
@@ -331,12 +329,13 @@ class PGNScraper():
                         html += ''' data-child-2 = ''' + move_info.fen_dict['child_2']
                     if move_info.move.is_mainline():
                         html += ''' data-mainline = True'''
-                    if move_info.uci_move:
-                        html += ''' data-uci-move = ''' + move_info.uci_move
+                    html += ''' data-uci-move = ''' + move_info.uci_move + ''' data-color = ''' + move_info.color + '''
+                                data-turn = ''' + str(int(move_info.move.ply()/2) + int(move_info.move.turn() == chess.BLACK)) + '''
+                                class = 'move'> '''
                     if turn:
-                        html += ''' class = 'move' onClick = "click_update(this)"> ''' + move_str[len(str(turn)):] + ''' </span>'''
+                        html += move_str[len(str(turn)):] + ''' </span>'''
                     else:
-                        html += ''' class = 'move' onClick = "click_update(this)"> ''' + move_str + ''' </span>'''
+                        html += move_str + ''' </span>'''
                     if move_str[len(move_str) - 1::] == '\n':
                         pos += 1
                         break
@@ -344,111 +343,86 @@ class PGNScraper():
                         html += '''<span> &nbsp; </span>'''
                 pos += 1
             html += '''</span>'''
-        html += '''</div></div></section>
-        <script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha384-ZvpUoO/+PpLXR1lu4jmpXWu80pZlYUAfxl5NsBMWOEPSjUn/6Z/hRTt8+pR6L4N2"
-            crossorigin="anonymous"></script>
-        <script type="text/javascript" src="{{ url_for('static', filename='chessboard-1.0.0.js') }}"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.min.js"
-            integrity="sha512-5nNBISa4noe7B2/Me0iHkkt7mUvXG9xYoeXuSrr8OmCQIxd5+Qwxhjy4npBLIuxGNQKwew/9fEup/f2SUVkkXg=="
-            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.js"
-            integrity="sha512-40VRp1+fauX7g61ZdQpOiOJTkBbYwVlTLjCXHK9Svf0Mmz9K8Smg5k6LVrc0eEc9+pApf1HNL6Cim/wFqZeRkw=="
-            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-        <script type="text/javascript" src="{{ url_for('static', filename='view.js')}}"></script>
-        '''
+
+        html += '''         </div>
+                        </div>
+                    </div>
+                </div>
+            {% endblock %}
+            '''
         return html
 
     def write_practice_html(self, name):
         moves = self.parsed_dict[name]
         html = '''
-    <!doctype html>
-    <title>
-        {% block title %}{% endblock %}MoveMentor
-    </title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css"
-      integrity="sha384-q94+BZtLrkL1/ohfjR8c6L+A6qzNH9R2hBLwyoAfu3i/WCvQjzL2RQJ3uNHDISdU" crossorigin="anonymous">
-      
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.js"
-            integrity="sha512-40VRp1+fauX7g61ZdQpOiOJTkBbYwVlTLjCXHK9Svf0Mmz9K8Smg5k6LVrc0eEc9+pApf1HNL6Cim/wFqZeRkw=="
-            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-        <script type="module">
-</script>
-    <nav>
-        <h1>MoveMentor</h1>
-        <ul>
-            {% if g.user %}
-                <li>
-                    <span>{{ g.user['username'] }}</span>
-                <li>
-                <a href="{{ url_for('auth.logout') }}">Log Out</a>
-            {% else %}
-                <li>
-                    <a href="{{ url_for('auth.register') }}">Register</a>
-                <li>
-                <a href="{{ url_for('auth.login') }}">Log In</a>
-            {% endif %}
-        </ul>
-    </nav>
-    <section class="content">
-    '''
-        html_flashed = '''{% for message in get_flashed_messages() %}<div class="flash">{{ message }}</div>{% endfor %}'''
-        html += '''<header><h1>''' + name + '''</h1></header>''' + html_flashed + '''
-        <div class='body'>
-            <div id="myBoard" class='board'></div>
-            <button id="restartBtn">Restart</button>
-            <button id="backBtn">Go Back</button>
-            <button id="difLineBtn">Different Line</button>
-            <button id="switchBtn">Switch Colors</button>
-            <div class='moves-container'>'''
+            {% extends 'openings/practice.html' %}
+
+            {% block header %}
+                <h1>Practice the ''' + name + ''' Opening</h1>
+            {% endblock %}
+
+            {% block content %}
+                <div class='container'>
+                    <div class='row'>
+                        <div class='col-1 justify-content-center'>
+                            <div class='row'>
+                                <button id="restartBtn">Restart</button>
+                            </div>
+                            <div class='row'>
+                                <button id="difLineBtn">Different Line</button>
+                            </div>
+                            <div class='row'>
+                                <button id="switchBtn">Switch Colors</button>
+                            </div>
+                            <div class='row'>
+                                <button id="hintBtn">Hide Hints</button>
+                            </div>
+                            <div class='row'>
+                                <span id="hints">No hints currently</span>
+                            </div>
+                        </div>
+                        <div class='col'>
+                            <div class='row justify-content-center'>
+                                <div id="myBoard" class='board'></div>
+                            </div>
+                            <div class='row moves-container-practice'>'''
         pos = 0
         while pos < len(moves):
-            html += '''<span class = 'moves-line'>'''
             for move_info in moves[pos:]:
                 move_str = move_info.uci_to_move()
-                if move_str[0] == ' ':
-                    text = ''
-                    for ch in move_info.move:
-                        if ch == ' ':
-                            text += '&nbsp;'
-                        elif ch == '|':
-                            text += '|'
-                    html += '''<span hidden> ''' + text + ''' </span>'''
-                else:
-                    turn = move_info.move_turn(True)
-                    if turn:
-                        html += '''<span hidden>''' + turn[0:len(turn) - 1] + '''&nbsp;</span>'''
-                    html += '''<span hidden id = ''' + str(pos) + ''' data-own = ''' + move_info.fen_dict['own']
+                if move_str[0] != ' ':
+                    html += '''<span id = ''' + str(pos) + ''' data-own = ''' + move_info.fen_dict['own']
                     if move_info.fen_dict['parent']:
                         html += ''' data-parent = ''' + move_info.fen_dict['parent']
                     if move_info.fen_dict['child_1']: 
                         html += ''' data-child-1 = ''' + move_info.fen_dict['child_1']
                     if move_info.fen_dict['child_2']:
                         html += ''' data-child-2 = ''' + move_info.fen_dict['child_2']
-                    if move_info.move.is_mainline():
-                        html += ''' data-mainline = True'''
-                    if move_info.uci_move:
-                        html += ''' data-uci-move = ''' + move_info.uci_move
-                    if turn:
-                        html += ''' class = 'move' onClick = "click_update(this)"> ''' + move_str[len(str(turn)):] + ''' </span>'''
-                    else:
-                        html += ''' class = 'move' onClick = "click_update(this)"> ''' + move_str + ''' </span>'''
+                    html += ''' data-uci-move = ''' + move_info.uci_move + ''' data-color = ''' + move_info.color + '''
+                                 data-turn = ''' + str(int(move_info.move.ply()/2) + int(move_info.move.turn() == chess.BLACK)) + '''></span>'''
                     if move_str[len(move_str) - 1::] == '\n':
                         pos += 1
-                        break
-                    else:
-                        html += '''<span> &nbsp; </span>'''
                 pos += 1
-            html += '''</span>'''
-        html += '''</div></div></section>
-        <script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha384-ZvpUoO/+PpLXR1lu4jmpXWu80pZlYUAfxl5NsBMWOEPSjUn/6Z/hRTt8+pR6L4N2"
-            crossorigin="anonymous"></script>
-        <script type="text/javascript" src="{{ url_for('static', filename='chessboard-1.0.0.js') }}"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.min.js"
-            integrity="sha512-5nNBISa4noe7B2/Me0iHkkt7mUvXG9xYoeXuSrr8OmCQIxd5+Qwxhjy4npBLIuxGNQKwew/9fEup/f2SUVkkXg=="
-            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-        <script type="module" src="{{ url_for('static', filename='practice.js')}}"></script>
-        '''
+            html += '''     </div>
+                        </div>
+                        <div class='col-2 justify-content-center'>'''
+            html += ''' <div class='row'>
+                            <h2 id='status'></h2>
+                        </div>
+                        '''
+            for i in range(1, 31):
+                html += '''
+                        <div class='row'>
+                            <div hidden id='n''' + str(i) + '''' class='col-2 move-list-num'>''' + str(i) + '''.</div>
+                            <div id='w''' + str(i) + '''' class='col move-list'></div>
+                            <div id='b''' + str(i) + '''' class='col move-list'></div>
+                        </div>
+                        '''
+        html += '''     </div>
+                    </div>
+                </div>
+            {% endblock %}
+            '''
         return html
 
     def print_moves(self, name):
