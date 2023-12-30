@@ -5,7 +5,7 @@ from werkzeug.exceptions import abort
 
 from movementor.auth import login_required
 
-from .scrape_and_parse import p
+from .scrape import p
 
 bp = Blueprint('openings', __name__)
 
@@ -19,7 +19,7 @@ def view(name):
     if request.method == 'POST':
         return redirect(url_for('openings.index'))
     
-    return render_template_string(p.write_view_html(name))
+    return render_template_string(p.writer.write_view_html(name))
 
 @bp.route('/<string:name>/practice', methods=('GET', 'POST'))
 @login_required
@@ -27,7 +27,7 @@ def practice(name):
     if request.method == 'POST':
         return redirect(url_for('openings.index'))
 
-    return render_template_string(p.write_practice_html(name))
+    return render_template_string(p.writer.write_practice_html(name))
 
 @bp.route('/<string:name>/static/img/chesspieces/wikipedia/<string:image>', methods=('GET', 'POST'))
 @login_required

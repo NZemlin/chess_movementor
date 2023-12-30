@@ -1,17 +1,4 @@
-Implement chess.com API
-Make arrow keys/spacebar only move screen when needed while viewing an opening
+Display stockfish evaluation
+Display captured pieces
+Improve autoscroll
 Improve visuals
-Clean up code
-Implement practice UI
-   - Display stockfish evaluation
-
-Link Problems:
-    In list of variations for one move, if there is immediately another variation(s) off of that, needs a child node and 2 variation nodes, ie:
-    4... Nxe4 5. d5
-       |
-       |
-       4... d6 5. d5
-       |          5. Bd3 g6
-       4... d5 5. Bb5
-
-    4... d6 needs to link to 5. d5, 4... d5, and 5. Bd3
