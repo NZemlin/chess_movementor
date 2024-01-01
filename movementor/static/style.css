@@ -10,7 +10,7 @@ nav h1 { flex: auto; margin: 0; }
 nav h1 a { text-decoration: none; padding: 0.25rem 0.5rem; }
 nav ul  { display: flex; list-style: none; margin: 0; padding: 0; }
 nav ul li a, nav ul li span, header .action { display: block; padding: 0.5rem; }
-.content { padding: 0 1rem 1rem; }
+.content { padding: 0 1rem 1rem; margin: 0px;}
 .content > header { border-bottom: 1px solid lightgray; display: flex; align-items: flex-end; }
 .content > header h1 { flex: auto; margin: 1rem 0 0.25rem 0; }
 .flash { margin: 1em 0; padding: 1em; background: #cae6f6; border: 1px solid #377ba8; }
@@ -24,10 +24,6 @@ input[type=submit] { align-self: start; min-width: 10em; }
 
 .body {
     display: flex;
-}
-
-.board {
-    width: 700px;
 }
 
 .moves-container-view {
@@ -58,4 +54,38 @@ span.move.selected {
     /* border-bottom-style: solid;
     border-color: rgb(221, 221, 40); */
     /* border-width: 0 0 2px 0; */
+}
+
+.captured {
+    /* padding: 10; */
+    width: 25px;
+}
+
+.material-dif {
+    font-size: 20px;
+}
+
+.board {
+    width: 700px;
+}
+
+.board-width, .board-container {
+    width: 700px;
+}
+
+.captured-opp, .captured-own, .empty-row {
+    height: 30px;
+}
+
+.button-spacer {
+    height: 15px;
+}
+
+.move-list-container {
+    overflow-x: hidden;
+    overflow-y: scroll;
+}
+
+.container {
+    margin: 50px;
 }

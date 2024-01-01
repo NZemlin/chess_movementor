@@ -1,4 +1,5 @@
 Display stockfish evaluation
-Display captured pieces
 Improve autoscroll
 Improve visuals
+    - Make scrollbars invisible unless needed
+Add keep playing option when line is finished with smart computer moves

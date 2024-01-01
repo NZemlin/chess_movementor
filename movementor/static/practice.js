@@ -1,5 +1,5 @@
 import {play_game_start} from './sounds.js'
-import {reset_helper_vars, mod_choices, new_board, config, board, game, updateStatus} from './chess_helper.js'
+import {reset_helper_vars, mod_choices, new_board, config, board, game, swapCapturedPieceImgs, updateStatus} from './chess_helper.js'
 import {reset_move_vars, dec_move_num, makeComputerMove, last_fen, other_choices} from './move.js'
 
 $('#restartBtn').on('click', function() {
@@ -44,6 +44,7 @@ $('#difLineBtn').on('click', function () {
 $('#switchBtn').on('click', function () {
     config.orientation = config.orientation == 'white' ? 'black' : 'white'
     config.position = game.fen()
+    swapCapturedPieceImgs()
     new_board()
     if (game.turn() == 'w' && config.orientation == 'black' || 
         game.turn() == 'b' && config.orientation == 'white') {

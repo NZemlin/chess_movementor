@@ -1,20 +1,15 @@
-import {config, board, game, updateStatus} from './chess_helper.js'
+import {config, board, game, mod_finished, updateStatus, swapCapturedPieceImgs, new_board} from './chess_helper.js'
 
 $('#switchBtn').on('click', function () {
     config.orientation = config.orientation == 'white' ? 'black' : 'white'
     config.position = game.fen()
-    board = Chessboard('myBoard', config)
+    swapCapturedPieceImgs()
+    new_board()
 })
 
 function elementInViewport(element) {
 
     var bounding = element.getBoundingClientRect();
-    // console.log('Bounding.top = ' + bounding.top)
-    // console.log('Bounding.bottom = ' + bounding.bottom)
-    // console.log('Bounding.left = ' + bounding.left)
-    // console.log('Bounding.right = ' + bounding.right)
-    // console.log('window.innerWidth = ' + window.innerWidth)
-    // console.log('window.innerHeight = ' + window.innerHeight)
 
     return (bounding.top >= 0 &&
         bounding.left >= 0 &&
@@ -34,6 +29,7 @@ function click_update(element) {
     }
     element.classList.add('selected');
     var own = element.getAttribute('data-own').replace(/_/g, ' ');
+    mod_finished(element.getAttribute('data-own') == element.getAttribute('data-child-1'))
     game.load(own)
     board.position(game.fen());
     if (!elementInViewport(element)) {

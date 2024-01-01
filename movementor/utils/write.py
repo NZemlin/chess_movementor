@@ -23,18 +23,24 @@ class PGNWriter():
                 <div class='container'>
                     <div class='row'>
                         <div class='col'>
-                            <div class='row'>
-                                <div id="myBoard" class='board'></div>
-                            </div>
+                        <div class='empty-row'></div>
                             <div class='row'>
                                 <button id="switchBtn">Switch Colors</button>
                             </div>
+                        </div>
+                        <div class='col-6 board-container'>
+                            <div class='row captured-opp board-width'></div>
                             <div class='row'>
+                                <div id="myBoard" class='board'></div>
+                            </div>
+                            <div class='row captured-own board-width'></div>
+                        </div>
+                        <div class='col-5'>
+                            <div class='empty-row'></div>
+                            <div class='row board-width'>
                                 <h2 id='status'></h2>
                             </div>
-                        </div>
-                        <div class='col moves-container-view'>
-                            <div class='row'>
+                            <div class='row moves-container-view'>
                                 <span class = 'moves-line'>'''
         for i, move_info in enumerate(moves):
             if move_info.space:
@@ -69,37 +75,46 @@ class PGNWriter():
                 <div class='container'>
                     <div class='row'>
                         <div class='col-1 justify-content-center'>
+                            <div class='row empty-row'></div>
                             <div class='row'>
                                 <button id="restartBtn">Restart</button>
                             </div>
+                            <div class='row button-spacer'></div>
                             <div class='row'>
                                 <button id="difLineBtn">Different Line</button>
                             </div>
+                            <div class='row button-spacer'></div>
                             <div class='row'>
                                 <button id="switchBtn">Switch Colors</button>
                             </div>
+                            <div class='row button-spacer'></div>
                             <div class='row'>
                                 <button id="hintBtn">Hide Hints</button>
                             </div>
+                            <div class='row button-spacer'></div>
                             <div class='row'>
                                 <span id="hints">No hints currently</span>
                             </div>
                         </div>
-                        <div class='col'>
-                            <div class='row justify-content-center'>
+                        <div class='col-9 board-container justify-content-center'>
+                            <div class='row captured-opp board-width'></div>
+                            <div class='row'>
                                 <div id="myBoard" class='board'></div>
                             </div>
+                            <div class='row captured-own board-width'></div>
                             <div class='row moves-container-practice'>'''
         for i, move_info in enumerate(moves):
             html += self.move_element(move_info, i, 'practice')
         html += '''     </div>
                     </div>
                     <div class='col-2 justify-content-center'>
-                    <div class='row'>
-                        <h2 id='status'></h2>
-                    </div>
+                        <div class='empty-row'></div>
+                        <div class='row'>
+                            <h2 id='status'></h2>
+                        </div>
+                        <div class='move-list-container'>
                     '''
-        for i in range(1, 31):
+        for i in range(1, 101):
             html += '''
                         <div class='row'>
                             <div hidden id='n''' + str(i) + '''' class='col-2 move-list-num'>''' + str(i) + '''.</div>
@@ -108,6 +123,7 @@ class PGNWriter():
                         </div>
                         '''
         html += '''     </div>
+                        </div>
                     </div>
                 </div>
             {% endblock %}

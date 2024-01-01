@@ -17,29 +17,31 @@ export function dec_move_num() {
 }
 
 export function makeComputerMove() {
-    console.log('Making a computer move')
-    if (game.game_over()) {
-        return
+    if (!finished) {
+        console.log('Making a computer move')
+        if (game.game_over()) {
+            return
+        }
+        console.log('Computer moves: ' + possibleMoves)
+        var randomIdx = Math.floor(Math.random() * possibleMoves.length)
+        var move = possibleMoves[randomIdx]
+        other_choices = possibleMoves
+        other_choices.splice(randomIdx, 1)
+        console.log('Other choices were: ' + other_choices)
+        last_fen = game.fen()
+        var color = game.turn()
+        game.move(move)
+        board.position(game.fen())
+        var element = document.getElementById('n' + move_number)
+        element.hidden = false
+        element = document.getElementById(color + move_number)
+        element.innerHTML = move
+        if (game.turn() == 'w') {
+            move_number++
+        }
+        updateStatus(move)
+        console.log('Your moves: ' + possibleMoves)
     }
-    console.log('Computer moves: ' + possibleMoves)
-    var randomIdx = Math.floor(Math.random() * possibleMoves.length)
-    var move = possibleMoves[randomIdx]
-    other_choices = possibleMoves
-    other_choices.splice(randomIdx, 1)
-    console.log('Other choices were: ' + other_choices)
-    last_fen = game.fen()
-    var color = game.turn()
-    game.move(move)
-    board.position(game.fen())
-    var element = document.getElementById('n' + move_number)
-    element.hidden = false
-    element = document.getElementById(color + move_number)
-    element.innerHTML = move
-    if (game.turn() == 'w') {
-        move_number++
-    }
-    updateStatus(move)
-    console.log('Your moves: ' + possibleMoves)
 }
 
 function onDragStartPractice (source, piece, position, orientation) {
@@ -69,7 +71,6 @@ function onDragStartView (source, piece, position, orientation) {
 }
 
 function onDropPractice (source, target) {
-    console.log('onDropPractice')
     // see if the move is legal
     var before = game.fen()
     var move = game.move({
@@ -78,16 +79,15 @@ function onDropPractice (source, target) {
         promotion: 'q' // NOTE: always promote to a queen for example simplicity
     })
     var after = game.fen()
-    console.log('Before: ' + before)
-    console.log('Move: ' + move)
-    console.log('After: ' + after)
     // illegal move
     if (move === null || (!finished && !(possibleMoves.includes(move.san)))) {
-        console.log('Move not in prepared opening.  Allowed moves are: ')
-        console.log(possibleMoves)
-        var hint_element = document.getElementById('hints')
-        hint_element.innerHTML = 'Allowed moves are: ' + possibleMoves
-        play_illegal()
+        if (source != target) {
+            console.log('Move not in prepared opening.  Allowed moves are: ')
+            console.log(possibleMoves)
+            var hint_element = document.getElementById('hints')
+            hint_element.innerHTML = 'Allowed moves are: ' + possibleMoves
+            play_illegal()
+        }
         if (before != after) {
             game.undo()
         }
@@ -119,15 +119,18 @@ function onDropView (source, target) {
     var after = game.fen()
     // illegal move
     if (move === null || !(possibleMoves.includes(move.san))) {
-        console.log('Move not in prepared opening.  Allowed moves are: ')
-        console.log(possibleMoves)
-        play_illegal()
+        if (source != target) {
+            console.log('Move not in prepared opening.  Allowed moves are: ')
+            console.log(possibleMoves)
+            play_illegal()
+        }
         if (before != after) {
             game.undo()
         }
         return 'snapback'
     }
     else {
+        console.log('A legal move was played: ' + move.san)
         var old = document.getElementsByClassName('selected');
         if (old.length > 0) {
             for (let i = 0; i < old.length; i++) {
