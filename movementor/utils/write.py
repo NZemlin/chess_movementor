@@ -3,10 +3,16 @@ class PGNWriter():
         self.parsed_dict = parsed_dict
         
     def move_element(self, move, i, page):
-        return '''<span ''' + ('hidden' if page == 'practice' else '') +  ''' id = ''' + str(i) + ''' data-own = ''' + move.fen_dict['own'] + '''
-                   data-parent = ''' + move.fen_dict['parent'] + ''' data-child-1 = ''' + move.fen_dict['child_1'] + '''
-                   data-child-2 = ''' + move.fen_dict['child_2'] + ''' data-mainline = ''' + str(move.move.is_mainline()) + '''
-                   data-uci-move = ''' + move.move.san() + ''' data-color = ''' + ('white' if not move.move.turn() else 'black') + '''
+        return '''<span ''' + ('hidden' if page == 'practice' else '') + '''
+                   id = ''' + str(i) + '''
+                   data-own = ''' + move.fen_dict['own'] + '''
+                   data-parent = ''' + move.fen_dict['parent'] + '''
+                   data-child-1 = ''' + move.fen_dict['child_1'] + '''
+                   data-child-2 = ''' + move.fen_dict['child_2'] + '''
+                   data-mainline = ''' + str(move.move.is_mainline()).lower() + '''
+                   data-san = ''' + move.move.san() + '''
+                   data-uci = ''' + move.move.uci() + '''
+                   data-color = ''' + ('white' if not move.move.turn() else 'black') + '''
                    data-turn = ''' + move.turn_number() + ''' class = 'move'>''' + move.move.san() + ''' </span>'''
 
     def write_view_html(self, name):

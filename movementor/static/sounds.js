@@ -1,45 +1,45 @@
-let game_start = new Audio('./static/audio/game-start.mp3');
-let move_self = new Audio('./static/audio/move-self.mp3');
-let move_opponent = new Audio('./static/audio/move-opponent.mp3');
+let gameStart = new Audio('./static/audio/game-start.mp3');
+let moveSelf = new Audio('./static/audio/move-self.mp3');
+let moveOpponent = new Audio('./static/audio/move-opponent.mp3');
 let capture = new Audio('./static/audio/capture.mp3');
 let castle = new Audio('./static/audio/castle.mp3');
 let promote = new Audio('./static/audio/promote.mp3');
-let move_check = new Audio('./static/audio/move-check.mp3');
-let game_end = new Audio('./static/audio/game-end.mp3');
+let moveCheck = new Audio('./static/audio/move-check.mp3');
+let gameEnd = new Audio('./static/audio/game-end.mp3');
 let illegal = new Audio('./static/audio/illegal.mp3');
 
-export function play_game_start() {
-    game_start.play()
+export function playGameStart() {
+    gameStart.play()
 }
 
-export function play_move_self() {
-    move_self.play()
+export function playMoveSelf() {
+    moveSelf.play()
 }
 
-export function play_move_opponent() {
-    move_opponent.play()
+export function playMoveOpponent() {
+    moveOpponent.play()
 }
 
-export function play_capture() {
+export function playCapture() {
     capture.play()
 }
 
-export function play_castle() {
+export function playCastle() {
     castle.play()
 }
 
-export function play_promote() {
+export function playPromote() {
     promote.play()
 }
 
-export function play_move_check() {
-    move_check.play()
+export function playMoveCheck() {
+    moveCheck.play()
 }
 
-export function play_game_end() {
-    game_end.play()
+export function playGameEnd() {
+    gameEnd.play()
 }
 
-export function play_illegal() {
+export function playIllegal() {
     illegal.play()
 }
