@@ -1,6 +1,7 @@
 Display stockfish evaluation
+Sort lines in view based on stockfish evaluation
 Improve autoscroll
 Improve visuals
-    - Make scrollbars invisible unless needed
-    - Add arrows
+Add arrows and right click square highlights
+Add pre-moves in practice mode
 Add keep playing option when line is finished with smart computer moves

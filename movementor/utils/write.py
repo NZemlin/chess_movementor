@@ -21,7 +21,16 @@ class PGNWriter():
             {% extends 'openings/view.html' %}
 
             {% block header %}
-                <h1>Study the ''' + name + '''</h1>
+                <div class='container'>
+                    <div class='row'>
+                        <div class='col'>
+                            <h1>Study the ''' + name + '''</h1>
+                        </div>
+                        <div class='col'>
+                            <a href="/''' + name + '''/practice"><h1>Switch to Practice</h1></a>
+                        </div>
+                    </div>
+                </div>
             {% endblock %}
 
             {% block content %}
@@ -29,7 +38,7 @@ class PGNWriter():
                 <div class='container'>
                     <div class='row'>
                         <div class='col'>
-                        <div class='empty-row'></div>
+                            <div class='empty-row'></div>
                             <div class='row'>
                                 <button id="switchBtn">Switch Colors</button>
                             </div>
@@ -41,7 +50,7 @@ class PGNWriter():
                             </div>
                             <div class='row captured-own board-width'></div>
                         </div>
-                        <div class='col-5'>
+                        <div class='col-6'>
                             <div class='empty-row'></div>
                             <div class='row board-width'>
                                 <h2 id='status'></h2>
@@ -73,14 +82,23 @@ class PGNWriter():
             {% extends 'openings/practice.html' %}
 
             {% block header %}
-                <h1>Practice the ''' + name + '''</h1>
+                <div class='container'>
+                    <div class='row'>
+                        <div class='col'>
+                            <h1>Practice the ''' + name + '''</h1>
+                        </div>
+                        <div class='col'>
+                            <a href="/''' + name + '''/view"><h1>Switch to View</h1></a>
+                        </div>
+                    </div>
+                </div>
             {% endblock %}
 
             {% block content %}
                 <div hidden id='page' data-page='practice'></div>
                 <div class='container'>
                     <div class='row'>
-                        <div class='col-1 justify-content-center'>
+                        <div class='col'>
                             <div class='row empty-row'></div>
                             <div class='row'>
                                 <button id="restartBtn">Restart</button>
@@ -102,7 +120,7 @@ class PGNWriter():
                                 <span id="hints">No hints currently</span>
                             </div>
                         </div>
-                        <div class='col-9 board-container justify-content-center'>
+                        <div class='col-6 board-container'>
                             <div class='row captured-opp board-width'></div>
                             <div class='row'>
                                 <div id="myBoard" class='board'></div>
@@ -111,25 +129,32 @@ class PGNWriter():
                             <div class='row moves-container-practice'>'''
         for i, move_info in enumerate(moves):
             html += self.move_element(move_info, i, 'practice')
-        html += '''     </div>
-                    </div>
-                    <div class='col-2 justify-content-center'>
-                        <div class='empty-row'></div>
-                        <div class='row'>
-                            <h2 id='status'></h2>
+        html += '''         </div>
                         </div>
-                        <div class='move-list-container'>
-                    '''
+                        <div class='col-2'>
+                            <div class='empty-row'></div>
+                            <div class='row'>
+                                <h2 id='status'></h2>
+                            </div>
+                            <div class='move-list-container'>
+                        '''
         for i in range(1, 101):
             html += '''
-                        <div class='row'>
-                            <div hidden id='n''' + str(i) + '''' class='col-2 move-list-num'>''' + str(i) + '''.</div>
-                            <div id='w''' + str(i) + '''' class='col move-list'></div>
-                            <div id='b''' + str(i) + '''' class='col move-list'></div>
+                            <div class='row'>
+                                <div hidden id='n''' + str(i) + '''' class='col-2 move-list-num'>''' + str(i) + '''.</div>
+                                <div id='w''' + str(i) + '''' class='col-4 move-list'></div>
+                                <div id='b''' + str(i) + '''' class='col-4 move-list'></div>
+                            </div>
+                            '''
+        html += '''         </div>
                         </div>
-                        '''
-        html += '''     </div>
+                        <div class='col-1'>
+                            <div class='row empty-row'></div>
+                            <div class='row'>
+                                <button id='keepPlayingBtn'>Continue Playing</button>
+                            </div>
                         </div>
+                        <div class='col-3'></div>
                     </div>
                 </div>
             {% endblock %}

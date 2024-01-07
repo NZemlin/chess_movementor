@@ -17,6 +17,16 @@ function elementInViewport(element) {
         bounding.bottom <= (window.innerHeight*.75 || document.documentElement.clientHeight));
 };
 
+function nearestMainlineParent(element) {
+    var mainline = element[0].getAttribute('data-mainline') === 'true';
+    while (!mainline) {
+        fen = element[0].getAttribute('data-parent');
+        element = document.querySelectorAll("[data-own='" + fen + "']");
+        mainline = element[0].getAttribute('data-mainline') === 'true';
+    };
+    return element;
+};
+
 function clickUpdate(element) {
     var old = document.getElementsByClassName('selected');
     if (old.length > 0) {
@@ -39,16 +49,6 @@ function clickUpdate(element) {
     };
     var uci = element.getAttribute('data-uci');
     updateStatus(element.getAttribute('data-san'), uci.slice(0, 2), uci.slice(2, 4));
-};
-
-function nearestMainlineParent(element) {
-    var mainline = element[0].getAttribute('data-mainline') === 'true';
-    while (!mainline) {
-        fen = element[0].getAttribute('data-parent');
-        element = document.querySelectorAll("[data-own='" + fen + "']");
-        mainline = element[0].getAttribute('data-mainline') === 'true';
-    };
-    return element;
 };
 
 function checkKey(e) {

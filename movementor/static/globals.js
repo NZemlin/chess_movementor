@@ -3,6 +3,7 @@ import { onDragStart, onDrop, onSnapEnd } from './move.js';
 import { updateStatus } from './update.js';
 
 export var finished = false;
+export var keepPlaying = false;
 export var possibleMoves = [];
 export var config = {
     draggable: true,
@@ -16,13 +17,10 @@ export var config = {
 export var board = Chessboard('myBoard', config);
 export var game = new Chess();
 
-export function resetGlobalVars(onlyFinished=false) {
-    finished = false;
-    if (!onlyFinished) {
-        config.position = 'start';
-        board = Chessboard('myBoard', config);
-        game = new Chess();
-    };
+export function resetBoard() {
+    config.position = 'start';
+    board = Chessboard('myBoard', config);
+    game = new Chess();
 };
 
 export function setPossibleMoves(moves) {
@@ -31,6 +29,10 @@ export function setPossibleMoves(moves) {
 
 export function setFinished(done) {
     finished = done;
+};
+
+export function setKeepPlaying(cont) {
+    keepPlaying = cont;
 };
 
 export function setBoard() {

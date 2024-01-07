@@ -1,4 +1,4 @@
-import { finished, config, game, setPossibleMoves, setFinished, updateFen } from './globals.js';
+import { finished, keepPlaying, config, game, setPossibleMoves, setFinished, updateFen, possibleMoves } from './globals.js';
 import { page } from './move.js';
 import { highlightLastMove } from './highlight.js';
 import { updateCapturedPieces } from './captured_pieces.js';
@@ -7,6 +7,10 @@ import * as sounds from './sounds.js';
 function updateAllowedMoves() {
     console.log('Updating allowed moves');
     var curMoves = [];
+    if (keepPlaying) {
+        setPossibleMoves(game.moves());
+        return;
+    };
     if (!finished) {
         if (game.fen() == 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1') {
             curMoves = [document.getElementById('0').getAttribute('data-san')];
@@ -14,11 +18,7 @@ function updateAllowedMoves() {
             return;
         }
         else {
-            var cur = document.querySelectorAll("[data-own='" + updateFen(game.fen()).replace(/ /g, '_') + "']");
-            if (cur.length == 0) {
-                var cur = document.querySelectorAll("[data-own='" + updateFen(game.fen()).replace(/ /g, '_') + "']");
-            };
-            cur = cur[0];
+            var cur = document.querySelectorAll("[data-own='" + updateFen(game.fen()).replace(/ /g, '_') + "']")[0];
         };
         var fen = cur.getAttribute('data-child-1');
         var color = '';
@@ -52,6 +52,9 @@ function updateAllowedMoves() {
             console.log('This line is finished');
             document.getElementById('status').innerHTML = 'This line is finished';
             setFinished(true);
+            if (page == 'practice') {
+                $('#keepPlayingBtn')[0].style.display = 'block';
+            };
         };
     };
     setPossibleMoves(curMoves);
@@ -103,6 +106,10 @@ export function updateStatus(move='', source='', target='') {
         }
         else {
             document.getElementById('status').innerHTML = 'This line is finished';
+            setFinished(true);
+            if (page == 'practice') {
+                $('#keepPlayingBtn')[0].style.display = 'block';
+            };
         };
     };
     updateCapturedPieces();

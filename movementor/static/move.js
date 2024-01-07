@@ -21,6 +21,7 @@ export function makeComputerMove() {
     if (!finished) {
         console.log('Making a computer move');
         if (game.game_over()) {
+            console.log('Game is over');
             return;
         };
         console.log('Computer moves: ' + possibleMoves);
@@ -37,6 +38,11 @@ export function makeComputerMove() {
         element.hidden = false;
         element = document.getElementById(color + moveNum);
         element.innerHTML = move;
+        if (color == 'w') {
+            element.scrollIntoView({
+                behavior: 'smooth'
+            });
+        };
         if (game.turn() == 'w') {
             moveNum++;
         };
@@ -49,9 +55,10 @@ function onDragStartPractice (source, piece, position, orientation) {
     if (game.game_over()) {
         return false;
     };
-    // only pick up pieces for own side
+    // only pick up pieces for own side and if game is still going
     if ((config.orientation === 'white' && piece.search(/^b/) !== -1 && game.turn() === 'w') || 
-        (config.orientation === 'black' && piece.search(/^w/) !== -1 && game.turn() === 'b')) {
+        (config.orientation === 'black' && piece.search(/^w/) !== -1 && game.turn() === 'b') ||
+         finished) {
         return false;
     };
 };
@@ -78,8 +85,7 @@ function onDropPractice (source, target) {
     var after = game.fen();
     if (move === null || (!finished && !(possibleMoves.includes(move.san)))) {
         if (source != target) {
-            console.log('Move not in prepared opening.  Allowed moves are: ');
-            console.log(possibleMoves);
+            console.log('Move not in prepared opening.  Allowed moves are: ' + possibleMoves);
             var hintElement = document.getElementById('hints');
             hintElement.innerHTML = 'Allowed moves are: ' + possibleMoves;
             playIllegal();
@@ -96,6 +102,11 @@ function onDropPractice (source, target) {
         element.hidden = false;
         element = document.getElementById(color + moveNum);
         element.innerHTML = move.san;
+        if (color == 'w') {
+            element.scrollIntoView({
+                behavior: 'smooth'
+            });
+        };
         if (game.turn() == 'w') {
             moveNum++;
         };
@@ -114,8 +125,7 @@ function onDropView (source, target) {
     var after = game.fen();
     if (move === null || !(possibleMoves.includes(move.san))) {
         if (source != target) {
-            console.log('Move not in prepared opening.  Allowed moves are: ');
-            console.log(possibleMoves);
+            console.log('Move not in prepared opening.  Allowed moves are: ' + possibleMoves);
             playIllegal();
         };
         if (before != after) {

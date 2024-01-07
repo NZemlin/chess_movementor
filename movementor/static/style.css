@@ -30,9 +30,9 @@ input[type=submit] { align-self: start; min-width: 10em; }
     font-family: monospace;
     white-space: nowrap;
     position: relative;
-    overflow-x: scroll;
-    overflow-y: scroll;
-    max-height: 700px;
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: 636px;
     font-size: 14px;
 }
 
@@ -83,7 +83,9 @@ span.move.selected {
 
 .move-list-container {
     overflow-x: hidden;
-    overflow-y: scroll;
+    overflow-y: auto;
+    height: 636px;
+    font-size: 2rem;
 }
 
 .container {
@@ -104,4 +106,18 @@ span.move.selected {
 
 .black-3c85d {
     background-color: rgb(119,153,84);
+}
+
+.container {
+    padding: 0 1rem 1rem;
+    margin: 0px;
+    max-width: 100%;
+}
+
+.content-row {
+    max-width: 100%;
+}
+
+#keepPlayingBtn {
+    display: none;
 }
