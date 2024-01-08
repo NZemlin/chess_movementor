@@ -2,9 +2,10 @@ import { Chess } from 'https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/ch
 import { onDragStart, onDrop, onSnapEnd } from './move.js';
 import { updateStatus } from './update.js';
 
+export var lastFen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR_w_KQkq_-_0_1';
+export var possibleMoves = [];
 export var finished = false;
 export var keepPlaying = false;
-export var possibleMoves = [];
 export var config = {
     draggable: true,
     dropOffBoard: 'snapback',
@@ -21,6 +22,10 @@ export function resetBoard() {
     config.position = 'start';
     board = Chessboard('myBoard', config);
     game = new Chess();
+};
+
+export function setLastFen (fen) {
+    lastFen = fen;
 };
 
 export function setPossibleMoves(moves) {
@@ -66,6 +71,14 @@ export function updateFen(fen) {
     else {
         return fen;
     };
+};
+
+export function elementInViewport(element) {
+    var bounding = element.getBoundingClientRect();
+    return (bounding.top >= 0 &&
+        bounding.left >= 0 &&
+        bounding.right <= (window.innerWidth*.75 || document.documentElement.clientWidth) &&
+        bounding.bottom <= (window.innerHeight*.75 || document.documentElement.clientHeight));
 };
 
 updateStatus();

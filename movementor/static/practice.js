@@ -1,6 +1,6 @@
-import { config, board, game, resetBoard, setPossibleMoves, setFinished, setKeepPlaying, setBoard } from './globals.js';
+import { lastFen, config, board, game, resetBoard, setPossibleMoves, setFinished, setKeepPlaying, setBoard } from './globals.js';
 import { updateStatus } from './update.js';
-import { lastFen, otherChoices, resetMoveVars, decMoveNum, makeComputerMove } from './move.js';
+import { otherChoices, resetMoveVars, decMoveNum, makeComputerMove } from './move.js';
 import { swapCapturedPieces } from './captured_pieces.js';
 import { playGameStart } from './sounds.js';
 
@@ -39,7 +39,7 @@ $('#difLineBtn').on('click', function () {
             decMoveNum();
         };
         game.undo();
-        board.position(lastFen);
+        board.position(lastFen, false);
         setFinished(false);
         setKeepPlaying(false);
         $('#keepPlayingBtn')[0].style.display = 'none';

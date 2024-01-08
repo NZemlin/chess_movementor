@@ -1,14 +1,13 @@
-import { finished, possibleMoves, config, board, game, updateFen } from './globals.js';
+import { finished, possibleMoves, config, board, game, setLastFen, updateFen } from './globals.js';
 import { updateStatus } from './update.js';
 import { playIllegal } from './sounds.js';
 
 export var page = document.getElementById('page').getAttribute('data-page');
-export var lastFen = '';
 export var moveNum = 1;
 export var otherChoices = [];
 
 export function resetMoveVars() {
-    lastFen = '';
+    setLastFen('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR_w_KQkq_-_0_1');
     otherChoices = [];
     moveNum = 1;
 };
@@ -30,17 +29,18 @@ export function makeComputerMove() {
         otherChoices = possibleMoves;
         otherChoices.splice(randomIdx, 1);
         console.log('Other choices were: ' + otherChoices);
-        lastFen = game.fen();
+        setLastFen(updateFen(game.fen()).replace(/ /g, '_'));
         var color = game.turn();
         var data = game.move(move);
-        board.position(game.fen());
+        board.position(game.fen(), false);
         var element = document.getElementById('n' + moveNum);
         element.hidden = false;
         element = document.getElementById(color + moveNum);
         element.innerHTML = move;
         if (color == 'w') {
             element.scrollIntoView({
-                behavior: 'smooth'
+                behavior: 'smooth',
+                block: 'nearest',
             });
         };
         if (game.turn() == 'w') {
@@ -61,6 +61,7 @@ function onDragStartPractice (source, piece, position, orientation) {
          finished) {
         return false;
     };
+    setLastFen(updateFen(game.fen()).replace(/ /g, '_'));
 };
 
 function onDragStartView (source, piece, position, orientation) {
@@ -72,7 +73,7 @@ function onDragStartView (source, piece, position, orientation) {
         (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
         return false;
     };
-    lastFen = updateFen(game.fen()).replace(/ /g, '_');
+    setLastFen(updateFen(game.fen()).replace(/ /g, '_'));
 }
 
 function onDropPractice (source, target) {
@@ -104,7 +105,8 @@ function onDropPractice (source, target) {
         element.innerHTML = move.san;
         if (color == 'w') {
             element.scrollIntoView({
-                behavior: 'smooth'
+                behavior: 'smooth',
+                block: 'nearest',
             });
         };
         if (game.turn() == 'w') {
@@ -135,22 +137,6 @@ function onDropView (source, target) {
     }
     else {
         console.log('A legal move was played: ' + move.san);
-        var old = document.getElementsByClassName('selected');
-        if (old.length > 0) {
-            for (let i = 0; i < old.length; i++) {
-                old[i].classList.remove('selected');
-            };
-        };
-        var element = document.querySelectorAll("[data-parent='" + lastFen + "']");
-        if (element.length == 0) {
-            element = [document.getElementById('0')];
-        };
-        for (let i = 0; i < element.length; i++) {
-            if (move.san == element[i].getAttribute('data-san')) {
-                element[i].classList.add('selected');
-                break;
-            };
-        };
         updateStatus(move.san, source, target);
     };
 };
@@ -165,5 +151,5 @@ export function onDrop(source, target) {
 
 export function onSnapEnd () {
     // Fixes board position after castling, en passant, pawn promotion
-    board.position(game.fen());
+    board.position(game.fen(), false);
 };

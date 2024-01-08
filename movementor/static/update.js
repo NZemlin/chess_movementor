@@ -1,8 +1,30 @@
-import { finished, keepPlaying, config, game, setPossibleMoves, setFinished, updateFen, possibleMoves } from './globals.js';
+import { lastFen, finished, keepPlaying, config, game, setPossibleMoves, setFinished, updateFen, elementInViewport } from './globals.js';
 import { page } from './move.js';
 import { highlightLastMove } from './highlight.js';
 import { updateCapturedPieces } from './captured_pieces.js';
 import * as sounds from './sounds.js';
+
+function updateSelectedMoveElement() {
+    if (game.fen().replace(/ /g, '_') != lastFen) {
+        console.log('Updating selected move element');
+        var old = document.getElementsByClassName('selected');
+        if (old.length != 0) {
+            old[0].classList.remove('selected');
+        };
+        var element = document.querySelectorAll("[data-own='" + updateFen(game.fen()).replace(/ /g, '_') + "']");
+        if (element.length != 0) {
+            element[0].classList.add('selected');
+        };
+        if (page == 'view') {
+            if (!elementInViewport(element[0])) {
+                element[0].scrollIntoView({ 
+                    behavior: 'smooth',
+                    block: 'nearest',
+                });
+            };
+        };
+    };
+};
 
 function updateAllowedMoves() {
     console.log('Updating allowed moves');
@@ -60,6 +82,17 @@ function updateAllowedMoves() {
     setPossibleMoves(curMoves);
 };
 
+function displayEvaluation(dataEval = '0.17') {
+    let evalFloat = parseFloat(dataEval)
+    let blackBar = document.querySelector(".blackBar");
+    let blackBarHeight = 50 - (evalFloat/15)*100;
+    blackBarHeight = blackBarHeight>100 ? (blackBarHeight=100) : blackBarHeight;
+    blackBarHeight = blackBarHeight<0 ? (blackBarHeight=0) : blackBarHeight;
+    blackBar.style.height = blackBarHeight + "%";
+    let evalNum = document.querySelector(".evalNum");
+    evalNum.innerHTML = dataEval;
+}
+
 export function updateStatus(move='', source='', target='') {
     console.log('Updating status');
     if (page == 'practice' && !finished) {
@@ -69,17 +102,17 @@ export function updateStatus(move='', source='', target='') {
 
     var status = '';
 
-    var moveColor = game.turn() === 'w' ? 'White' : 'Black';
+    var nextMoveColor = game.turn() === 'w' ? 'White' : 'Black';
     if (game.in_checkmate()) {
         sounds.playGameEnd();
-        status = 'Game over, ' + moveColor + ' is in checkmate.';
+        status = 'Game over, ' + nextMoveColor + ' is in checkmate.';
     }
     else if (game.in_draw()) {
         status = 'Game over, drawn position';
     }
     else if (game.in_check()) {
         sounds.playMoveCheck();
-        status += ', ' + moveColor + ' is in check';
+        status += ', ' + nextMoveColor + ' is in check';
     }
     else {
         if (move) {
@@ -99,8 +132,11 @@ export function updateStatus(move='', source='', target='') {
                 sounds.playMoveOpponent();
             }
             highlightLastMove(source, target);
+            // getEvaluation(game.fen(), function(evaluations) {
+            //     displayEvaluation(evaluations);
+            // });
         };
-        status = moveColor + ' to move';
+        status = nextMoveColor + ' to move';
         if (!finished) {
             document.getElementById('status').innerHTML = status;
         }
@@ -112,7 +148,11 @@ export function updateStatus(move='', source='', target='') {
             };
         };
     };
+    updateSelectedMoveElement();
     updateCapturedPieces();
     updateAllowedMoves();
+    var element = document.getElementsByClassName('selected');
+    var dataEval = element.length != 0 ? element[0].getAttribute('data-eval') : '0.17'
+    displayEvaluation(dataEval);
     console.log('----------------------------------------------------');
 };

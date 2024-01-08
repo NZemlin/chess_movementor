@@ -1,4 +1,4 @@
-import { config, board, game, setFinished, setBoard } from './globals.js';
+import { config, board, game, setLastFen, setFinished, setBoard, updateFen, elementInViewport } from './globals.js';
 import { updateStatus } from './update.js';
 import { swapCapturedPieces } from './captured_pieces.js';
 
@@ -8,14 +8,6 @@ $('#switchBtn').on('click', function () {
     swapCapturedPieces();
     setBoard();
 });
-
-function elementInViewport(element) {
-    var bounding = element.getBoundingClientRect();
-    return (bounding.top >= 0 &&
-        bounding.left >= 0 &&
-        bounding.right <= (window.innerWidth*.75 || document.documentElement.clientWidth) &&
-        bounding.bottom <= (window.innerHeight*.75 || document.documentElement.clientHeight));
-};
 
 function nearestMainlineParent(element) {
     var mainline = element[0].getAttribute('data-mainline') === 'true';
@@ -28,25 +20,13 @@ function nearestMainlineParent(element) {
 };
 
 function clickUpdate(element) {
-    var old = document.getElementsByClassName('selected');
-    if (old.length > 0) {
-        if (old[0] == element) {
-            return;
-        };
-        for (let i = 0; i < old.length; i++) {
-            old[i].classList.remove('selected');
-        };
+    if (element == document.getElementsByClassName('selected')[0]) {
+        return;
     };
-    element.classList.add('selected');
-    var own = element.getAttribute('data-own').replace(/_/g, ' ');
+    setLastFen(element.getAttribute('data-parent'));
     setFinished(element.getAttribute('data-own') == element.getAttribute('data-child-1'));
-    game.load(own);
-    board.position(game.fen());
-    if (!elementInViewport(element)) {
-        element.scrollIntoView({ 
-            behavior: 'smooth'
-        });
-    };
+    game.load(element.getAttribute('data-own').replace(/_/g, ' '));
+    board.position(game.fen(), false);
     var uci = element.getAttribute('data-uci');
     updateStatus(element.getAttribute('data-san'), uci.slice(0, 2), uci.slice(2, 4));
 };
@@ -114,6 +94,6 @@ window.addEventListener("keydown", dontScroll, false);
 var moves = document.getElementsByClassName('move');
 for (let i = 0; i < moves.length; i++) {
     moves[i].addEventListener('click', function() {
-        clickUpdate(moves[i])
+        clickUpdate(moves[i]);
     });
 };

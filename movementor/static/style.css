@@ -49,7 +49,7 @@ span.move:hover {
 }
 
 span.move.selected {
-    background-color: yellow;
+    background-color: rgb(187,204,68);
     border-radius: 2px;
     /* border-bottom-style: solid;
     border-color: rgb(221, 221, 40); */
@@ -65,12 +65,12 @@ span.move.selected {
     font-size: 20px;
 }
 
-.board {
+.board, .board-width, .board-container {
     width: 700px;
 }
 
-.board-width, .board-container {
-    width: 700px;
+.board-container {
+    padding-left: 0px;
 }
 
 .captured-opp, .captured-own, .empty-row {
@@ -120,4 +120,64 @@ span.move.selected {
 
 #keepPlayingBtn {
     display: none;
+}
+
+.eval-col {
+    -ms-flex: 0 0 20px;
+    flex: 0 0 20px;
+    padding: 0 5px;
+}
+
+#evalBar {
+    width: 20px;
+    height: 674.17px;
+    background-color: rgb(255,255,255);
+    float: left;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    border-radius: 3px;
+}
+  
+#evalBar::after{
+    content: "";
+    display: block;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    box-shadow: 0 0 5px rgba(0,0,0,0.7) inset;
+    border-radius: 3px;
+}
+
+#evalBar .blackBar {
+    width: 100%;
+    height: 35%;
+    background-color: #403d39;
+    transition: height 1s;
+    position: absolute;
+    top: 0;
+    border-radius: 3px;
+}
+
+.zero {
+    width: 100%;
+    opacity: 1;
+    position: absolute;
+    top: 0;
+    height: 50%;
+}
+
+.evalNum {
+    width: 100%;
+    opacity: 1;
+    position: absolute;
+    top: 98%;
+    height: 2%;
+    font-size: .6rem;
+    font-weight: bolder;
+    text-align: center;
+    color:#403d39;
 }

@@ -1,7 +1,12 @@
-Display stockfish evaluation
+*Add engine play and selectable strength for continued play
+*Display stockfish evaluation for continued play
 Sort lines in view based on stockfish evaluation
-Improve autoscroll
-Improve visuals
+Switch evaluation score when in opponent's favor
+Pop up larger evaluation score on hover
+Don't display bad moves when swapping colors
+Add swap color functionality to evaluation bar
 Add arrows and right click square highlights
 Add pre-moves in practice mode
-Add keep playing option when line is finished with smart computer moves
+Improve autoscroll in view page
+Improve visuals
+    - Add color theme selector

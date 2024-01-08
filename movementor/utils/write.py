@@ -13,7 +13,9 @@ class PGNWriter():
                    data-san = ''' + move.move.san() + '''
                    data-uci = ''' + move.move.uci() + '''
                    data-color = ''' + ('white' if not move.move.turn() else 'black') + '''
-                   data-turn = ''' + move.turn_number() + ''' class = 'move'>''' + move.move.san() + ''' </span>'''
+                   data-turn = ''' + move.turn_number() + '''
+                   data-eval = ''' + str(move.eval) + '''
+                   class='move'>''' + move.move.san() + '''</span>'''
 
     def write_view_html(self, name):
         moves = self.parsed_dict[name]
@@ -41,6 +43,14 @@ class PGNWriter():
                             <div class='empty-row'></div>
                             <div class='row'>
                                 <button id="switchBtn">Switch Colors</button>
+                            </div>
+                        </div>
+                        <div class='col eval-col'>
+                            <div class='empty-row'></div>
+                            <div id='evalBar'>
+                                <div class='blackBar' style='height:50%;'></div>
+                                <div class='zero'></div>
+                                <div class='evalNum'>0.5</div>
                             </div>
                         </div>
                         <div class='col-6 board-container'>
@@ -118,6 +128,14 @@ class PGNWriter():
                             <div class='row button-spacer'></div>
                             <div class='row'>
                                 <span id="hints">No hints currently</span>
+                            </div>
+                        </div>
+                        <div class='col eval-col'>
+                            <div class='empty-row'></div>
+                            <div id='evalBar'>
+                                <div class='blackBar' style='height:50%;'></div>
+                                <div class='zero'></div>
+                                <div class='evalNum'>0.5</div>
                             </div>
                         </div>
                         <div class='col-6 board-container'>

@@ -1,6 +1,10 @@
+import chess, chess.engine
+
+engine = chess.engine.SimpleEngine.popen_uci('movementor\stockfish-windows-x86-64-avx2.exe')
 class MoveInfo():
     def __init__(self, move, space = ''):
         self.move = move
+        self.eval = engine.analyse(self.move.board(), chess.engine.Limit(time=0.01))['score'].white().score(mate_score=10000)/100
         self.space = space
         self.fen_dict = {}
         self.populate_fen_dict()
