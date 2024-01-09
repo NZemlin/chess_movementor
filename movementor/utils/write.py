@@ -48,9 +48,11 @@ class PGNWriter():
                         <div class='col eval-col'>
                             <div class='empty-row'></div>
                             <div id='evalBar'>
+                                <div class='eval-pop-up'>0.17</div>
+                                <div class='evalNum evalNumOpp'>0.17</div>
                                 <div class='blackBar' style='height:50%;'></div>
                                 <div class='zero'></div>
-                                <div class='evalNum'>0.5</div>
+                                <div class='evalNum evalNumOwn'>0.17</div>
                             </div>
                         </div>
                         <div class='col-6 board-container'>
@@ -123,6 +125,10 @@ class PGNWriter():
                             </div>
                             <div class='row button-spacer'></div>
                             <div class='row'>
+                                <button id="evalBarBtn">Hide Eval</button>
+                            </div>
+                            <div class='row button-spacer'></div>
+                            <div class='row'>
                                 <button id="hintBtn">Hide Hints</button>
                             </div>
                             <div class='row button-spacer'></div>
@@ -133,9 +139,11 @@ class PGNWriter():
                         <div class='col eval-col'>
                             <div class='empty-row'></div>
                             <div id='evalBar'>
+                                <div class='eval-pop-up'>0.17</div>
+                                <div class='evalNum evalNumOpp'>0.17</div>
                                 <div class='blackBar' style='height:50%;'></div>
                                 <div class='zero'></div>
-                                <div class='evalNum'>0.5</div>
+                                <div class='evalNum evalNumOwn'>0.17</div>
                             </div>
                         </div>
                         <div class='col-6 board-container'>

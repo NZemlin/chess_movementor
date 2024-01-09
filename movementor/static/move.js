@@ -18,17 +18,22 @@ export function decMoveNum() {
 
 export function makeComputerMove() {
     if (!finished) {
-        console.log('Making a computer move');
         if (game.game_over()) {
             console.log('Game is over');
             return;
         };
-        console.log('Computer moves: ' + possibleMoves);
         var randomIdx = Math.floor(Math.random() * possibleMoves.length);
         var move = possibleMoves[randomIdx];
+        console.log('Computer chose: ' + move);
         otherChoices = possibleMoves;
         otherChoices.splice(randomIdx, 1);
-        console.log('Other choices were: ' + otherChoices);
+        if (otherChoices.length != 0) {
+            console.log('Other choices were: ' + otherChoices);
+        }
+        else {
+            var difLineBtn = document.getElementById('difLineBtn');
+            difLineBtn.innerHTML = 'No Other Lines';
+        };
         setLastFen(updateFen(game.fen()).replace(/ /g, '_'));
         var color = game.turn();
         var data = game.move(move);

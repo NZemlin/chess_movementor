@@ -1,5 +1,5 @@
 import { lastFen, config, board, game, resetBoard, setPossibleMoves, setFinished, setKeepPlaying, setBoard } from './globals.js';
-import { updateStatus } from './update.js';
+import { updateEvalColors, updateStatus } from './update.js';
 import { otherChoices, resetMoveVars, decMoveNum, makeComputerMove } from './move.js';
 import { swapCapturedPieces } from './captured_pieces.js';
 import { playGameStart } from './sounds.js';
@@ -18,9 +18,12 @@ $('#restartBtn').on('click', function() {
     setFinished(false);
     setKeepPlaying(false);
     $('#keepPlayingBtn')[0].style.display = 'none';
+    var difLineBtn = document.getElementById('difLineBtn');
+    difLineBtn.innerHTML = 'Different Line';
     resetMoveVars();
     playGameStart();
     updateStatus();
+    updateEvalColors();
     if (game.turn() == 'w' && config.orientation == 'black') {
         window.setTimeout(makeComputerMove, 1000);
     };
@@ -39,7 +42,7 @@ $('#difLineBtn').on('click', function () {
             decMoveNum();
         };
         game.undo();
-        board.position(lastFen, false);
+        board.position(game.fen(), false);
         setFinished(false);
         setKeepPlaying(false);
         $('#keepPlayingBtn')[0].style.display = 'none';
@@ -53,10 +56,16 @@ $('#switchBtn').on('click', function () {
     config.position = game.fen();
     swapCapturedPieces();
     setBoard();
+    updateEvalColors();
     if (game.turn() == 'w' && config.orientation == 'black' || 
         game.turn() == 'b' && config.orientation == 'white') {
         window.setTimeout(makeComputerMove, 500);
     };
+});
+
+$('#evalBarBtn').on('click', function () {
+    this.innerHTML = this.innerHTML == 'Show Eval' ? 'Hide Eval' : 'Show Eval';
+    evalBar.hidden = !evalBar.hidden;
 });
 
 $('#hintBtn').on('click', function () {

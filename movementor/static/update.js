@@ -1,16 +1,16 @@
-import { lastFen, finished, keepPlaying, config, game, setPossibleMoves, setFinished, updateFen, elementInViewport } from './globals.js';
+import { startPosition, finished, keepPlaying, config, game, setPossibleMoves, setFinished, updateFen, elementInViewport } from './globals.js';
 import { page } from './move.js';
 import { highlightLastMove } from './highlight.js';
 import { updateCapturedPieces } from './captured_pieces.js';
 import * as sounds from './sounds.js';
 
 function updateSelectedMoveElement() {
-    if (game.fen().replace(/ /g, '_') != lastFen) {
-        console.log('Updating selected move element');
-        var old = document.getElementsByClassName('selected');
-        if (old.length != 0) {
-            old[0].classList.remove('selected');
-        };
+    console.log('Updating selected move element');
+    var old = document.getElementsByClassName('selected');
+    if (old.length != 0) {
+        old[0].classList.remove('selected');
+    };
+    if (game.fen().replace(/ /g, '_') != startPosition) {
         var element = document.querySelectorAll("[data-own='" + updateFen(game.fen()).replace(/ /g, '_') + "']");
         if (element.length != 0) {
             element[0].classList.add('selected');
@@ -28,14 +28,23 @@ function updateSelectedMoveElement() {
 
 function updateAllowedMoves() {
     console.log('Updating allowed moves');
+    var nextMoveColor = game.turn() === 'w' ? 'white' : 'black';
     var curMoves = [];
     if (keepPlaying) {
+        if (nextMoveColor != config.orientation) {
+            var difLineBtn = document.getElementById('difLineBtn');
+            difLineBtn.innerHTML = game.moves().length > 1 ? 'Different Line' : 'No Other Lines';
+        };
         setPossibleMoves(game.moves());
         return;
     };
     if (!finished) {
         if (game.fen() == 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1') {
             curMoves = [document.getElementById('0').getAttribute('data-san')];
+            if (nextMoveColor != config.orientation) {
+                var difLineBtn = document.getElementById('difLineBtn');
+                difLineBtn.innerHTML = curMoves.length > 1 ? 'Different Line' : 'No Other Lines';
+            };
             setPossibleMoves(curMoves);
             return;
         }
@@ -79,22 +88,63 @@ function updateAllowedMoves() {
             };
         };
     };
+    if (nextMoveColor != config.orientation) {
+        var difLineBtn = document.getElementById('difLineBtn');
+        difLineBtn.innerHTML = curMoves.length > 1 ? 'Different Line' : 'No Other Lines';
+    };
     setPossibleMoves(curMoves);
 };
 
 function displayEvaluation(dataEval = '0.17') {
-    let evalFloat = parseFloat(dataEval)
-    let blackBar = document.querySelector(".blackBar");
-    let blackBarHeight = 50 - (evalFloat/15)*100;
+    var evalFloat = parseFloat(dataEval);
+    var blackBar = document.querySelector(".blackBar");
+    var blackBarHeight = 50 + ((config.orientation == 'white') ? -(evalFloat/15)*100 : (evalFloat/15)*100);
     blackBarHeight = blackBarHeight>100 ? (blackBarHeight=100) : blackBarHeight;
     blackBarHeight = blackBarHeight<0 ? (blackBarHeight=0) : blackBarHeight;
     blackBar.style.height = blackBarHeight + "%";
-    let evalNum = document.querySelector(".evalNum");
-    evalNum.innerHTML = dataEval;
-}
+    var evalNumOwn = document.querySelector(".evalNumOwn");
+    var evalNumOpp = document.querySelector(".evalNumOpp");
+    var evalPopup = document.querySelector(".eval-pop-up");
+    var sign;
+    evalNumOwn.style.color = (config.orientation == 'white') ? '#403d39' : 'white';
+    evalNumOpp.style.color = (config.orientation == 'white') ? 'white' : '#403d39';
+    if (evalFloat > 0 && config.orientation == 'black' ||
+        evalFloat < 0 && config.orientation == 'white') {
+        evalPopup.style.backgroundColor = '#403d39';
+        evalPopup.style.color = 'white';
+        evalPopup.style.border = 'none';
+        evalNumOpp.style.visibility = 'visible';
+        evalNumOwn.style.visibility = 'hidden';
+        sign = '-';
+    }
+    else {
+        evalPopup.style.backgroundColor = 'white';
+        evalPopup.style.color = 'black';
+        evalPopup.style.border = '1px solid lightgray';
+        evalNumOwn.style.visibility = 'visible';
+        evalNumOpp.style.visibility = 'hidden';
+        sign = '+';
+    };
+    evalFloat = (evalFloat > 0) ? evalFloat : -evalFloat;
+    evalNumOwn.innerHTML = evalFloat.toFixed(1);
+    evalNumOpp.innerHTML = evalFloat.toFixed(1);
+    evalPopup.innerHTML = sign + evalFloat.toFixed(2);
+};
+
+export function updateEvalColors() {
+    var blackBar = document.querySelector(".blackBar");
+    var evalBar = document.querySelector("#evalBar");
+    blackBar.style.color = (config.orientation == 'white') ? '#403d39' : 'white';
+    evalBar.style.color = (config.orientation == 'white') ? 'white' : '#403d39';
+    var cur_eval = '0.17';
+    var element = document.getElementsByClassName('selected');
+    if (element.length != 0) {
+        cur_eval = element[0].getAttribute('data-eval');
+    };
+    displayEvaluation(cur_eval);
+};
 
 export function updateStatus(move='', source='', target='') {
-    console.log('Updating status');
     if (page == 'practice' && !finished) {
         var hintElement = document.getElementById('hints');
         hintElement.innerHTML = 'No hints currently';
@@ -132,9 +182,6 @@ export function updateStatus(move='', source='', target='') {
                 sounds.playMoveOpponent();
             }
             highlightLastMove(source, target);
-            // getEvaluation(game.fen(), function(evaluations) {
-            //     displayEvaluation(evaluations);
-            // });
         };
         status = nextMoveColor + ' to move';
         if (!finished) {
@@ -154,5 +201,6 @@ export function updateStatus(move='', source='', target='') {
     var element = document.getElementsByClassName('selected');
     var dataEval = element.length != 0 ? element[0].getAttribute('data-eval') : '0.17'
     displayEvaluation(dataEval);
+    console.log('Status updated');
     console.log('----------------------------------------------------');
 };

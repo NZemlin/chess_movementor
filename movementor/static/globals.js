@@ -2,7 +2,8 @@ import { Chess } from 'https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/ch
 import { onDragStart, onDrop, onSnapEnd } from './move.js';
 import { updateStatus } from './update.js';
 
-export var lastFen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR_w_KQkq_-_0_1';
+export var startPosition = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR_w_KQkq_-_0_1';
+export var lastFen = startPosition;
 export var possibleMoves = [];
 export var finished = false;
 export var keepPlaying = false;

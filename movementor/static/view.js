@@ -1,5 +1,5 @@
 import { config, board, game, setLastFen, setFinished, setBoard, updateFen, elementInViewport } from './globals.js';
-import { updateStatus } from './update.js';
+import { updateEvalColors, updateStatus } from './update.js';
 import { swapCapturedPieces } from './captured_pieces.js';
 
 $('#switchBtn').on('click', function () {
@@ -7,6 +7,7 @@ $('#switchBtn').on('click', function () {
     config.position = game.fen();
     swapCapturedPieces();
     setBoard();
+    updateEvalColors();
 });
 
 function nearestMainlineParent(element) {
