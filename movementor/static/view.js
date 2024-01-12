@@ -1,23 +1,21 @@
-import { config, board, game, setLastFen, setFinished, setBoard, updateFen, elementInViewport } from './globals.js';
-import { updateEvalColors, updateStatus } from './update.js';
-import { swapCapturedPieces } from './captured_pieces.js';
+import { board, game, setLastFen, swapBoard } from './globals.js';
+import { timeoutBtn } from './helpers.js';
+import { updateStatus } from './update.js';
 
 $('#switchBtn').on('click', function () {
-    config.orientation = config.orientation == 'white' ? 'black' : 'white';
-    config.position = game.fen();
-    swapCapturedPieces();
-    setBoard();
-    updateEvalColors();
+    swapBoard();
+    timeoutBtn(this);
 });
 
 function nearestMainlineParent(element) {
-    var mainline = element[0].getAttribute('data-mainline') === 'true';
-    while (!mainline) {
-        fen = element[0].getAttribute('data-parent');
-        element = document.querySelectorAll("[data-own='" + fen + "']");
-        mainline = element[0].getAttribute('data-mainline') === 'true';
+    var stop = element.getAttribute('data-mainline') === 'true';
+    while (!stop) {
+        var fen = element.getAttribute('data-parent');
+        element = document.querySelectorAll("[data-own='" + fen + "']")[0];
+        stop = (element.getAttribute('data-mainline') === 'true' ||
+                element.getAttribute('data-variation-start') === 'true');
     };
-    return element;
+    return [element];
 };
 
 function clickUpdate(element) {
@@ -25,7 +23,6 @@ function clickUpdate(element) {
         return;
     };
     setLastFen(element.getAttribute('data-parent'));
-    setFinished(element.getAttribute('data-own') == element.getAttribute('data-child-1'));
     game.load(element.getAttribute('data-own').replace(/_/g, ' '));
     board.position(game.fen(), false);
     var uci = element.getAttribute('data-uci');
@@ -36,8 +33,7 @@ function checkKey(e) {
     var old = document.getElementsByClassName('selected');
     if (old.length == 0 && (e.keyCode == '37' || e.keyCode == '38' || e.keyCode == '39' || e.keyCode == '40')) {
         clickUpdate(document.getElementById('0'));
-    }
-    else {
+    } else {
         var fen;
         switch (e.keyCode) {
             case 32:
@@ -71,8 +67,7 @@ function checkKey(e) {
                         console.log('No variation to current selected move');
                         break;
                 };
-            }
-            else {
+            } else {
                 if (e.keyCode == 32) {
                     element = nearestMainlineParent(element[0]);
                 };

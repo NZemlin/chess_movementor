@@ -74,12 +74,12 @@ function countPieces() {
 };
 
 function updateMaterialDif(own) {
+    countPieces();
     materialDif = 0;
     for (const [key, value] of Object.entries(pieceDict)) {
         if (key[0] == own) {
             materialDif += value * valueDict[key];
-        }
-        else {
+        } else {
             materialDif -= value * valueDict[key];
         };
     };
@@ -102,25 +102,24 @@ export function swapCapturedPieces() {
     var oldOwn = Array.from(document.getElementsByClassName('captured-own')[0].getElementsByTagName('div')).concat(
                   Array.from(document.getElementsByClassName('captured-own')[0].getElementsByTagName('span')));
     removeCapturedPieces();
-    var element = document.getElementsByClassName('captured-own');
-    if (oldOpp.length > 0) {
+    var element = document.getElementsByClassName('captured-own')[0];
+    if (oldOpp) {
         for (let i = 0; i != oldOpp.length; i++) {
-            element[0].appendChild(oldOpp[i]);
+            element.appendChild(oldOpp[i]);
         };
     };
-    var element = document.getElementsByClassName('captured-opp');
-    if (oldOwn.length > 0) {
+    var element = document.getElementsByClassName('captured-opp')[0];
+    if (oldOwn) {
         for (let i = 0; i != oldOwn.length; i++) {
-            element[0].appendChild(oldOwn[i]);
+            element.appendChild(oldOwn[i]);
         };
     };
 };
 
 export function updateCapturedPieces() {
-    console.log('Updating captured');
+    console.log('Updating captured pieces');
     var own = config.orientation == 'white' ? 'w' : 'b';
     removeCapturedPieces();
-    countPieces();
     updateMaterialDif(own);
     for (const [key, value] of Object.entries(pieceDict)) {
         var dif = fullDict[key] - pieceDict[key];
@@ -132,23 +131,14 @@ export function updateCapturedPieces() {
                 newImg.src = 'static/img/chesspieces/wikipedia/' + key + '.png';
                 newImg.style = 'width:30px;height:30px;';
                 newDiv.appendChild(newImg);
-                var element = document.getElementsByClassName('captured-' + ((own == key[0]) ? 'opp' : 'own'));
-                element[0].appendChild(newDiv);
+                document.getElementsByClassName('captured-' + ((own == key[0]) ? 'opp' : 'own'))[0].appendChild(newDiv);
             };
         };
     };
     if (materialDif != 0) {
         var materialScore = document.createElement('span');
         materialScore.classList.add('col-1', 'captured', 'material-dif');
-        if (materialDif > 0) {
-            var newContent = document.createTextNode('+' + materialDif);
-            var element = document.getElementsByClassName('captured-own');
-        }
-        else {
-            var newContent = document.createTextNode('+' + -materialDif);
-            var element = document.getElementsByClassName('captured-opp');
-        };
-        materialScore.appendChild(newContent);
-        element[0].appendChild(materialScore);
+        materialScore.appendChild(document.createTextNode('+' + materialDif));
+        document.getElementsByClassName('captured-' + (materialDif > 0 ? 'own' : 'opp'))[0].appendChild(materialScore);
     };
 };

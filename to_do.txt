@@ -1,9 +1,16 @@
 *Add engine play and selectable strength for continued play
 *Display stockfish evaluation for continued play
-Sort lines in view based on stockfish evaluation
-Don't display bad moves when swapping colors
+*Sort lines in view based on stockfish evaluation (need concurrency to make work?)
+*Don't display bad moves when swapping colors
+
+* = engine needed
+
 Add arrows and right click square highlights
 Add pre-moves in practice mode
+Add promotion choice
 Improve autoscroll in view page
 Improve visuals
     - Add color theme selector
+
+Implement database functionality for scraped and parsed pgns
+Make a page that allowers user to update their pgns

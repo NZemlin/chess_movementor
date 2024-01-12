@@ -10,6 +10,7 @@ class PGNWriter():
                    data-child-1 = ''' + move.fen_dict['child_1'] + '''
                    data-child-2 = ''' + move.fen_dict['child_2'] + '''
                    data-mainline = ''' + str(move.move.is_mainline()).lower() + '''
+                   data-variation-start = ''' + str(move.move.starts_variation()).lower() + '''
                    data-san = ''' + move.move.san() + '''
                    data-uci = ''' + move.move.uci() + '''
                    data-color = ''' + ('white' if not move.move.turn() else 'black') + '''
@@ -133,7 +134,7 @@ class PGNWriter():
                             </div>
                             <div class='row button-spacer'></div>
                             <div class='row'>
-                                <span id="hints">No hints currently</span>
+                                <span id="hints" class='text-wrap'>No hints currently</span>
                             </div>
                         </div>
                         <div class='col eval-col'>

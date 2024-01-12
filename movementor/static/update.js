@@ -1,113 +1,73 @@
-import { startPosition, finished, keepPlaying, config, game, setPossibleMoves, setFinished, updateFen, elementInViewport } from './globals.js';
-import { page } from './move.js';
+import { page, possibleMoves, keepPlaying, config, game, setPossibleMoves, declareFinished } from './globals.js';
+import { scrollIfNeeded, lastMoveElement, nextMoveColor, oppTurn } from './helpers.js';
 import { highlightLastMove } from './highlight.js';
 import { updateCapturedPieces } from './captured_pieces.js';
 import * as sounds from './sounds.js';
 
 function updateSelectedMoveElement() {
+    if (keepPlaying) {
+        return;
+    };
     console.log('Updating selected move element');
     var old = document.getElementsByClassName('selected');
     if (old.length != 0) {
         old[0].classList.remove('selected');
     };
-    if (game.fen().replace(/ /g, '_') != startPosition) {
-        var element = document.querySelectorAll("[data-own='" + updateFen(game.fen()).replace(/ /g, '_') + "']");
-        if (element.length != 0) {
-            element[0].classList.add('selected');
-        };
-        if (page == 'view') {
-            if (!elementInViewport(element[0])) {
-                element[0].scrollIntoView({ 
-                    behavior: 'smooth',
-                    block: 'nearest',
-                });
-            };
-        };
+    var element = lastMoveElement();
+    element.classList.add('selected');
+    if (page == 'view') {
+        scrollIfNeeded(element);
     };
 };
 
 function updateAllowedMoves() {
     console.log('Updating allowed moves');
-    var nextMoveColor = game.turn() === 'w' ? 'white' : 'black';
-    var curMoves = [];
     if (keepPlaying) {
-        if (nextMoveColor != config.orientation) {
-            var difLineBtn = document.getElementById('difLineBtn');
-            difLineBtn.innerHTML = game.moves().length > 1 ? 'Different Line' : 'No Other Lines';
-        };
         setPossibleMoves(game.moves());
         return;
     };
-    if (!finished) {
-        if (game.fen() == 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1') {
-            curMoves = [document.getElementById('0').getAttribute('data-san')];
-            if (nextMoveColor != config.orientation) {
-                var difLineBtn = document.getElementById('difLineBtn');
-                difLineBtn.innerHTML = curMoves.length > 1 ? 'Different Line' : 'No Other Lines';
-            };
-            setPossibleMoves(curMoves);
-            return;
-        }
-        else {
-            var cur = document.querySelectorAll("[data-own='" + updateFen(game.fen()).replace(/ /g, '_') + "']")[0];
-        };
-        var fen = cur.getAttribute('data-child-1');
-        var color = '';
-        var turn = '';
-        if (fen != null) {
-            var element = document.querySelectorAll("[data-own='" + fen + "']");
-            if (element[0].getAttribute('data-own') != cur.getAttribute('data-own')) {
-                var move = element[0].getAttribute('data-san');
-                curMoves.push(move);
-                color = element[0].getAttribute('data-color');
-                turn = element[0].getAttribute('data-turn');
-            };
-        };
-        fen = cur.getAttribute('data-child-2');
-        while (fen != null) {
-            if (element[0].getAttribute('data-own') == fen) {
-                break;
-            }
-            var element = document.querySelectorAll("[data-own='" + fen + "']");
-            move = element[0].getAttribute('data-san');
-            if (color == element[0].getAttribute('data-color') && turn == element[0].getAttribute('data-turn')) {
-                curMoves.push(move);
-                element = document.querySelectorAll("[data-own='" + fen + "']");
-                fen = element[0].getAttribute('data-child-2');
-            }
-            else {
-                break;
-            };
-        };
-        if (curMoves.length == 0) {
-            console.log('This line is finished');
-            document.getElementById('status').innerHTML = 'This line is finished';
-            setFinished(true);
-            if (page == 'practice') {
-                $('#keepPlayingBtn')[0].style.display = 'block';
-            };
-        };
+    var curMoves = [];
+    var element = lastMoveElement();
+    var fen = element.getAttribute('data-child-1');
+    if (fen == element.getAttribute('data-own')) {
+        declareFinished();
+        return;
     };
-    if (nextMoveColor != config.orientation) {
-        var difLineBtn = document.getElementById('difLineBtn');
-        difLineBtn.innerHTML = curMoves.length > 1 ? 'Different Line' : 'No Other Lines';
+    element = document.querySelectorAll("[data-own='" + fen + "']")[0];
+    curMoves.push(element.getAttribute('data-san'));
+    if (lastMoveElement().getAttribute('data-own') == lastMoveElement().getAttribute('data-child-2')) {
+        setPossibleMoves(curMoves);
+        return;
+    };
+    fen = lastMoveElement().getAttribute('data-child-2');
+    while (fen != element.getAttribute('data-own')) {
+        element = document.querySelectorAll("[data-own='" + fen + "']")[0];
+        if (game.turn() != element.getAttribute('data-color')[0]) {
+            break;
+        };
+        curMoves.push(element.getAttribute('data-san'));
+        fen = element.getAttribute('data-child-2');
     };
     setPossibleMoves(curMoves);
 };
 
+export function updateHintText(own) {
+    if (page == 'practice') {
+        document.getElementById('hints').innerHTML = possibleMoves && own ? ('Allowed moves are: ' + possibleMoves.join(', ')) : 'No hints currently';
+    };
+};
+
 function displayEvaluation(dataEval = '0.17') {
     var evalFloat = parseFloat(dataEval);
-    var blackBar = document.querySelector(".blackBar");
     var blackBarHeight = 50 + ((config.orientation == 'white') ? -(evalFloat/15)*100 : (evalFloat/15)*100);
     blackBarHeight = blackBarHeight>100 ? (blackBarHeight=100) : blackBarHeight;
     blackBarHeight = blackBarHeight<0 ? (blackBarHeight=0) : blackBarHeight;
-    blackBar.style.height = blackBarHeight + "%";
+    document.querySelector(".blackBar").style.height = blackBarHeight + "%";
+
+    var evalPopup = document.querySelector(".eval-pop-up");
     var evalNumOwn = document.querySelector(".evalNumOwn");
     var evalNumOpp = document.querySelector(".evalNumOpp");
-    var evalPopup = document.querySelector(".eval-pop-up");
     var sign;
-    evalNumOwn.style.color = (config.orientation == 'white') ? '#403d39' : 'white';
-    evalNumOpp.style.color = (config.orientation == 'white') ? 'white' : '#403d39';
     if (evalFloat > 0 && config.orientation == 'black' ||
         evalFloat < 0 && config.orientation == 'white') {
         evalPopup.style.backgroundColor = '#403d39';
@@ -116,8 +76,7 @@ function displayEvaluation(dataEval = '0.17') {
         evalNumOpp.style.visibility = 'visible';
         evalNumOwn.style.visibility = 'hidden';
         sign = '-';
-    }
-    else {
+    } else {
         evalPopup.style.backgroundColor = 'white';
         evalPopup.style.color = 'black';
         evalPopup.style.border = '1px solid lightgray';
@@ -126,81 +85,69 @@ function displayEvaluation(dataEval = '0.17') {
         sign = '+';
     };
     evalFloat = (evalFloat > 0) ? evalFloat : -evalFloat;
+
+    evalNumOwn.style.color = (config.orientation == 'white') ? '#403d39' : 'white';
     evalNumOwn.innerHTML = evalFloat.toFixed(1);
+
+    evalNumOpp.style.color = (config.orientation == 'white') ? 'white' : '#403d39';
     evalNumOpp.innerHTML = evalFloat.toFixed(1);
+
     evalPopup.innerHTML = sign + evalFloat.toFixed(2);
 };
 
-export function updateEvalColors() {
+export function updateEvalBar() {
     var blackBar = document.querySelector(".blackBar");
     var evalBar = document.querySelector("#evalBar");
-    blackBar.style.color = (config.orientation == 'white') ? '#403d39' : 'white';
-    evalBar.style.color = (config.orientation == 'white') ? 'white' : '#403d39';
-    var cur_eval = '0.17';
+    blackBar.style.backgroundColor = (config.orientation == 'white') ? '#403d39' : 'white';
+    evalBar.style.backgroundColor = (config.orientation == 'white') ? 'white' : '#403d39';
     var element = document.getElementsByClassName('selected');
-    if (element.length != 0) {
-        cur_eval = element[0].getAttribute('data-eval');
-    };
-    displayEvaluation(cur_eval);
+    displayEvaluation(element.length != 0 ? element[0].getAttribute('data-eval') : '0.17');
 };
 
 export function updateStatus(move='', source='', target='') {
-    if (page == 'practice' && !finished) {
-        var hintElement = document.getElementById('hints');
-        hintElement.innerHTML = 'No hints currently';
-    };
-
-    var status = '';
-
-    var nextMoveColor = game.turn() === 'w' ? 'White' : 'Black';
+    var nextColor = nextMoveColor();
+    nextColor = nextColor.charAt(0).toUpperCase() + nextColor.slice(1);
+    var status = nextColor + ' to move';
     if (game.in_checkmate()) {
         sounds.playGameEnd();
-        status = 'Game over, ' + nextMoveColor + ' is in checkmate.';
-    }
-    else if (game.in_draw()) {
+        status = 'Game over, ' + nextColor + ' is in checkmate.';
+    } else if (game.in_draw()) {
         status = 'Game over, drawn position';
-    }
-    else if (game.in_check()) {
+    } else if (game.in_check()) {
         sounds.playMoveCheck();
-        status += ', ' + nextMoveColor + ' is in check';
-    }
-    else {
-        if (move) {
-            if (move[-2] == '=') {
-                sounds.playPromote();
-            }
-            else if (move.includes('x')) {
-                sounds.playCapture();
-            }
-            else if (move[0] == 'O') {
-                sounds.playCastle();
-            }
-            else if (game.turn() == config.orientation) {
-                sounds.playMoveSelf();
-            }
-            else {
-                sounds.playMoveOpponent();
-            }
-            highlightLastMove(source, target);
+        status += ', ' + nextColor + ' is in check';
+    } else if (move) {
+        if (move[-2] == '=') {
+            sounds.playPromote();
+        } else if (move.includes('x')) {
+            sounds.playCapture();
+        } else if (move[0] == 'O') {
+            sounds.playCastle();
+        } else if (oppTurn()) {
+            sounds.playMoveSelf();
+        } else {
+            sounds.playMoveOpponent();
         };
-        status = nextMoveColor + ' to move';
-        if (!finished) {
-            document.getElementById('status').innerHTML = status;
-        }
-        else {
-            document.getElementById('status').innerHTML = 'This line is finished';
-            setFinished(true);
-            if (page == 'practice') {
-                $('#keepPlayingBtn')[0].style.display = 'block';
-            };
-        };
+        highlightLastMove(source, target);
     };
+    document.getElementById('status').innerHTML = status;
     updateSelectedMoveElement();
     updateCapturedPieces();
     updateAllowedMoves();
-    var element = document.getElementsByClassName('selected');
-    var dataEval = element.length != 0 ? element[0].getAttribute('data-eval') : '0.17'
-    displayEvaluation(dataEval);
+    updateHintText();
+    updateEvalBar();
     console.log('Status updated');
+    console.log('----------------------------------------------------');
+};
+
+export function gameStart() {
+    if (page == 'practice') {
+        updateHintText();
+    };
+    document.getElementById('status').innerHTML = 'White to move';
+    setPossibleMoves([document.getElementById('0').getAttribute('data-san')]);
+    updateEvalBar();
+    sounds.playGameStart()
+    console.log('Game started');
     console.log('----------------------------------------------------');
 };

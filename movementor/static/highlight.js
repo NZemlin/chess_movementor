@@ -6,8 +6,10 @@ function lightOrDark(square) {
 };
 
 export function highlightLastMove(source, target) {
-    $board.find('.' + squareClass).removeClass('highlight-light');
-    $board.find('.' + squareClass).removeClass('highlight-dark');
-    $board.find('.square-' + source).addClass('highlight-' +  lightOrDark(source));
-    $board.find('.square-' + target).addClass('highlight-' +  lightOrDark(target));
+    if (source && target) {
+        $board.find('.' + squareClass).removeClass('highlight-light');
+        $board.find('.' + squareClass).removeClass('highlight-dark');
+        $board.find('.square-' + source).addClass('highlight-' +  lightOrDark(source));
+        $board.find('.square-' + target).addClass('highlight-' +  lightOrDark(target));
+    };
 };
