@@ -200,3 +200,18 @@ span.move.selected {
 #evalBar:hover .eval-pop-up {
     visibility: visible;
 }
+
+.promotionOption {
+    border-radius: 50%;
+    background-color: darkgray;
+    transition: transform 0.2s;
+    position: absolute;
+    z-index: 1000;
+}
+
+.promotionOption:hover {
+    cursor: pointer;
+    border-radius: 0%;
+    background-color: rgb(187,204,68);
+    width: 100%;
+}

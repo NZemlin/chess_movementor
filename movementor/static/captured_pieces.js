@@ -1,4 +1,5 @@
 import { config, game } from './globals.js';
+import { createChessPiece } from './helpers.js';
 
 var materialDif = 0;
 
@@ -49,12 +50,8 @@ var valueDict = {
 
 function equalDictionaries(d1, d2) {
     for (var key in d1) {
-        if (!( key in d2)) {
-            return false;
-        };
-        if (d1[key] != d2[key]) {
-            return false;
-        };
+        if (!(key in d2)) return false;
+        if (d1[key] != d2[key]) return false;
     };
     return true;
 };
@@ -85,7 +82,7 @@ function updateMaterialDif(own) {
     };
 };
 
-function removeCapturedPieces() {
+export function removeCapturedPieces() {
     if (!equalDictionaries(pieceDict, fullDict)) {
         var elements = document.getElementsByClassName('captured');
         if (elements.length > 0) {
@@ -127,18 +124,18 @@ export function updateCapturedPieces() {
             for (let i = 1; i <= dif; i++) {
                 var newDiv = document.createElement('div');
                 newDiv.classList.add('col-1', 'captured');
-                var newImg = document.createElement('img');
-                newImg.src = 'static/img/chesspieces/wikipedia/' + key + '.png';
-                newImg.style = 'width:30px;height:30px;';
+                var newImg = createChessPiece(key[0], key[1], '', 30)
                 newDiv.appendChild(newImg);
                 document.getElementsByClassName('captured-' + ((own == key[0]) ? 'opp' : 'own'))[0].appendChild(newDiv);
             };
         };
     };
     if (materialDif != 0) {
+        var side = materialDif > 0 ? 'own' : 'opp';
+        materialDif *= materialDif < 0 ? -1 : 1;
         var materialScore = document.createElement('span');
         materialScore.classList.add('col-1', 'captured', 'material-dif');
         materialScore.appendChild(document.createTextNode('+' + materialDif));
-        document.getElementsByClassName('captured-' + (materialDif > 0 ? 'own' : 'opp'))[0].appendChild(materialScore);
+        document.getElementsByClassName('captured-' + side)[0].appendChild(materialScore);
     };
 };

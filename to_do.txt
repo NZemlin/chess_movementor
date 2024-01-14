@@ -7,10 +7,11 @@
 
 Add arrows and right click square highlights
 Add pre-moves in practice mode
-Add promotion choice
 Improve autoscroll in view page
 Improve visuals
     - Add color theme selector
+Implement keep playing for view page
 
 Implement database functionality for scraped and parsed pgns
-Make a page that allowers user to update their pgns
+Add a button that allowers user to update their pgns
+Implement own pgn builder

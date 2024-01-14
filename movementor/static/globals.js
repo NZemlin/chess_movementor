@@ -10,6 +10,8 @@ export var lastFen = startPosition;
 export var possibleMoves = [];
 export var finished = false;
 export var keepPlaying = false;
+export var movementAllowed = true;
+export var highlightedSquares = [];
 export var config = {
     draggable: true,
     dropOffBoard: 'snapback',
@@ -29,6 +31,7 @@ export function setLastFen(fen=startPosition) {
 export function setPossibleMoves(moves) {
     possibleMoves = moves;
     toggleDifLineBtn(otherChoices.length == 0);
+    finished = false;
 };
 
 export function setFinished(done) {
@@ -45,6 +48,14 @@ export function declareFinished() {
 
 export function setKeepPlaying(cont) {
     keepPlaying = cont;
+};
+
+export function setMovementAllowed(allowed) {
+    movementAllowed = allowed;
+};
+
+export function setHighlightedSquares(squares) {
+    highlightedSquares = squares;
 };
 
 export function swapBoard() {

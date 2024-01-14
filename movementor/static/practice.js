@@ -1,5 +1,6 @@
 import { board, game, setPossibleMoves, setFinished, setKeepPlaying, swapBoard, resetBoard } from './globals.js';
 import { timeoutBtn, oppTurn } from './helpers.js';
+import { highlightLastMove } from './highlight.js';
 import { updateStatus, gameStart } from './update.js';
 import { otherChoices, resetMoveVars, decMoveNum, makeComputerMove } from './move.js';
 
@@ -47,6 +48,7 @@ $('#difLineBtn').on('click', function () {
 
 $('#switchBtn').on('click', function () {
     swapBoard();
+    highlightLastMove();
     window.setTimeout(makeComputerMove, 500);
     timeoutBtn(this);
 });

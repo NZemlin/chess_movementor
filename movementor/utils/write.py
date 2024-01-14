@@ -49,11 +49,11 @@ class PGNWriter():
                         <div class='col eval-col'>
                             <div class='empty-row'></div>
                             <div id='evalBar'>
-                                <div class='eval-pop-up'>0.17</div>
-                                <div class='evalNum evalNumOpp'>0.17</div>
+                                <div class='eval-pop-up'>0.22</div>
+                                <div class='evalNum evalNumOpp'>0.22</div>
                                 <div class='blackBar' style='height:50%;'></div>
                                 <div class='zero'></div>
-                                <div class='evalNum evalNumOwn'>0.17</div>
+                                <div class='evalNum evalNumOwn'>0.22</div>
                             </div>
                         </div>
                         <div class='col-6 board-container'>
@@ -140,11 +140,11 @@ class PGNWriter():
                         <div class='col eval-col'>
                             <div class='empty-row'></div>
                             <div id='evalBar'>
-                                <div class='eval-pop-up'>0.17</div>
-                                <div class='evalNum evalNumOpp'>0.17</div>
+                                <div class='eval-pop-up'>0.22</div>
+                                <div class='evalNum evalNumOpp'>0.22</div>
                                 <div class='blackBar' style='height:50%;'></div>
                                 <div class='zero'></div>
-                                <div class='evalNum evalNumOwn'>0.17</div>
+                                <div class='evalNum evalNumOwn'>0.22</div>
                             </div>
                         </div>
                         <div class='col-6 board-container'>

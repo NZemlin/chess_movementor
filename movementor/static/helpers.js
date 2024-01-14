@@ -39,9 +39,7 @@ export function updateFen(fen) {
             fen = splitFen.join(' ');
             return fen;
         };
-    } else {
-        return fen;
-    };
+    } else return fen;
 };
 
 export function timeoutBtn(btn, time=1) {
@@ -52,9 +50,7 @@ export function timeoutBtn(btn, time=1) {
 };
 
 export function toggleDifLineBtn(done) {
-    if (page == 'view') {
-        return;
-    };
+    if (page == 'view') return;
     var difLineBtn = document.getElementById('difLineBtn');
     if (done) {
         difLineBtn.innerHTML = 'No Other Lines';
@@ -63,6 +59,19 @@ export function toggleDifLineBtn(done) {
         difLineBtn.innerHTML = 'Different Line';
         difLineBtn.disabled = false;
     };
+};
+
+export function createChessPiece(color, pieceType, pieceClasses, size) {
+    let pieceName = color + pieceType.toUpperCase();
+    let img = document.createElement("img");
+    img.src = 'static/img/chesspieces/wikipedia/' + pieceName + '.png';
+    img.alt = pieceType;
+    if (pieceClasses) img.className = pieceClasses;
+    var dataPiece = document.createAttribute('data-piece')
+    dataPiece.value = pieceName
+    img.setAttributeNode(dataPiece)
+    img.style = 'width:' + size + 'px;height:' + size + 'px;';
+    return img;
 };
 
 export function getMoveNum() {

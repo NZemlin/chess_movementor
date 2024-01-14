@@ -1,13 +1,11 @@
 import { page, possibleMoves, keepPlaying, config, game, setPossibleMoves, declareFinished } from './globals.js';
 import { scrollIfNeeded, lastMoveElement, nextMoveColor, oppTurn } from './helpers.js';
 import { highlightLastMove } from './highlight.js';
-import { updateCapturedPieces } from './captured_pieces.js';
+import { removeCapturedPieces, updateCapturedPieces } from './captured_pieces.js';
 import * as sounds from './sounds.js';
 
 function updateSelectedMoveElement() {
-    if (keepPlaying) {
-        return;
-    };
+    if (keepPlaying) return;
     console.log('Updating selected move element');
     var old = document.getElementsByClassName('selected');
     if (old.length != 0) {
@@ -42,9 +40,7 @@ function updateAllowedMoves() {
     fen = lastMoveElement().getAttribute('data-child-2');
     while (fen != element.getAttribute('data-own')) {
         element = document.querySelectorAll("[data-own='" + fen + "']")[0];
-        if (game.turn() != element.getAttribute('data-color')[0]) {
-            break;
-        };
+        if (game.turn() != element.getAttribute('data-color')[0]) break;
         curMoves.push(element.getAttribute('data-san'));
         fen = element.getAttribute('data-child-2');
     };
@@ -52,12 +48,11 @@ function updateAllowedMoves() {
 };
 
 export function updateHintText(own) {
-    if (page == 'practice') {
-        document.getElementById('hints').innerHTML = possibleMoves && own ? ('Allowed moves are: ' + possibleMoves.join(', ')) : 'No hints currently';
-    };
+    if (page == 'view') return;
+    document.getElementById('hints').innerHTML = possibleMoves && own ? ('Allowed moves are: ' + possibleMoves.join(', ')) : 'No hints currently';
 };
 
-function displayEvaluation(dataEval = '0.17') {
+function displayEvaluation(dataEval = '0.22') {
     var evalFloat = parseFloat(dataEval);
     var blackBarHeight = 50 + ((config.orientation == 'white') ? -(evalFloat/15)*100 : (evalFloat/15)*100);
     blackBarHeight = blackBarHeight>100 ? (blackBarHeight=100) : blackBarHeight;
@@ -101,7 +96,7 @@ export function updateEvalBar() {
     blackBar.style.backgroundColor = (config.orientation == 'white') ? '#403d39' : 'white';
     evalBar.style.backgroundColor = (config.orientation == 'white') ? 'white' : '#403d39';
     var element = document.getElementsByClassName('selected');
-    displayEvaluation(element.length != 0 ? element[0].getAttribute('data-eval') : '0.17');
+    displayEvaluation(element.length != 0 ? element[0].getAttribute('data-eval') : '0.22');
 };
 
 export function updateStatus(move='', source='', target='') {
@@ -128,9 +123,9 @@ export function updateStatus(move='', source='', target='') {
         } else {
             sounds.playMoveOpponent();
         };
-        highlightLastMove(source, target);
     };
     document.getElementById('status').innerHTML = status;
+    highlightLastMove(source, target);
     updateSelectedMoveElement();
     updateCapturedPieces();
     updateAllowedMoves();
@@ -141,9 +136,8 @@ export function updateStatus(move='', source='', target='') {
 };
 
 export function gameStart() {
-    if (page == 'practice') {
-        updateHintText();
-    };
+    if (page == 'practice') updateHintText();
+    removeCapturedPieces();
     document.getElementById('status').innerHTML = 'White to move';
     setPossibleMoves([document.getElementById('0').getAttribute('data-san')]);
     updateEvalBar();
