@@ -1,5 +1,5 @@
 import { page, possibleMoves, keepPlaying, config, game, setPossibleMoves, declareFinished } from './globals.js';
-import { scrollIfNeeded, lastMoveElement, nextMoveColor, oppTurn } from './helpers.js';
+import { scrollIfNeeded, addRightClickListeners, lastMoveElement, nextMoveColor, oppTurn } from './helpers.js';
 import { highlightLastMove } from './highlight.js';
 import { removeCapturedPieces, updateCapturedPieces } from './captured_pieces.js';
 import * as sounds from './sounds.js';
@@ -139,6 +139,7 @@ export function gameStart() {
     if (page == 'practice') updateHintText();
     removeCapturedPieces();
     document.getElementById('status').innerHTML = 'White to move';
+    addRightClickListeners();
     setPossibleMoves([document.getElementById('0').getAttribute('data-san')]);
     updateEvalBar();
     sounds.playGameStart()

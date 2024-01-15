@@ -1,4 +1,5 @@
 import { page, config, game } from "./globals.js";
+import { toggleRightClickHighlight } from "./highlight.js";
 
 function elementInViewport(element) {
     var bounding = element.getBoundingClientRect();
@@ -72,6 +73,15 @@ export function createChessPiece(color, pieceType, pieceClasses, size) {
     img.setAttributeNode(dataPiece)
     img.style = 'width:' + size + 'px;height:' + size + 'px;';
     return img;
+};
+
+export function addRightClickListeners() {
+    var squares = document.getElementsByClassName('square-55d63');
+    for (let i = 0; i < squares.length; i++) {
+        squares[i].addEventListener("mousedown", e => {
+            if (e.button == 2) toggleRightClickHighlight(squares[i]);
+        });
+    };
 };
 
 export function getMoveNum() {

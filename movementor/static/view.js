@@ -1,11 +1,12 @@
 import { board, game, setLastFen, swapBoard } from './globals.js';
 import { timeoutBtn } from './helpers.js';
-import { highlightLastMove } from './highlight.js';
+import { highlightLastMove, clearRightClickHighlights, highlightRightClickedSquares } from './highlight.js';
 import { updateStatus } from './update.js';
 
 $('#switchBtn').on('click', function () {
     swapBoard();
     highlightLastMove();
+    highlightRightClickedSquares();
     timeoutBtn(this);
 });
 
@@ -22,6 +23,7 @@ function nearestMainlineParent(element) {
 
 function clickUpdate(element) {
     if (element == document.getElementsByClassName('selected')[0]) return;
+    clearRightClickHighlights();
     setLastFen(element.getAttribute('data-parent'));
     game.load(element.getAttribute('data-own').replace(/_/g, ' '));
     board.position(game.fen(), false);

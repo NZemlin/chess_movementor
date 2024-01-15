@@ -1,5 +1,6 @@
 import { Chess } from 'https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.js';
-import { toggleDifLineBtn } from './helpers.js';
+import { toggleDifLineBtn, addRightClickListeners } from './helpers.js';
+import { clearRightClickHighlights } from './highlight.js';
 import { otherChoices, onDragStart, onDrop, onSnapEnd } from './move.js';
 import { updateEvalBar, gameStart } from './update.js';
 import { swapCapturedPieces } from './captured_pieces.js';
@@ -12,6 +13,7 @@ export var finished = false;
 export var keepPlaying = false;
 export var movementAllowed = true;
 export var highlightedSquares = [];
+export var rightClickedSquares = [];
 export var config = {
     draggable: true,
     dropOffBoard: 'snapback',
@@ -54,14 +56,26 @@ export function setMovementAllowed(allowed) {
     movementAllowed = allowed;
 };
 
-export function setHighlightedSquares(squares) {
+export function setHighlightedSquares(squares=[]) {
     highlightedSquares = squares;
+};
+
+export function modRightClickedSquares(square='', add=true) {
+    if (!square) rightClickedSquares = [];
+    else {
+        if (add && !rightClickedSquares.includes(square)) rightClickedSquares.push(square);
+        else if (rightClickedSquares.includes(square)) {
+            var index = rightClickedSquares.indexOf(square);
+            rightClickedSquares.splice(index, 1);
+        };
+    };
 };
 
 export function swapBoard() {
     config.orientation = (config.orientation == 'white' ? 'black' : 'white');
     config.position = game.fen();
     board = Chessboard('myBoard', config);
+    addRightClickListeners();
     swapCapturedPieces();
     updateEvalBar();
 };
@@ -72,6 +86,22 @@ export function resetBoard() {
     config.position = 'start';
     board = Chessboard('myBoard', config);
     game = new Chess();
+    addRightClickListeners();
 };
+
+document.addEventListener('mousedown', e => {
+    var ignore = [];
+    ignore.push(document.getElementById('switchBtn'));
+    if (page == 'practice') {
+        ignore.push(document.getElementById('evalBarBtn'));
+        ignore.push(document.getElementById('hintBtn'));
+    };
+    if (ignore.includes(e.target)) return;
+    if (e.button == 0) clearRightClickHighlights();
+});
+
+document.addEventListener('contextmenu', e => {
+    e.preventDefault();
+});
 
 gameStart();

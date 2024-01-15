@@ -5,13 +5,12 @@
 
 * = engine needed
 
-Add arrows and right click square highlights
+Add arrows
+Add right-click memory
+
 Add pre-moves in practice mode
+Implement keep playing for view page
 Improve autoscroll in view page
+Allow view page to go back to start position
 Improve visuals
     - Add color theme selector
-Implement keep playing for view page
-
-Implement database functionality for scraped and parsed pgns
-Add a button that allowers user to update their pgns
-Implement own pgn builder

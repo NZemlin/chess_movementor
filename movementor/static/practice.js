@@ -1,6 +1,6 @@
-import { board, game, setPossibleMoves, setFinished, setKeepPlaying, swapBoard, resetBoard } from './globals.js';
+import { board, game, setPossibleMoves, setFinished, setKeepPlaying, swapBoard, resetBoard, setHighlightedSquares, modRightClickedSquares } from './globals.js';
 import { timeoutBtn, oppTurn } from './helpers.js';
-import { highlightLastMove } from './highlight.js';
+import { highlightLastMove, highlightRightClickedSquares } from './highlight.js';
 import { updateStatus, gameStart } from './update.js';
 import { otherChoices, resetMoveVars, decMoveNum, makeComputerMove } from './move.js';
 
@@ -19,6 +19,8 @@ $('#restartBtn').on('click', function() {
     var difLineBtn = document.getElementById('difLineBtn');
     difLineBtn.innerHTML = 'Different Line';
     difLineBtn.disabled = false;
+    setHighlightedSquares();
+    modRightClickedSquares();
     resetMoveVars();
     gameStart();
     window.setTimeout(makeComputerMove, 500);
@@ -49,6 +51,7 @@ $('#difLineBtn').on('click', function () {
 $('#switchBtn').on('click', function () {
     swapBoard();
     highlightLastMove();
+    highlightRightClickedSquares();
     window.setTimeout(makeComputerMove, 500);
     timeoutBtn(this);
 });

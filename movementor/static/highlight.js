@@ -1,4 +1,4 @@
-import { highlightedSquares, setHighlightedSquares } from "./globals.js";
+import { startPosition, game, highlightedSquares, rightClickedSquares, setHighlightedSquares, modRightClickedSquares } from "./globals.js";
 
 var squareClass = 'square-55d63';
 var $board = $('#myBoard');
@@ -8,6 +8,7 @@ function lightOrDark(square) {
 };
 
 export function highlightLastMove(source='', target='') {
+    if (game.fen() == startPosition.replace(/_/g, ' ')) return;
     $board.find('.' + squareClass).removeClass('highlight-light');
     $board.find('.' + squareClass).removeClass('highlight-dark');
     if (!(source && target)) {
@@ -18,4 +19,25 @@ export function highlightLastMove(source='', target='') {
         $board.find('.square-' + target).addClass('highlight-' +  lightOrDark(target));
         setHighlightedSquares([source, target])
     };
+};
+
+export function highlightRightClickedSquares() {
+    for (let i = 0; i < rightClickedSquares.length; i++) {
+        toggleRightClickHighlight($board.find('.square-' + rightClickedSquares[i])[0], true);
+    };
+};
+
+export function clearRightClickHighlights() {
+    $board.find('.' + squareClass).removeClass('highlight-right-click-light');
+    $board.find('.' + squareClass).removeClass('highlight-right-click-dark');
+    modRightClickedSquares();
+};
+
+export function toggleRightClickHighlight(square, swap=false) {
+    var dataSquare = square.getAttribute('data-square');
+    var color = 'highlight-right-click-' +  lightOrDark(dataSquare);
+    var highlighted = square.classList.contains(color);
+    if (highlighted) square.classList.remove(color);
+    else square.classList.add(color);
+    if (!swap) modRightClickedSquares(dataSquare, !highlighted);
 };
