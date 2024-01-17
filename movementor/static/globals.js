@@ -1,12 +1,14 @@
 import { Chess } from 'https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.js';
 import { toggleDifLineBtn, addRightClickListeners } from './helpers.js';
-import { clearRightClickHighlights } from './highlight.js';
+import { highlightLastMove, clearRightClickHighlights, highlightRightClickedSquares } from './highlight.js';
 import { otherChoices, onDragStart, onDrop, onSnapEnd } from './move.js';
 import { updateEvalBar, gameStart } from './update.js';
 import { swapCapturedPieces } from './captured_pieces.js';
 
 export var page = document.getElementById('page').getAttribute('data-page');
 export var startPosition = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR_w_KQkq_-_0_1';
+export var startElement = document.getElementById('-1');
+export var squareClass = 'square-55d63';
 export var lastFen = startPosition;
 export var possibleMoves = [];
 export var finished = false;
@@ -43,9 +45,7 @@ export function setFinished(done) {
 export function declareFinished() {
     document.getElementById('status').innerHTML = 'This line is finished';
     setFinished(true);
-    if (page == 'practice') {
-        $('#keepPlayingBtn')[0].style.display = 'block';
-    };
+    if (page == 'practice') $('#keepPlayingBtn')[0].style.display = 'block';
 };
 
 export function setKeepPlaying(cont) {
@@ -76,6 +76,8 @@ export function swapBoard() {
     config.position = game.fen();
     board = Chessboard('myBoard', config);
     addRightClickListeners();
+    highlightLastMove();
+    highlightRightClickedSquares();
     swapCapturedPieces();
     updateEvalBar();
 };
@@ -87,16 +89,12 @@ export function resetBoard() {
     board = Chessboard('myBoard', config);
     game = new Chess();
     addRightClickListeners();
+    setLastFen();
 };
 
 document.addEventListener('mousedown', e => {
-    var ignore = [];
-    ignore.push(document.getElementById('switchBtn'));
-    if (page == 'practice') {
-        ignore.push(document.getElementById('evalBarBtn'));
-        ignore.push(document.getElementById('hintBtn'));
-    };
-    if (ignore.includes(e.target)) return;
+    var ignore = document.getElementsByClassName('ignore');
+    if ((Array.from(ignore)).includes(e.target)) return;
     if (e.button == 0) clearRightClickHighlights();
 });
 

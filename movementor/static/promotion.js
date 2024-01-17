@@ -1,4 +1,4 @@
-import { board, game, setMovementAllowed } from './globals.js';
+import { squareClass, board, game, setMovementAllowed } from './globals.js';
 import { createChessPiece } from './helpers.js';
 import { validateMove } from './move.js';
 
@@ -19,7 +19,7 @@ function setPromotionOptionSquares(color, target) {
 
 export function opaqueBoardSquares(color, target) {
     setPromotionOptionSquares(color, target);
-    var boardSquares = document.getElementsByClassName('square-55d63');
+    var boardSquares = document.getElementsByClassName(squareClass);
     for (let i = 0; i < boardSquares.length; i++) {
         if (!(promotionOptionSquares.includes(boardSquares[i].getAttribute('data-square')))) {
             boardSquares[i].style.opacity = 0.5;
@@ -33,7 +33,7 @@ export function opaqueBoardSquares(color, target) {
 };
   
 function clearPromotionOptions() {
-    var boardSquares = document.getElementsByClassName('square-55d63');
+    var boardSquares = document.getElementsByClassName(squareClass);
     for (let i = 0; i < boardSquares.length; i++) {
         if (!(promotionOptionSquares.includes(boardSquares[i].getAttribute('data-square')))) {
             boardSquares[i].style.opacity = 1;

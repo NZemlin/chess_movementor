@@ -44,11 +44,11 @@ input[type=submit] { align-self: start; min-width: 10em; }
     display: flex;
 }
 
-span.move:hover {
+span.move:hover, .played-move:hover {
     cursor: pointer;
 }
 
-span.move.selected {
+span.move.selected, .played-selected {
     background-color: rgb(187,204,68);
     border-radius: 2px;
     /* border-bottom-style: solid;

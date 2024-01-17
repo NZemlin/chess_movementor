@@ -19,6 +19,7 @@ class PGNWriter():
                    class='move'>''' + move.move.san() + '''</span>'''
 
     def write_view_html(self, name):
+        start_position = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR_w_KQkq_-_0_1'
         moves = self.parsed_dict[name]
         html = '''
             {% extends 'openings/view.html' %}
@@ -43,7 +44,7 @@ class PGNWriter():
                         <div class='col'>
                             <div class='empty-row'></div>
                             <div class='row'>
-                                <button id="switchBtn">Switch Colors</button>
+                                <button id="switchBtn" class='ignore'>Switch Colors</button>
                             </div>
                         </div>
                         <div class='col eval-col'>
@@ -69,6 +70,12 @@ class PGNWriter():
                                 <h2 id='status'></h2>
                             </div>
                             <div class='row moves-container-view'>
+                                <span hidden id = "-1"
+                                    data-own = ''' + start_position + '''
+                                    data-parent = ''' + start_position + '''
+                                    data-child-1 = ''' + moves[0].fen_dict['own'] + '''
+                                    data-child-2 = ''' + moves[0].fen_dict['own'] + '''
+                                    data-eval = 0.22 class='move selected'></span>
                                 <span class = 'moves-line'>'''
         for i, move_info in enumerate(moves):
             if move_info.space:
@@ -90,6 +97,7 @@ class PGNWriter():
         return html
 
     def write_practice_html(self, name):
+        start_position = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR_w_KQkq_-_0_1'
         moves = self.parsed_dict[name]
         html = '''
             {% extends 'openings/practice.html' %}
@@ -122,15 +130,15 @@ class PGNWriter():
                             </div>
                             <div class='row button-spacer'></div>
                             <div class='row'>
-                                <button id="switchBtn">Switch Colors</button>
+                                <button id="switchBtn" class='ignore'>Switch Colors</button>
                             </div>
                             <div class='row button-spacer'></div>
                             <div class='row'>
-                                <button id="evalBarBtn">Hide Eval</button>
+                                <button id="evalBarBtn" class='ignore'>Hide Eval</button>
                             </div>
                             <div class='row button-spacer'></div>
                             <div class='row'>
-                                <button id="hintBtn">Hide Hints</button>
+                                <button id="hintBtn" class='ignore'>Hide Hints</button>
                             </div>
                             <div class='row button-spacer'></div>
                             <div class='row'>
@@ -153,12 +161,19 @@ class PGNWriter():
                                 <div id="myBoard" class='board'></div>
                             </div>
                             <div class='row captured-own board-width'></div>
-                            <div class='row moves-container-practice'>'''
+                            <div class='row moves-container-practice'>
+                                <span hidden id = "-1"
+                                    data-fen = ''' + start_position + '''
+                                    data-own = ''' + start_position + '''
+                                    data-parent = ''' + start_position + '''
+                                    data-child-1 = ''' + moves[0].fen_dict['own'] + '''
+                                    data-child-2 = ''' + moves[0].fen_dict['own'] + '''
+                                    data-eval = 0.22 class='move played-selected'></span>'''
         for i, move_info in enumerate(moves):
             html += self.move_element(move_info, i, 'practice')
         html += '''         </div>
                         </div>
-                        <div class='col-2'>
+                        <div class='col-3'>
                             <div class='empty-row'></div>
                             <div class='row'>
                                 <h2 id='status'></h2>
@@ -169,8 +184,12 @@ class PGNWriter():
             html += '''
                             <div class='row'>
                                 <div hidden id='n''' + str(i) + '''' class='col-2 move-list-num'>''' + str(i) + '''.</div>
-                                <div id='w''' + str(i) + '''' class='col-4 move-list'></div>
-                                <div id='b''' + str(i) + '''' class='col-4 move-list'></div>
+                                <div id='w''' + str(i) + '''' class='col-4 move-list played-move'
+                                    data-fen = '' data-source = '' data-target= '' data-prev-move=b''' + str(i-1) + '''
+                                    data-next-move=b''' + str(i) + ''' data-eval = '' style=visibility:'hidden';></div>
+                                <div id='b''' + str(i) + '''' class='col-4 move-list played-move'
+                                    data-fen = '' data-source = '' data-target= '' data-prev-move=w''' + str(i) + '''
+                                    data-next-move=w''' + str(i+1) + ''' data-eval = '' style=visibility:'hidden';></div>
                             </div>
                             '''
         html += '''         </div>
@@ -181,7 +200,7 @@ class PGNWriter():
                                 <button id='keepPlayingBtn'>Continue Playing</button>
                             </div>
                         </div>
-                        <div class='col-3'></div>
+                        <div class='col-2'></div>
                     </div>
                 </div>
             {% endblock %}

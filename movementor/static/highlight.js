@@ -1,6 +1,5 @@
-import { startPosition, game, highlightedSquares, rightClickedSquares, setHighlightedSquares, modRightClickedSquares } from "./globals.js";
+import { squareClass, startPosition, game, highlightedSquares, rightClickedSquares, setHighlightedSquares, modRightClickedSquares } from "./globals.js";
 
-var squareClass = 'square-55d63';
 var $board = $('#myBoard');
 
 function lightOrDark(square) {

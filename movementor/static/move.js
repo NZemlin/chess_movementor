@@ -1,20 +1,37 @@
 import { page, possibleMoves, finished, movementAllowed, config, board, game, setLastFen, setMovementAllowed } from './globals.js';
-import { scrollIfNeeded, updateFen, toggleDifLineBtn, getMoveNum, oppTurn } from './helpers.js';
+import { scrollIfNeeded, toggleDifLineBtn, getMoveNum, getSelected, getPlayedSelected, getUnderscoredFen, oppTurn } from './helpers.js';
+import { clearRightClickHighlights } from './highlight.js';
 import { opaqueBoardSquares, attemptPromotion } from './promotion.js';
-import { updateHintText, updateStatus } from './update.js';
+import { updateEvalBar, updateHintText, updateGameState } from './update.js';
 import { playIllegal } from './sounds.js';
 
 export var moveNum = 1;
 export var otherChoices = [];
 
 export function resetMoveVars() {
-    setLastFen();
     moveNum = 1;
     otherChoices = [];
 };
 
 export function decMoveNum() {
     moveNum--;
+};
+
+function setPlayedMoveInfo(move) {
+    var color = game.turn() == 'w' ? 'b' : 'w';
+    var moveNum = (getMoveNum() - (color == 'b'));
+    var element = document.getElementById(color + moveNum);
+    document.getElementById('n' + moveNum).hidden = false;
+    getPlayedSelected().classList.remove('played-selected');
+    element.innerHTML = move.san;
+    element.style.visibility = 'visible';
+    element.setAttribute('data-fen', getUnderscoredFen());
+    element.setAttribute('data-source', move.from);
+    element.setAttribute('data-target', move.to);
+    element.classList.add('played-selected');
+    element.setAttribute('data-eval', getSelected().getAttribute('data-eval'));
+    if (color == 'w') scrollIfNeeded(element);
+    updateEvalBar();
 };
 
 export function makeComputerMove() {
@@ -25,27 +42,16 @@ export function makeComputerMove() {
     otherChoices = possibleMoves;
     otherChoices.splice(randomIdx, 1);
     toggleDifLineBtn(otherChoices.length == 0);
-    if (otherChoices.length != 0) {
-        console.log('Other choices were: ' + otherChoices.join(', '));
-    };
-    setLastFen(updateFen(game.fen()).replace(/ /g, '_'));
-    var color = game.turn();
-    var moveNum = (getMoveNum() - (color == config.orientation[0]));
+    if (otherChoices.length != 0) console.log('Other choices were: ' + otherChoices.join(', '));
+    setLastFen(getUnderscoredFen());
     var data = game.move(move);
     board.position(game.fen(), false);
-    document.getElementById('n' + moveNum).hidden = false;
-    var element = document.getElementById(color + moveNum);
-    element.innerHTML = move;
-    if (color == 'w') {
-        scrollIfNeeded(element);
-    };
+    clearRightClickHighlights();
     updateHintText(false);
-    updateStatus(move, data.from, data.to);
-    if (finished) {
-        console.log('Line is finished');
-    } else {
-        console.log('Your moves: ' + possibleMoves.join(', '));
-    };
+    updateGameState(move, data.from, data.to);
+    setPlayedMoveInfo(data);
+    if (finished) console.log('Line is finished');
+    else console.log('Your moves: ' + possibleMoves.join(', '));
 };
 
 export function onDragStart(source, piece, position, orientation) {
@@ -54,24 +60,21 @@ export function onDragStart(source, piece, position, orientation) {
     if ((game.turn() === 'w' && piece.search(/^b/) !== -1) ||
         (game.turn() === 'b' && piece.search(/^w/) !== -1) ||
          game.game_over() || finished || !movementAllowed) return false;
-    // only pick up own side if on practice page
-    if (page == 'practice' && oppTurn()) return false;
-    setLastFen(updateFen(game.fen()).replace(/ /g, '_'));
+    // if on practice page, only pick up own side and if
+    // current board position is current game position
+    if (page == 'practice' && (oppTurn() || getUnderscoredFen() != getPlayedSelected().getAttribute('data-fen'))) return false;
+    setLastFen(getUnderscoredFen());
 };
 
 function handlePromotionAttempt(move, source, target, before) {
     if (game.get(source).type != 'p') return validateMove(move, source, target, before, true);
     var left, right;
-    if (source.charAt(0) != 'a') {
-        left = String.fromCharCode(source.charAt(0).charCodeAt(0) - 1);
-    };
-    if (source.charAt(0) != 'h') {
-        right = String.fromCharCode(source.charAt(0).charCodeAt(0) + 1);
-    };
-    var num = config.orientation[0] == 'w' ? '8' : '1';
-    if (((left != null && target == left + num && game.get(left + num) != null) ||
-         (right != null && target == right + num && game.get(right + num) != null) ||
-         (target == source.charAt(0) + num && game.get(target) == null))) {
+    if (source.charAt(0) != 'a') left = String.fromCharCode(source.charAt(0).charCodeAt(0) - 1);
+    if (source.charAt(0) != 'h') right = String.fromCharCode(source.charAt(0).charCodeAt(0) + 1);
+    var rank = config.orientation[0] == 'w' ? '8' : '1';
+    if (((left != null && target == left + rank && game.get(left + rank) != null) ||
+         (right != null && target == right + rank && game.get(right + rank) != null) ||
+         (target == source.charAt(0) + rank && game.get(target) == null))) {
         setMovementAllowed(false);
         opaqueBoardSquares(config.orientation[0], target);
         attemptPromotion(config.orientation[0], source, target, before);
@@ -80,14 +83,9 @@ function handlePromotionAttempt(move, source, target, before) {
 
 export function handleLegalMove(move, source, target) {
     console.log('A legal move was played: ' + move.san);
-    updateStatus(move.san, source, target);
+    updateGameState(move.san, source, target);
     if (page == 'practice') {
-        var color = game.turn() == 'w' ? 'b' : 'w';
-        var moveNum = (getMoveNum() - (color != config.orientation[0]));
-        document.getElementById('n' + moveNum).hidden = false;
-        var element = document.getElementById(color + moveNum);
-        element.innerHTML = move.san;
-        if (color == 'b') scrollIfNeeded(element);
+        setPlayedMoveInfo(move);
         window.setTimeout(makeComputerMove, 500);
     };
 };

@@ -1,24 +1,15 @@
-import { board, game, setPossibleMoves, setFinished, setKeepPlaying, swapBoard, resetBoard, setHighlightedSquares, modRightClickedSquares } from './globals.js';
-import { timeoutBtn, oppTurn } from './helpers.js';
-import { highlightLastMove, highlightRightClickedSquares } from './highlight.js';
-import { updateStatus, gameStart } from './update.js';
+import { squareClass, startPosition, startElement, config, board, game, setPossibleMoves, setFinished, setKeepPlaying, swapBoard, resetBoard, setHighlightedSquares, modRightClickedSquares } from './globals.js';
+import { timeoutBtn, resetMoveList, resetButtons, playSound, oppTurn, getPlayedSelected } from './helpers.js';
+import { highlightLastMove } from './highlight.js';
+import { updateEvalBar, updateGameState, gameStart } from './update.js';
 import { otherChoices, resetMoveVars, decMoveNum, makeComputerMove } from './move.js';
+import * as sounds from './sounds.js';
 
 $('#restartBtn').on('click', function() {
     console.clear();
-    var element = document.getElementsByClassName('move-list-num');
-    for (let i = 0; i < element.length; i++) {
-        element[i].hidden = true;
-    };
-    element = document.getElementsByClassName('move-list');
-    for (let i = 0; i < element.length; i++) {
-        element[i].innerHTML = '';
-    };
+    resetMoveList();
     resetBoard();
-    $('#keepPlayingBtn')[0].style.display = 'none';
-    var difLineBtn = document.getElementById('difLineBtn');
-    difLineBtn.innerHTML = 'Different Line';
-    difLineBtn.disabled = false;
+    resetButtons();
     setHighlightedSquares();
     modRightClickedSquares();
     resetMoveVars();
@@ -27,17 +18,12 @@ $('#restartBtn').on('click', function() {
 });
   
 $('#difLineBtn').on('click', function () {
-    if (!otherChoices) {
-        console.log('No other lines were available');
-    } else {
+    if (!otherChoices) console.log('No other lines were available');
+    else {
         console.log('Different line chosen');
         console.log('----------------------------------------------------');
-        if (oppTurn()) {
-            game.undo();
-        };
-        if (game.turn() == 'w') {
-            decMoveNum();
-        };
+        if (oppTurn()) game.undo();
+        if (game.turn() == 'w') decMoveNum();
         game.undo();
         board.position(game.fen(), false);
         setFinished(false);
@@ -50,8 +36,6 @@ $('#difLineBtn').on('click', function () {
 
 $('#switchBtn').on('click', function () {
     swapBoard();
-    highlightLastMove();
-    highlightRightClickedSquares();
     window.setTimeout(makeComputerMove, 500);
     timeoutBtn(this);
 });
@@ -71,8 +55,57 @@ $('#keepPlayingBtn').on('click', function () {
     this.style.display = 'none';
     setFinished(false);
     setKeepPlaying(true);
-    updateStatus();
+    updateGameState();
     document.getElementById('evalBarBtn').click();
     document.getElementById('hintBtn').click();
     window.setTimeout(makeComputerMove, 500);
 });
+
+function clickUpdate(element) {
+    board.position(element.getAttribute('data-fen').replace(/_/g, ' '), false);
+    playSound(element.innerHTML);
+    getPlayedSelected().classList.remove('played-selected');
+    element.classList.add('played-selected');
+    highlightLastMove(element.getAttribute('data-source'), element.getAttribute('data-target'));
+    updateEvalBar();
+};
+
+function checkKey(e) {
+    var firstMove = document.getElementById('w1');
+    if (firstMove.style.visibility == 'hidden') return;
+    var old = getPlayedSelected();
+    if (e.keyCode == 37) {
+        if (old == startElement) return;
+        if (old == firstMove) {
+            old.classList.remove('played-selected');
+            startElement.classList.add('played-selected');
+            board.position(startPosition.replace(/_/g, ' '), false);
+            $('#myBoard').find('.' + squareClass).removeClass('highlight-light');
+            $('#myBoard').find('.' + squareClass).removeClass('highlight-dark');
+            (config.orientation == 'w') ? sounds.playMoveOpponent() : sounds.playMoveSelf();
+            return;
+        };
+        clickUpdate(document.getElementById(old.getAttribute('data-prev-move')));
+    } else if (e.keyCode == 39) {
+        var nextMove = (old == startElement) ? firstMove : document.getElementById(old.getAttribute('data-next-move'));
+        if (nextMove.style.visibility != 'visible') return;
+        clickUpdate(nextMove);
+    };
+};
+
+document.onkeydown = checkKey;
+
+function dontScroll(e) {
+    if(["Space","ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].indexOf(e.code) > -1) {
+        e.preventDefault();
+    };
+};
+
+window.addEventListener("keydown", dontScroll, false);
+
+var moves = document.getElementsByClassName('played-move');
+for (let i = 0; i < moves.length; i++) {
+    moves[i].addEventListener('click', function() {
+        clickUpdate(moves[i]);
+    });
+};

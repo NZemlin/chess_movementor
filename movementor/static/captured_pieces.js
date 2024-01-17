@@ -63,9 +63,7 @@ function countPieces() {
     };
     for (let i = 0; i < 8; i++) {
         for (let j = 0; j < 8; j++) {
-            if (pos[i][j] != null) {
-                pieceDict[pos[i][j].color + pos[i][j].type.toUpperCase()] += 1;
-            };
+            if (pos[i][j] != null) pieceDict[pos[i][j].color + pos[i][j].type.toUpperCase()] += 1;
         };
     };
 };
@@ -74,11 +72,7 @@ function updateMaterialDif(own) {
     countPieces();
     materialDif = 0;
     for (const [key, value] of Object.entries(pieceDict)) {
-        if (key[0] == own) {
-            materialDif += value * valueDict[key];
-        } else {
-            materialDif -= value * valueDict[key];
-        };
+        materialDif += (key[0] == own) ? value * valueDict[key] : -value * valueDict[key];
     };
 };
 
@@ -114,7 +108,7 @@ export function swapCapturedPieces() {
 };
 
 export function updateCapturedPieces() {
-    console.log('Updating captured pieces');
+    // console.log('Updating captured pieces');
     var own = config.orientation == 'white' ? 'w' : 'b';
     removeCapturedPieces();
     updateMaterialDif(own);

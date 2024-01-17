@@ -1,25 +1,20 @@
 import { page, possibleMoves, keepPlaying, config, game, setPossibleMoves, declareFinished } from './globals.js';
-import { scrollIfNeeded, addRightClickListeners, lastMoveElement, nextMoveColor, oppTurn } from './helpers.js';
+import { scrollIfNeeded, addRightClickListeners, playSound, lastMoveElement, nextMoveColor, getPlayedSelected, getSelected } from './helpers.js';
 import { highlightLastMove } from './highlight.js';
 import { removeCapturedPieces, updateCapturedPieces } from './captured_pieces.js';
-import * as sounds from './sounds.js';
 
 function updateSelectedMoveElement() {
     if (keepPlaying) return;
-    console.log('Updating selected move element');
+    // console.log('Updating selected move element');
     var old = document.getElementsByClassName('selected');
-    if (old.length != 0) {
-        old[0].classList.remove('selected');
-    };
+    if (old.length != 0) old[0].classList.remove('selected');
     var element = lastMoveElement();
     element.classList.add('selected');
-    if (page == 'view') {
-        scrollIfNeeded(element);
-    };
+    if (page == 'view') scrollIfNeeded(element);
 };
 
 function updateAllowedMoves() {
-    console.log('Updating allowed moves');
+    // console.log('Updating allowed moves');
     if (keepPlaying) {
         setPossibleMoves(game.moves());
         return;
@@ -47,9 +42,9 @@ function updateAllowedMoves() {
     setPossibleMoves(curMoves);
 };
 
-export function updateHintText(own) {
+export function updateHintText(own='') {
     if (page == 'view') return;
-    document.getElementById('hints').innerHTML = possibleMoves && own ? ('Allowed moves are: ' + possibleMoves.join(', ')) : 'No hints currently';
+    document.getElementById('hints').innerHTML = (possibleMoves && own) ? ('Allowed moves are: ' + possibleMoves.join(', ')) : 'No hints currently';
 };
 
 function displayEvaluation(dataEval = '0.22') {
@@ -95,54 +90,40 @@ export function updateEvalBar() {
     var evalBar = document.querySelector("#evalBar");
     blackBar.style.backgroundColor = (config.orientation == 'white') ? '#403d39' : 'white';
     evalBar.style.backgroundColor = (config.orientation == 'white') ? 'white' : '#403d39';
-    var element = document.getElementsByClassName('selected');
-    displayEvaluation(element.length != 0 ? element[0].getAttribute('data-eval') : '0.22');
+    var element = (page == 'practice') ? getPlayedSelected() : getSelected();
+    displayEvaluation(element.getAttribute('data-eval'));
 };
 
-export function updateStatus(move='', source='', target='') {
-    var nextColor = nextMoveColor();
-    nextColor = nextColor.charAt(0).toUpperCase() + nextColor.slice(1);
+function updateStatus() {
+    // console.log('Updating status');
+    var nextColor = nextMoveColor().charAt(0).toUpperCase() + nextMoveColor().slice(1);
     var status = nextColor + ' to move';
-    if (game.in_checkmate()) {
-        sounds.playGameEnd();
-        status = 'Game over, ' + nextColor + ' is in checkmate.';
-    } else if (game.in_draw()) {
-        status = 'Game over, drawn position';
-    } else if (game.in_check()) {
-        sounds.playMoveCheck();
-        status += ', ' + nextColor + ' is in check';
-    } else if (move) {
-        if (move[-2] == '=') {
-            sounds.playPromote();
-        } else if (move.includes('x')) {
-            sounds.playCapture();
-        } else if (move[0] == 'O') {
-            sounds.playCastle();
-        } else if (oppTurn()) {
-            sounds.playMoveSelf();
-        } else {
-            sounds.playMoveOpponent();
-        };
-    };
+    if (game.in_checkmate()) status = 'Game over, ' + nextColor + ' is in checkmate.';
+    else if (game.in_draw()) status = 'Game over, drawn position';
+    else if (game.in_check()) status += ', ' + nextColor + ' is in check';
     document.getElementById('status').innerHTML = status;
+};
+
+export function updateGameState(move='', source='', target='', mute=false) {
+    if (!mute) playSound(move);
     highlightLastMove(source, target);
     updateSelectedMoveElement();
     updateCapturedPieces();
     updateAllowedMoves();
     updateHintText();
     updateEvalBar();
-    console.log('Status updated');
-    console.log('----------------------------------------------------');
+    updateStatus();
+    // console.log('Game state updated')
+    if (page == 'practice') console.log('----------------------------------------------------');
 };
 
 export function gameStart() {
-    if (page == 'practice') updateHintText();
-    removeCapturedPieces();
-    document.getElementById('status').innerHTML = 'White to move';
     addRightClickListeners();
+    playSound();
+    removeCapturedPieces();
     setPossibleMoves([document.getElementById('0').getAttribute('data-san')]);
     updateEvalBar();
-    sounds.playGameStart()
+    updateStatus();
     console.log('Game started');
-    console.log('----------------------------------------------------');
+    if (page == 'practice') console.log('----------------------------------------------------');
 };
