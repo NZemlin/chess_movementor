@@ -1,5 +1,5 @@
 import { Chess } from 'https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.js';
-import { toggleDifLineBtn, addRightClickListeners } from './helpers.js';
+import { toggleDifLineBtn, addRightClickListeners, getBoardFen } from './helpers.js';
 import { highlightLastMove, clearRightClickHighlights, highlightRightClickedSquares } from './highlight.js';
 import { onDragStart, onDrop, onSnapEnd } from './move.js';
 import { updateEvalBar, gameStart } from './update.js';
@@ -16,7 +16,7 @@ export var finished = false;
 export var keepPlaying = false;
 export var movementAllowed = true;
 export var highlightedSquares = [];
-export var rightClickedSquares = [];
+export var rightClickMemory = {};
 export var config = {
     draggable: true,
     dropOffBoard: 'snapback',
@@ -69,19 +69,21 @@ export function setHighlightedSquares(squares=[]) {
 };
 
 export function modRightClickedSquares(square='', add=true) {
-    if (!square) rightClickedSquares = [];
+    var fen = getBoardFen();
+    if (!(fen in rightClickMemory)) rightClickMemory[fen] = [];
+    if (!square) rightClickMemory[fen] = [];
     else {
-        if (add && !rightClickedSquares.includes(square)) rightClickedSquares.push(square);
-        else if (rightClickedSquares.includes(square)) {
-            var index = rightClickedSquares.indexOf(square);
-            rightClickedSquares.splice(index, 1);
+        if (add && !rightClickMemory[fen].includes(square)) rightClickMemory[fen].push(square);
+        else if (rightClickMemory[fen].includes(square)) {
+            var index = rightClickMemory[fen].indexOf(square);
+            rightClickMemory[fen].splice(index, 1);
         };
     };
 };
 
 export function swapBoard() {
     config.orientation = (config.orientation == 'white' ? 'black' : 'white');
-    config.position = game.fen();
+    config.position = getBoardFen().replace(/_/g, ' ');
     board = Chessboard('myBoard', config);
     addRightClickListeners();
     highlightLastMove();
@@ -96,14 +98,13 @@ export function resetBoard() {
     config.position = 'start';
     board = Chessboard('myBoard', config);
     game = new Chess();
-    addRightClickListeners();
     setLastFen();
 };
 
 document.addEventListener('mousedown', e => {
     var ignore = document.getElementsByClassName('ignore');
     if ((Array.from(ignore)).includes(e.target)) return;
-    if (e.button == 0) clearRightClickHighlights();
+    if (e.button == 0) clearRightClickHighlights(true);
 });
 
 document.addEventListener('contextmenu', e => {

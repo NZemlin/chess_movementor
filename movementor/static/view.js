@@ -1,7 +1,8 @@
-import { startPosition, startElement, config, board, game, setLastFen, swapBoard, resetBoard } from './globals.js';
+import { startPosition, startElement, config, board, game, setLastFen, swapBoard, setKeepPlaying } from './globals.js';
 import { timeoutBtn } from './helpers.js';
 import { updateGameState } from './update.js';
 import { playMoveSelf, playMoveOpponent } from './sounds.js';
+import { highlightRightClickedSquares } from './highlight.js';
 
 $('#switchBtn').on('click', function () {
     swapBoard();
@@ -24,7 +25,9 @@ function clickUpdate(element) {
     setLastFen(element.getAttribute('data-parent'));
     game.load(element.getAttribute('data-own').replace(/_/g, ' '));
     board.position(game.fen(), false);
+    highlightRightClickedSquares();
     var uci = element.getAttribute('data-uci');
+    setKeepPlaying(false);
     updateGameState(element.getAttribute('data-san'), uci.slice(0, 2), uci.slice(2, 4));
 };
 
@@ -36,7 +39,9 @@ function requestedFen(keyCode, old) {
         case 38:
             if (old == document.getElementById('0')) {
                 fen = startPosition;
-                resetBoard();
+                game.load(fen.replace(/_/g, ' '));
+                board.position(game.fen(), false);
+                highlightRightClickedSquares();
                 updateGameState('', '', '', true);
                 startElement.classList.add('selected');
                 (config.orientation == 'w') ? playMoveOpponent() : playMoveSelf();

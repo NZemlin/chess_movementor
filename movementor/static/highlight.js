@@ -1,4 +1,5 @@
-import { squareClass, startPosition, game, highlightedSquares, rightClickedSquares, setHighlightedSquares, modRightClickedSquares } from "./globals.js";
+import { squareClass, startPosition, game, highlightedSquares, rightClickMemory, setHighlightedSquares, modRightClickedSquares } from "./globals.js";
+import { getUnderscoredFen, getBoardFen } from "./helpers.js";
 
 var $board = $('#myBoard');
 
@@ -20,23 +21,28 @@ export function highlightLastMove(source='', target='') {
     };
 };
 
+export function clearRightClickHighlights(erase=false) {
+    $board.find('.' + squareClass).removeClass('highlight-right-click-light');
+    $board.find('.' + squareClass).removeClass('highlight-right-click-dark');
+    if (erase) modRightClickedSquares();
+};
+
 export function highlightRightClickedSquares() {
-    for (let i = 0; i < rightClickedSquares.length; i++) {
-        toggleRightClickHighlight($board.find('.square-' + rightClickedSquares[i])[0], true);
+    clearRightClickHighlights();
+    var fen = getBoardFen();
+    if (!(fen in rightClickMemory)) rightClickMemory[fen] = [];
+    var squares = rightClickMemory[fen];
+    for (let i = 0; i < squares.length; i++) {
+        var color = 'highlight-right-click-' +  lightOrDark(squares[i]);
+        $board.find('.square-' + squares[i])[0].classList.add(color);
     };
 };
 
-export function clearRightClickHighlights() {
-    $board.find('.' + squareClass).removeClass('highlight-right-click-light');
-    $board.find('.' + squareClass).removeClass('highlight-right-click-dark');
-    modRightClickedSquares();
-};
-
-export function toggleRightClickHighlight(square, swap=false) {
+export function toggleRightClickHighlight(square) {
     var dataSquare = square.getAttribute('data-square');
     var color = 'highlight-right-click-' +  lightOrDark(dataSquare);
     var highlighted = square.classList.contains(color);
     if (highlighted) square.classList.remove(color);
     else square.classList.add(color);
-    if (!swap) modRightClickedSquares(dataSquare, !highlighted);
+    modRightClickedSquares(dataSquare, !highlighted);
 };

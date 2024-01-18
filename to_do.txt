@@ -5,10 +5,9 @@
 * = engine needed
 
 Add arrows/arrow memory
-Add right-click memory
-
-Implement keep playing for view page
-Add dots/circles for possible moves/captures when picking up a piece
 
 Improve visuals
+    - Highlight border of square that's being hovered over when holding a piece
+    - Add dots/circles for possible moves/captures when picking up a piece
     - Add color theme selector
+    - Light/dark mode

@@ -141,6 +141,10 @@ export function getUnderscoredFen() {
     return updateFen(game.fen()).replace(/ /g, '_');
 };
 
+export function getBoardFen() {
+    return (page == 'practice') ? getPlayedSelected().getAttribute('data-fen') : getUnderscoredFen();
+};
+
 export function lastMoveElement() {
     return document.querySelectorAll("[data-own='" + getUnderscoredFen() + "']")[0];
 };

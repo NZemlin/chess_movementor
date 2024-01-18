@@ -36,6 +36,10 @@ input[type=submit] { align-self: start; min-width: 10em; }
     font-size: 14px;
 }
 
+.piece-417db:hover {
+    cursor: pointer;
+}
+
 .moves-container {
     overflow: hidden;
 }

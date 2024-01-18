@@ -101,6 +101,7 @@ function updateStatus() {
     if (game.in_checkmate()) status = 'Game over, ' + nextColor + ' is in checkmate.';
     else if (game.in_draw()) status = 'Game over, drawn position';
     else if (game.in_check()) status += ', ' + nextColor + ' is in check';
+    if (keepPlaying) status = '(Out of prepared opening) ' + status;
     document.getElementById('status').innerHTML = status;
 };
 

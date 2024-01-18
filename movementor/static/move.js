@@ -1,4 +1,4 @@
-import { page, possibleMoves, finished, movementAllowed, config, board, game, setLastFen, setMovementAllowed, setOtherChoices } from './globals.js';
+import { page, possibleMoves, finished, movementAllowed, config, board, game, setLastFen, setMovementAllowed, setOtherChoices, setKeepPlaying } from './globals.js';
 import { scrollIfNeeded, getMoveNum, getSelected, getPlayedSelected, getUnderscoredFen, oppTurn } from './helpers.js';
 import { clearRightClickHighlights } from './highlight.js';
 import { opaqueBoardSquares, attemptPromotion } from './promotion.js';
@@ -40,14 +40,15 @@ export function makeComputerMove() {
 };
 
 export function onDragStart(source, piece, position, orientation) {
-    // only pick up pieces for the side to move, if game is still going,
-    // if line isn't finished, and if movement is allowed
+    // only pick up pieces for the side to move,
+    // if game is still going, and if movement is allowed
     if ((game.turn() === 'w' && piece.search(/^b/) !== -1) ||
         (game.turn() === 'b' && piece.search(/^w/) !== -1) ||
-         game.game_over() || finished || !movementAllowed) return false;
+         game.game_over() || !movementAllowed) return false;
     // if on practice page, only pick up own side and if
-    // current board position is current game position
-    if (page == 'practice' && (oppTurn() || getUnderscoredFen() != getPlayedSelected().getAttribute('data-fen'))) return false;
+    // current board position is current game position and
+    // if game is still going
+    if (page == 'practice' && (finished || oppTurn() || getUnderscoredFen() != getPlayedSelected().getAttribute('data-fen'))) return false;
     setLastFen(getUnderscoredFen());
 };
 
@@ -77,6 +78,11 @@ export function handleLegalMove(move, source, target) {
 
 export function validateMove(move, source, target, before, checkedPromo) {
     if (move === null || !(possibleMoves.includes(move.san))) {
+        if (page == 'view' && finished && move != null) {
+            setKeepPlaying(true);
+            handleLegalMove(move, source, target);
+            return;
+        };
         if (before != game.fen()) {
             game.undo();
             board.position(game.fen(), false);
