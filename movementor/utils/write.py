@@ -184,12 +184,12 @@ class PGNWriter():
             html += '''
                             <div class='row'>
                                 <div hidden id='n''' + str(i) + '''' class='col-2 move-list-num'>''' + str(i) + '''.</div>
-                                <div id='w''' + str(i) + '''' class='col-4 move-list played-move'
+                                <div class='col-4'><span id='w''' + str(i) + '''' class='move-list played-move'
                                     data-fen = '' data-source = '' data-target= '' data-prev-move=b''' + str(i-1) + '''
-                                    data-next-move=b''' + str(i) + ''' data-eval = '' style=visibility:'hidden';></div>
-                                <div id='b''' + str(i) + '''' class='col-4 move-list played-move'
+                                    data-next-move=b''' + str(i) + ''' data-eval = '' style=visibility:'hidden';></span></div>
+                                <div class='col-4'><span id='b''' + str(i) + '''' class='move-list played-move'
                                     data-fen = '' data-source = '' data-target= '' data-prev-move=w''' + str(i) + '''
-                                    data-next-move=w''' + str(i+1) + ''' data-eval = '' style=visibility:'hidden';></div>
+                                    data-next-move=w''' + str(i+1) + ''' data-eval = '' style=visibility:'hidden';></span></div>
                             </div>
                             '''
         html += '''         </div>

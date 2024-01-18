@@ -4,14 +4,11 @@
 *Don't display bad moves when swapping colors
 * = engine needed
 
-Add arrows
+Add arrows/arrow memory
 Add right-click memory
+
+Implement keep playing for view page
 Add dots/circles for possible moves/captures when picking up a piece
 
-Add pre-moves in practice mode
-Implement keep playing for view page
-
-Improve autoscroll in view page
-Make spamming clicks and arrows not skip playing sounds for each
 Improve visuals
     - Add color theme selector

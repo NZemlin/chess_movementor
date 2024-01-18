@@ -1,21 +1,9 @@
-import { page, possibleMoves, finished, movementAllowed, config, board, game, setLastFen, setMovementAllowed } from './globals.js';
-import { scrollIfNeeded, toggleDifLineBtn, getMoveNum, getSelected, getPlayedSelected, getUnderscoredFen, oppTurn } from './helpers.js';
+import { page, possibleMoves, finished, movementAllowed, config, board, game, setLastFen, setMovementAllowed, setOtherChoices } from './globals.js';
+import { scrollIfNeeded, getMoveNum, getSelected, getPlayedSelected, getUnderscoredFen, oppTurn } from './helpers.js';
 import { clearRightClickHighlights } from './highlight.js';
 import { opaqueBoardSquares, attemptPromotion } from './promotion.js';
 import { updateEvalBar, updateHintText, updateGameState } from './update.js';
 import { playIllegal } from './sounds.js';
-
-export var moveNum = 1;
-export var otherChoices = [];
-
-export function resetMoveVars() {
-    moveNum = 1;
-    otherChoices = [];
-};
-
-export function decMoveNum() {
-    moveNum--;
-};
 
 function setPlayedMoveInfo(move) {
     var color = game.turn() == 'w' ? 'b' : 'w';
@@ -39,10 +27,7 @@ export function makeComputerMove() {
     var randomIdx = Math.floor(Math.random() * possibleMoves.length);
     var move = possibleMoves[randomIdx];
     console.log('Computer chose: ' + move);
-    otherChoices = possibleMoves;
-    otherChoices.splice(randomIdx, 1);
-    toggleDifLineBtn(otherChoices.length == 0);
-    if (otherChoices.length != 0) console.log('Other choices were: ' + otherChoices.join(', '));
+    setOtherChoices(possibleMoves, randomIdx);
     setLastFen(getUnderscoredFen());
     var data = game.move(move);
     board.position(game.fen(), false);

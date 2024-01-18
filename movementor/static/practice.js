@@ -1,8 +1,8 @@
-import { squareClass, startPosition, startElement, config, board, game, setPossibleMoves, setFinished, setKeepPlaying, swapBoard, resetBoard, setHighlightedSquares, modRightClickedSquares } from './globals.js';
-import { timeoutBtn, resetMoveList, resetButtons, playSound, oppTurn, getPlayedSelected } from './helpers.js';
+import { squareClass, startPosition, startElement, otherChoices, config, board, game, setPossibleMoves, setFinished, setKeepPlaying, swapBoard, resetBoard, setHighlightedSquares, modRightClickedSquares } from './globals.js';
+import { scrollIfNeeded, timeoutBtn, resetMoveList, resetButtons, playSound, oppTurn, getPlayedSelected } from './helpers.js';
 import { highlightLastMove } from './highlight.js';
 import { updateEvalBar, updateGameState, gameStart } from './update.js';
-import { otherChoices, resetMoveVars, decMoveNum, makeComputerMove } from './move.js';
+import { makeComputerMove } from './move.js';
 import * as sounds from './sounds.js';
 
 $('#restartBtn').on('click', function() {
@@ -12,7 +12,6 @@ $('#restartBtn').on('click', function() {
     resetButtons();
     setHighlightedSquares();
     modRightClickedSquares();
-    resetMoveVars();
     gameStart();
     window.setTimeout(makeComputerMove, 500);
 });
@@ -23,7 +22,6 @@ $('#difLineBtn').on('click', function () {
         console.log('Different line chosen');
         console.log('----------------------------------------------------');
         if (oppTurn()) game.undo();
-        if (game.turn() == 'w') decMoveNum();
         game.undo();
         board.position(game.fen(), false);
         setFinished(false);
@@ -68,6 +66,7 @@ function clickUpdate(element) {
     element.classList.add('played-selected');
     highlightLastMove(element.getAttribute('data-source'), element.getAttribute('data-target'));
     updateEvalBar();
+    scrollIfNeeded(element);
 };
 
 function checkKey(e) {

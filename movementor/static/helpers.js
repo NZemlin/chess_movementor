@@ -3,21 +3,26 @@ import { toggleRightClickHighlight } from "./highlight.js";
 import { updateHintText } from "./update.js";
 import * as sounds from './sounds.js';
 
-function elementInViewport(element) {
-    var bounding = element.getBoundingClientRect();
-    return (bounding.top >= 0 &&
-        bounding.left >= 0 &&
-        bounding.right <= (window.innerWidth*.75 || document.documentElement.clientWidth) &&
-        bounding.bottom <= (window.innerHeight*.75 || document.documentElement.clientHeight));
-};
-
 export function scrollIfNeeded(element) {
-    if (!elementInViewport(element)) {
-        element.scrollIntoView({ 
-            behavior: 'smooth',
-            block: 'nearest',
+    var observer;
+    var area = (page == 'view') ? ".moves-container-view" : ".move-list-container";
+    var options = {
+        root: document.querySelector(area),
+        rootMargin: "-100px",
+        threshold: 0,
+    };
+    const callback = (entries, observer) => {
+        entries.forEach((entry) => {
+            if (!entry.isIntersecting) {
+                entry.target.scrollIntoView({ 
+                    behavior: 'smooth',
+                    block: 'nearest',
+                });
+            };
         });
     };
+    observer = new IntersectionObserver(callback, options);
+    observer.observe(element);
 };
 
 export function updateFen(fen) {

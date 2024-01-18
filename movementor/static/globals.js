@@ -1,7 +1,7 @@
 import { Chess } from 'https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.js';
 import { toggleDifLineBtn, addRightClickListeners } from './helpers.js';
 import { highlightLastMove, clearRightClickHighlights, highlightRightClickedSquares } from './highlight.js';
-import { otherChoices, onDragStart, onDrop, onSnapEnd } from './move.js';
+import { onDragStart, onDrop, onSnapEnd } from './move.js';
 import { updateEvalBar, gameStart } from './update.js';
 import { swapCapturedPieces } from './captured_pieces.js';
 
@@ -11,6 +11,7 @@ export var startElement = document.getElementById('-1');
 export var squareClass = 'square-55d63';
 export var lastFen = startPosition;
 export var possibleMoves = [];
+export var otherChoices = [];
 export var finished = false;
 export var keepPlaying = false;
 export var movementAllowed = true;
@@ -36,6 +37,13 @@ export function setPossibleMoves(moves) {
     possibleMoves = moves;
     toggleDifLineBtn(otherChoices.length == 0);
     finished = false;
+};
+
+export function setOtherChoices(moves, index) {
+    otherChoices = moves;
+    otherChoices.splice(index, 1);
+    toggleDifLineBtn(otherChoices.length == 0);
+    if (otherChoices.length != 0) console.log('Other choices were: ' + otherChoices.join(', '));
 };
 
 export function setFinished(done) {
