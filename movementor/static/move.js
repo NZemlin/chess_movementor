@@ -1,5 +1,5 @@
 import { page, possibleMoves, finished, movementAllowed, config, board, game, setLastFen, setMovementAllowed, setOtherChoices, setKeepPlaying } from './globals.js';
-import { scrollIfNeeded, getMoveNum, getSelected, getPlayedSelected, getUnderscoredFen, oppTurn } from './helpers.js';
+import { scrollIfNeeded, clearCanvas, getMoveNum, getSelected, getPlayedSelected, getUnderscoredFen, oppTurn } from './helpers.js';
 import { clearRightClickHighlights } from './highlight.js';
 import { opaqueBoardSquares, attemptPromotion } from './promotion.js';
 import { updateEvalBar, updateHintText, updateGameState } from './update.js';
@@ -32,6 +32,7 @@ export function makeComputerMove() {
     var data = game.move(move);
     board.position(game.fen(), false);
     clearRightClickHighlights();
+    clearCanvas();
     updateHintText(false);
     updateGameState(move, data.from, data.to);
     setPlayedMoveInfo(data);

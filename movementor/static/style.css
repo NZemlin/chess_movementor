@@ -227,3 +227,21 @@ span.move.selected, .played-selected {
     background-color: rgb(187,204,68);
     width: 100%;
 }
+
+#board_wrapper{
+    position: relative;
+    width: 700px;
+    height: 674.17px;
+}
+
+#primary_canvas, #drawing_canvas, #myBoard{
+    position: absolute; 
+    top: 0px; 
+    left: 0px;
+}
+
+#primary_canvas, #drawing_canvas {
+    z-index: 10;
+    opacity: 0.8;
+    padding: 0 9.75px 0 9.75px;
+}

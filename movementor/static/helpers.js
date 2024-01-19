@@ -1,5 +1,5 @@
-import { page, squareClass, startElement, config, game } from "./globals.js";
-import { toggleRightClickHighlight } from "./highlight.js";
+import { page, squareClass, startElement, mouseDownSquare, config, game, setMouseDownSquare, arrowMemory, drawArrows, boardWidth } from "./globals.js";
+import { lightOrDark, toggleRightClickHighlight } from "./highlight.js";
 import { updateHintText } from "./update.js";
 import * as sounds from './sounds.js';
 
@@ -98,13 +98,66 @@ export function createChessPiece(color, pieceType, pieceClasses, size) {
     return img;
 };
 
+export function recolorNotation() {
+    var notations = document.getElementsByClassName('notation-322f9');
+    for (let i = 0; i < notations.length; i++) {
+        var parent = notations[i].parentElement;
+        var dataSquare = parent.getAttribute('data-square')
+        var newColor = lightOrDark(dataSquare) == 'light' ? 'rgb(119,153,84)' : 'rgb(233,237,204)';
+        notations[i].style.color = newColor;
+    };
+};
+
 export function addRightClickListeners() {
+    addRightClickDownListeners();
+    addRightClickUpListeners();
+};
+
+export function addRightClickDownListeners() {
     var squares = document.getElementsByClassName(squareClass);
     for (let i = 0; i < squares.length; i++) {
         squares[i].addEventListener("mousedown", e => {
-            if (e.button == 2) toggleRightClickHighlight(squares[i]);
+            if (e.button == 2) setMouseDownSquare(squares[i]);
         });
     };
+};
+
+export function addRightClickUpListeners() {
+    var squares = document.getElementsByClassName(squareClass);
+    for (let i = 0; i < squares.length; i++) {
+        squares[i].addEventListener("mouseup", e => {
+            if (e.button == 2 && mouseDownSquare == squares[i]) toggleRightClickHighlight(squares[i]);
+        });
+    };
+};
+
+export function clearCanvas() {
+    var c = document.getElementById('primary_canvas');
+    var context = c.getContext('2d');
+    context.clearRect(0,0, context.canvas.width, context.canvas.height);
+};
+
+export function swapArrows() {
+    for (var key in arrowMemory) {
+        var arrows = arrowMemory[key];
+        var newArrows = [];
+        for (let i = 0; i != arrows.length; i++) {
+            let initialPoint = { x: null, y: null };
+            let finalPoint = { x: null, y: null };
+            initialPoint.x = boardWidth - arrows[i].initial.x;
+            initialPoint.y = boardWidth - arrows[i].initial.y;
+            finalPoint.x = boardWidth - arrows[i].final.x;
+            finalPoint.y = boardWidth - arrows[i].final.y;
+            let newArrow = {
+                context: arrows[i].context,
+                initial: initialPoint,
+                final: finalPoint,
+            };
+            newArrows.push(newArrow);
+        };
+        arrowMemory[key] = newArrows;
+    };
+    drawArrows();
 };
 
 export function playSound(move='') {

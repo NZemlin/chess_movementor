@@ -1,4 +1,4 @@
-import { startPosition, startElement, config, board, game, setLastFen, swapBoard, setKeepPlaying } from './globals.js';
+import { startPosition, startElement, config, board, game, setLastFen, swapBoard, setKeepPlaying, drawArrows } from './globals.js';
 import { timeoutBtn } from './helpers.js';
 import { updateGameState } from './update.js';
 import { playMoveSelf, playMoveOpponent } from './sounds.js';
@@ -26,6 +26,7 @@ function clickUpdate(element) {
     game.load(element.getAttribute('data-own').replace(/_/g, ' '));
     board.position(game.fen(), false);
     highlightRightClickedSquares();
+    drawArrows();
     var uci = element.getAttribute('data-uci');
     setKeepPlaying(false);
     updateGameState(element.getAttribute('data-san'), uci.slice(0, 2), uci.slice(2, 4));
@@ -42,6 +43,7 @@ function requestedFen(keyCode, old) {
                 game.load(fen.replace(/_/g, ' '));
                 board.position(game.fen(), false);
                 highlightRightClickedSquares();
+                drawArrows();
                 updateGameState('', '', '', true);
                 startElement.classList.add('selected');
                 (config.orientation == 'w') ? playMoveOpponent() : playMoveSelf();

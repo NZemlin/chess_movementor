@@ -1,11 +1,13 @@
 import { Chess } from 'https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.js';
-import { toggleDifLineBtn, addRightClickListeners, getBoardFen } from './helpers.js';
+import { redrawArrows, ChessboardArrows } from './chessboard_arrows.js';
+import { toggleDifLineBtn, addRightClickListeners, clearCanvas, getBoardFen, swapArrows, recolorNotation } from './helpers.js';
 import { highlightLastMove, clearRightClickHighlights, highlightRightClickedSquares } from './highlight.js';
 import { onDragStart, onDrop, onSnapEnd } from './move.js';
 import { updateEvalBar, gameStart } from './update.js';
 import { swapCapturedPieces } from './captured_pieces.js';
 
 export var page = document.getElementById('page').getAttribute('data-page');
+export var boardWidth = 700;
 export var startPosition = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR_w_KQkq_-_0_1';
 export var startElement = document.getElementById('-1');
 export var squareClass = 'square-55d63';
@@ -17,6 +19,8 @@ export var keepPlaying = false;
 export var movementAllowed = true;
 export var highlightedSquares = [];
 export var rightClickMemory = {};
+export var arrowMemory = {};
+export var mouseDownSquare;
 export var config = {
     draggable: true,
     dropOffBoard: 'snapback',
@@ -28,6 +32,7 @@ export var config = {
 };
 export var board = Chessboard('myBoard', config);
 export var game = new Chess();
+export var overlay = new ChessboardArrows('board_wrapper');
 
 export function setLastFen(fen=startPosition) {
     lastFen = fen;
@@ -81,14 +86,54 @@ export function modRightClickedSquares(square='', add=true) {
     };
 };
 
+function repeatArrow(arrow) {
+    var drawnArrows = arrowMemory[getBoardFen()];
+    for (let i = 0; i < drawnArrows.length; i++) {
+        if (drawnArrows[i].initial['x'] == arrow.initial['x'] &&
+            drawnArrows[i].final['x'] == arrow.final['x'] &&
+            drawnArrows[i].initial['y'] == arrow.initial['y'] &&
+            drawnArrows[i].final['y'] == arrow.final['y']) return i + 1;
+    };
+    return 0;
+};
+
+export function modArrows(arrow='', add=true) {
+    var fen = getBoardFen();
+    if (!(fen in arrowMemory)) arrowMemory[fen] = [];
+    if (!arrow) arrowMemory[fen] = [];
+    else {
+        var index = repeatArrow(arrow);
+        var repeated = !!index;
+        if (add && !repeated) arrowMemory[fen].push(arrow);
+        else if (repeated) arrowMemory[fen].splice(index - 1, 1);
+    };
+    drawArrows();
+};
+
+export function drawArrows() {
+    clearCanvas();
+    var fen = getBoardFen();
+    if (!(fen in arrowMemory)) arrowMemory[fen] = [];
+    var arrows = arrowMemory[fen];
+    for (let i = 0; i < arrows.length; i++) {
+        redrawArrows(arrows[i].context, arrows[i].initial, arrows[i].final);
+    };
+};
+
+export function setMouseDownSquare(square) {
+    mouseDownSquare = square;
+};
+
 export function swapBoard() {
     config.orientation = (config.orientation == 'white' ? 'black' : 'white');
     config.position = getBoardFen().replace(/_/g, ' ');
     board = Chessboard('myBoard', config);
     addRightClickListeners();
+    recolorNotation();
     highlightLastMove();
     highlightRightClickedSquares();
     swapCapturedPieces();
+    swapArrows();
     updateEvalBar();
 };
 
@@ -104,7 +149,10 @@ export function resetBoard() {
 document.addEventListener('mousedown', e => {
     var ignore = document.getElementsByClassName('ignore');
     if ((Array.from(ignore)).includes(e.target)) return;
-    if (e.button == 0) clearRightClickHighlights(true);
+    if (e.button == 0) {
+        clearRightClickHighlights(true);
+        modArrows();
+    };
 });
 
 document.addEventListener('contextmenu', e => {

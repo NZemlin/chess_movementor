@@ -1,13 +1,16 @@
 *Add engine play and selectable strength for continued play
 *Display stockfish evaluation for continued play
+Supply copyable pgn after finishing continued computer game
 *Sort lines in view based on stockfish evaluation (need concurrency to make work?)
 *Don't display bad moves when swapping colors
-* = engine needed
 
-Add arrows/arrow memory
 
 Improve visuals
     - Highlight border of square that's being hovered over when holding a piece
+    - Highlight source square while dragging piece
     - Add dots/circles for possible moves/captures when picking up a piece
+    - Add alternating background colors for move rows
     - Add color theme selector
     - Light/dark mode
+
+* = engine needed

@@ -16,7 +16,7 @@ class PGNWriter():
                    data-color = ''' + ('white' if not move.move.turn() else 'black') + '''
                    data-turn = ''' + move.turn_number() + '''
                    data-eval = ''' + str(move.eval) + '''
-                   class='move'>''' + move.move.san() + '''</span>'''
+                   class='move ignore'>''' + move.move.san() + '''</span>'''
 
     def write_view_html(self, name):
         start_position = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR_w_KQkq_-_0_1'
@@ -31,7 +31,7 @@ class PGNWriter():
                             <h1>Study the ''' + name + '''</h1>
                         </div>
                         <div class='col'>
-                            <a href="/''' + name + '''/practice"><h1>Switch to Practice</h1></a>
+                            <a href="/''' + name + '''/practice"><h1>Practice the ''' + name + '''</h1></a>
                         </div>
                     </div>
                 </div>
@@ -59,7 +59,9 @@ class PGNWriter():
                         </div>
                         <div class='col-6 board-container'>
                             <div class='row captured-opp board-width'></div>
-                            <div class='row'>
+                            <div id='board_wrapper' class='row'>
+                                <canvas style="pointer-events:none;" id="primary_canvas" width="700" height="674.17" ></canvas>
+                                <canvas style="pointer-events:none;" id="drawing_canvas"  width="700" height="674.17" ></canvas>
                                 <div id="myBoard" class='board'></div>
                             </div>
                             <div class='row captured-own board-width'></div>
@@ -109,7 +111,7 @@ class PGNWriter():
                             <h1>Practice the ''' + name + '''</h1>
                         </div>
                         <div class='col'>
-                            <a href="/''' + name + '''/view"><h1>Switch to View</h1></a>
+                            <a href="/''' + name + '''/view"><h1>Study the ''' + name + '''</h1></a>
                         </div>
                     </div>
                 </div>
@@ -157,7 +159,9 @@ class PGNWriter():
                         </div>
                         <div class='col-6 board-container'>
                             <div class='row captured-opp board-width'></div>
-                            <div class='row'>
+                            <div id='board_wrapper' class='row'>
+                                <canvas style="pointer-events:none;" id="primary_canvas" width="700" height="674.17" ></canvas>
+                                <canvas style="pointer-events:none;" id="drawing_canvas"  width="700" height="674.17" ></canvas>
                                 <div id="myBoard" class='board'></div>
                             </div>
                             <div class='row captured-own board-width'></div>
@@ -184,10 +188,10 @@ class PGNWriter():
             html += '''
                             <div class='row'>
                                 <div hidden id='n''' + str(i) + '''' class='col-2 move-list-num'>''' + str(i) + '''.</div>
-                                <div class='col-4'><span id='w''' + str(i) + '''' class='move-list played-move'
+                                <div class='col-4'><span id='w''' + str(i) + '''' class='move-list played-move ignore'
                                     data-fen = '' data-source = '' data-target= '' data-prev-move=b''' + str(i-1) + '''
                                     data-next-move=b''' + str(i) + ''' data-eval = '' style=visibility:'hidden';></span></div>
-                                <div class='col-4'><span id='b''' + str(i) + '''' class='move-list played-move'
+                                <div class='col-4'><span id='b''' + str(i) + '''' class='move-list played-move ignore'
                                     data-fen = '' data-source = '' data-target= '' data-prev-move=w''' + str(i) + '''
                                     data-next-move=w''' + str(i+1) + ''' data-eval = '' style=visibility:'hidden';></span></div>
                             </div>

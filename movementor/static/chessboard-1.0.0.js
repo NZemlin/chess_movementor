@@ -1589,6 +1589,9 @@
     }
 
     function mousedownSquare (evt) {
+      // do nothing if we didn't left click
+      if (evt.type == 'mousedown' && evt.button != 0) return
+
       // do nothing if we're not draggable
       if (!config.draggable) return
 

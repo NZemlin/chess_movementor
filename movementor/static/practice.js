@@ -1,6 +1,6 @@
-import { squareClass, startPosition, startElement, otherChoices, config, board, game, setPossibleMoves, setFinished, setKeepPlaying, swapBoard, resetBoard, setHighlightedSquares, modRightClickedSquares } from './globals.js';
+import { squareClass, startPosition, startElement, otherChoices, config, board, game, setPossibleMoves, setFinished, setKeepPlaying, swapBoard, resetBoard, setHighlightedSquares, modRightClickedSquares, drawArrows } from './globals.js';
 import { scrollIfNeeded, timeoutBtn, resetMoveList, resetButtons, playSound, oppTurn, getPlayedSelected, getUnderscoredFen, getBoardFen } from './helpers.js';
-import { clearRightClickHighlights, highlightLastMove, highlightRightClickedSquares } from './highlight.js';
+import { highlightLastMove, highlightRightClickedSquares } from './highlight.js';
 import { updateEvalBar, updateGameState, gameStart } from './update.js';
 import { makeComputerMove } from './move.js';
 import * as sounds from './sounds.js';
@@ -70,6 +70,7 @@ function clickUpdate(element) {
     highlightLastMove(element.getAttribute('data-source'), element.getAttribute('data-target'));
     updateEvalBar();
     highlightRightClickedSquares();
+    drawArrows();
     scrollIfNeeded(element);
     $('#keepPlayingBtn')[0].disabled = !latestMove;
     if (latestMove) window.setTimeout(makeComputerMove, 500);
@@ -86,6 +87,7 @@ function checkKey(e) {
             startElement.classList.add('played-selected');
             board.position(startPosition.replace(/_/g, ' '), false);
             highlightRightClickedSquares();
+            drawArrows();
             $('#myBoard').find('.' + squareClass).removeClass('highlight-light');
             $('#myBoard').find('.' + squareClass).removeClass('highlight-dark');
             (config.orientation == 'w') ? sounds.playMoveOpponent() : sounds.playMoveSelf();

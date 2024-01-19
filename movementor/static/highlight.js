@@ -1,9 +1,9 @@
 import { squareClass, startPosition, game, highlightedSquares, rightClickMemory, setHighlightedSquares, modRightClickedSquares } from "./globals.js";
-import { getUnderscoredFen, getBoardFen } from "./helpers.js";
+import { getBoardFen } from "./helpers.js";
 
 var $board = $('#myBoard');
 
-function lightOrDark(square) {
+export function lightOrDark(square) {
     return ((square[0].charCodeAt(0) - 96) + Number(square[1])) % 2 ? 'light' : 'dark';
 };
 
