@@ -1,4 +1,4 @@
-import { page, squareClass, startElement, mouseDownSquare, config, game, setMouseDownSquare, arrowMemory, drawArrows, boardWidth } from "./globals.js";
+import { page, squareClass, startElement, mouseDownSquare, config, game, setMouseDownSquare, setLeftClickSquare, arrowMemory, drawArrows, boardWidth } from "./globals.js";
 import { lightOrDark, toggleRightClickHighlight } from "./highlight.js";
 import { updateHintText } from "./update.js";
 import * as sounds from './sounds.js';
@@ -108,7 +108,8 @@ export function recolorNotation() {
     };
 };
 
-export function addRightClickListeners() {
+export function addClickListeners() {
+    addLeftClickDownListeners();
     addRightClickDownListeners();
     addRightClickUpListeners();
 };
@@ -118,6 +119,15 @@ export function addRightClickDownListeners() {
     for (let i = 0; i < squares.length; i++) {
         squares[i].addEventListener("mousedown", e => {
             if (e.button == 2) setMouseDownSquare(squares[i]);
+        });
+    };
+};
+
+export function addLeftClickDownListeners() {
+    var squares = document.getElementsByClassName(squareClass);
+    for (let i = 0; i < squares.length; i++) {
+        squares[i].addEventListener("mousedown", e => {
+            if (e.button == 0) setLeftClickSquare(squares[i].getAttribute('data-square'));
         });
     };
 };

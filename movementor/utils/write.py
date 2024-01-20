@@ -31,7 +31,7 @@ class PGNWriter():
                             <h1>Study the ''' + name + '''</h1>
                         </div>
                         <div class='col'>
-                            <a href="/''' + name + '''/practice"><h1>Practice the ''' + name + '''</h1></a>
+                            <a href="/''' + name + '''/practice"><h1>Practice the ''' + name + '''&nbsp;-></h1></a>
                         </div>
                     </div>
                 </div>
@@ -44,7 +44,11 @@ class PGNWriter():
                         <div class='col'>
                             <div class='empty-row'></div>
                             <div class='row'>
-                                <button id="switchBtn" class='ignore'>Switch Colors</button>
+                                <button id="fenBtn">Copy FEN</button>
+                            </div>
+                            <div class='row button-spacer'></div>
+                            <div class='row'>
+                                <button id="switchBtn" class='ignore'>Swap</button>
                             </div>
                         </div>
                         <div class='col eval-col'>
@@ -79,14 +83,17 @@ class PGNWriter():
                                     data-child-2 = ''' + moves[0].fen_dict['own'] + '''
                                     data-eval = 0.22 class='move selected'></span>
                                 <span class = 'moves-line'>'''
+        line_num = 0
         for i, move_info in enumerate(moves):
+            dark = 'dark-row' if (line_num % 2 == 0) else ''
             if move_info.space:
                 html += '''<span> ''' + move_info.space.replace(' ', '&nbsp;') + ''' </span>'''
             if move_info.move_turn():
                 html += '''<span>''' + move_info.move_turn() + '''&nbsp;</span>'''
             html += self.move_element(move_info, i, 'view')
             if move_info.new_line:
-                html += '''</span><span class = 'moves-line'>'''
+                line_num += 1
+                html += '''</span><span class = 'moves-line ''' + dark + ''''>'''
             else:
                 html += '''<span> &nbsp; </span>'''
 
@@ -111,7 +118,7 @@ class PGNWriter():
                             <h1>Practice the ''' + name + '''</h1>
                         </div>
                         <div class='col'>
-                            <a href="/''' + name + '''/view"><h1>Study the ''' + name + '''</h1></a>
+                            <a href="/''' + name + '''/view"><h1>Study the ''' + name + '''&nbsp;-></h1></a>
                         </div>
                     </div>
                 </div>
@@ -124,15 +131,19 @@ class PGNWriter():
                         <div class='col'>
                             <div class='row empty-row'></div>
                             <div class='row'>
+                                <button id="pgnBtn">Copy PGN</button>
+                            </div>
+                            <div class='row button-spacer'></div>
+                            <div class='row'>
                                 <button id="restartBtn">Restart</button>
                             </div>
                             <div class='row button-spacer'></div>
                             <div class='row'>
-                                <button id="difLineBtn">Different Line</button>
+                                <button id="difLineBtn">Other Line</button>
                             </div>
                             <div class='row button-spacer'></div>
                             <div class='row'>
-                                <button id="switchBtn" class='ignore'>Switch Colors</button>
+                                <button id="switchBtn" class='ignore'>Swap</button>
                             </div>
                             <div class='row button-spacer'></div>
                             <div class='row'>
@@ -187,7 +198,7 @@ class PGNWriter():
         for i in range(1, 101):
             html += '''
                             <div class='row'>
-                                <div hidden id='n''' + str(i) + '''' class='col-2 move-list-num'>''' + str(i) + '''.</div>
+                                <div hidden id='n''' + str(i) + '''' class='col-2 move-list-num'>&nbsp;''' + str(i) + '''.</div>
                                 <div class='col-4'><span id='w''' + str(i) + '''' class='move-list played-move ignore'
                                     data-fen = '' data-source = '' data-target= '' data-prev-move=b''' + str(i-1) + '''
                                     data-next-move=b''' + str(i) + ''' data-eval = '' style=visibility:'hidden';></span></div>

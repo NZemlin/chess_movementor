@@ -1,5 +1,5 @@
 import { page, possibleMoves, keepPlaying, config, game, setPossibleMoves, declareFinished } from './globals.js';
-import { scrollIfNeeded, addRightClickListeners, playSound, lastMoveElement, nextMoveColor, getPlayedSelected, getSelected, recolorNotation } from './helpers.js';
+import { scrollIfNeeded, addClickListeners, playSound, lastMoveElement, nextMoveColor, getPlayedSelected, getSelected, recolorNotation } from './helpers.js';
 import { highlightLastMove } from './highlight.js';
 import { removeCapturedPieces, updateCapturedPieces } from './captured_pieces.js';
 
@@ -119,7 +119,7 @@ export function updateGameState(move='', source='', target='', mute=false) {
 };
 
 export function gameStart() {
-    addRightClickListeners();
+    addClickListeners();
     recolorNotation();
     playSound();
     removeCapturedPieces();

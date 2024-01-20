@@ -1,8 +1,8 @@
 import { Chess } from 'https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.js';
 import { redrawArrows, ChessboardArrows } from './chessboard_arrows.js';
-import { toggleDifLineBtn, addRightClickListeners, clearCanvas, getBoardFen, swapArrows, recolorNotation } from './helpers.js';
-import { highlightLastMove, clearRightClickHighlights, highlightRightClickedSquares } from './highlight.js';
-import { onDragStart, onDrop, onSnapEnd } from './move.js';
+import { toggleDifLineBtn, addClickListeners, clearCanvas, getBoardFen, swapArrows, recolorNotation, oppTurn } from './helpers.js';
+import { highlightLastMove, clearRightClickHighlights, highlightRightClickedSquares, highlightBorder } from './highlight.js';
+import { onDragStart, onDragMove, onDrop, onSnapEnd } from './move.js';
 import { updateEvalBar, gameStart } from './update.js';
 import { swapCapturedPieces } from './captured_pieces.js';
 
@@ -11,6 +11,7 @@ export var boardWidth = 700;
 export var startPosition = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR_w_KQkq_-_0_1';
 export var startElement = document.getElementById('-1');
 export var squareClass = 'square-55d63';
+export var pieceClass = 'piece-417db';
 export var lastFen = startPosition;
 export var possibleMoves = [];
 export var otherChoices = [];
@@ -21,11 +22,13 @@ export var highlightedSquares = [];
 export var rightClickMemory = {};
 export var arrowMemory = {};
 export var mouseDownSquare;
+export var leftClickSquare;
 export var config = {
     draggable: true,
     dropOffBoard: 'snapback',
     position: 'start',
     orientation: 'white',
+    onDragMove: onDragMove,
     onDragStart: onDragStart,
     onDrop: onDrop,
     onSnapEnd: onSnapEnd,
@@ -58,7 +61,7 @@ export function setFinished(done) {
 export function declareFinished() {
     document.getElementById('status').innerHTML = 'This line is finished';
     setFinished(true);
-    if (page == 'practice') $('#keepPlayingBtn')[0].style.display = 'block';
+    if (page == 'practice' && !game.game_over()) $('#keepPlayingBtn')[0].style.display = 'block';
 };
 
 export function setKeepPlaying(cont) {
@@ -124,11 +127,15 @@ export function setMouseDownSquare(square) {
     mouseDownSquare = square;
 };
 
+export function setLeftClickSquare(square) {
+    leftClickSquare = square;
+};
+
 export function swapBoard() {
     config.orientation = (config.orientation == 'white' ? 'black' : 'white');
     config.position = getBoardFen().replace(/_/g, ' ');
     board = Chessboard('myBoard', config);
-    addRightClickListeners();
+    addClickListeners();
     recolorNotation();
     highlightLastMove();
     highlightRightClickedSquares();
@@ -150,6 +157,7 @@ document.addEventListener('mousedown', e => {
     var ignore = document.getElementsByClassName('ignore');
     if ((Array.from(ignore)).includes(e.target)) return;
     if (e.button == 0) {
+        if (e.target.classList.contains(pieceClass) && !oppTurn()) highlightBorder(leftClickSquare);
         clearRightClickHighlights(true);
         modArrows();
     };

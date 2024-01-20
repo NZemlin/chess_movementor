@@ -46,3 +46,14 @@ export function toggleRightClickHighlight(square) {
     else square.classList.add(color);
     modRightClickedSquares(dataSquare, !highlighted);
 };
+
+export function highlightBorder(next='', old='') {
+    if (next) {
+        var NewHighlight = 'border-highlight-' + lightOrDark(next);
+        document.getElementsByClassName('square-' + next)[0].classList.add(NewHighlight);
+    };
+    if (old) {
+        var oldHighlight = 'border-highlight-' + lightOrDark(old);
+        document.getElementsByClassName('square-' + old)[0].classList.remove(oldHighlight);
+    };
+};

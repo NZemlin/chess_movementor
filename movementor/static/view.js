@@ -4,6 +4,11 @@ import { updateGameState } from './update.js';
 import { playMoveSelf, playMoveOpponent } from './sounds.js';
 import { highlightRightClickedSquares } from './highlight.js';
 
+$('#fenBtn').on('click', function() {
+    var fen = game.fen();
+    navigator.clipboard.writeText(fen);
+});
+
 $('#switchBtn').on('click', function () {
     swapBoard();
     timeoutBtn(this);
@@ -99,4 +104,10 @@ for (let i = 0; i < moves.length; i++) {
     moves[i].addEventListener('click', function() {
         clickUpdate(moves[i]);
     });
+};
+
+var width = String(document.getElementsByClassName('moves-container-view')[0].scrollWidth)
+var movesLines = document.getElementsByClassName('moves-line');
+for (let i = 0; i < movesLines.length; i++) {
+    movesLines[i].style.minWidth = width + 'px';
 };

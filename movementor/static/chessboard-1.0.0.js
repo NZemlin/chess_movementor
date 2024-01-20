@@ -39,8 +39,8 @@
   CSS['board'] = 'board-b72b1'
   CSS['chessboard'] = 'chessboard-63f37'
   CSS['clearfix'] = 'clearfix-7da63'
-  CSS['highlight1'] = 'highlight1-32417'
-  CSS['highlight2'] = 'highlight2-9c5d2'
+  // CSS['highlight1'] = 'highlight1-32417'
+  // CSS['highlight2'] = 'highlight2-9c5d2'
   CSS['notation'] = 'notation-322f9'
   CSS['numeric'] = 'numeric-fc462'
   CSS['piece'] = 'piece-417db'
@@ -1182,7 +1182,7 @@
     function removeSquareHighlights () {
       $board
         .find('.' + CSS.square)
-        .removeClass(CSS.highlight1 + ' ' + CSS.highlight2)
+        // .removeClass(CSS.highlight1 + ' ' + CSS.highlight2)
     }
 
     function snapbackDraggedPiece () {
@@ -1310,7 +1310,7 @@
       if (source !== 'spare') {
         // highlight the source square and hide the piece
         $('#' + squareElsIds[source])
-          .addClass(CSS.highlight1)
+          // .addClass(CSS.highlight1)
           .find('.' + CSS.piece)
           .css('display', 'none')
       }
@@ -1331,12 +1331,12 @@
 
       // remove highlight from previous square
       if (validSquare(draggedPieceLocation)) {
-        $('#' + squareElsIds[draggedPieceLocation]).removeClass(CSS.highlight2)
+        // $('#' + squareElsIds[draggedPieceLocation]).removeClass(CSS.highlight2)
       }
 
       // add highlight to new square
       if (validSquare(location)) {
-        $('#' + squareElsIds[location]).addClass(CSS.highlight2)
+        // $('#' + squareElsIds[location]).addClass(CSS.highlight2)
       }
 
       // run onDragMove

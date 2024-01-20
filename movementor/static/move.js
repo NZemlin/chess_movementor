@@ -1,6 +1,6 @@
 import { page, possibleMoves, finished, movementAllowed, config, board, game, setLastFen, setMovementAllowed, setOtherChoices, setKeepPlaying } from './globals.js';
 import { scrollIfNeeded, clearCanvas, getMoveNum, getSelected, getPlayedSelected, getUnderscoredFen, oppTurn } from './helpers.js';
-import { clearRightClickHighlights } from './highlight.js';
+import { lightOrDark,clearRightClickHighlights, highlightBorder } from './highlight.js';
 import { opaqueBoardSquares, attemptPromotion } from './promotion.js';
 import { updateEvalBar, updateHintText, updateGameState } from './update.js';
 import { playIllegal } from './sounds.js';
@@ -9,6 +9,7 @@ function setPlayedMoveInfo(move) {
     var color = game.turn() == 'w' ? 'b' : 'w';
     var moveNum = (getMoveNum() - (color == 'b'));
     var element = document.getElementById(color + moveNum);
+    if (!(moveNum % 2)) element.parentElement.parentElement.classList.add('dark-row');
     document.getElementById('n' + moveNum).hidden = false;
     getPlayedSelected().classList.remove('played-selected');
     element.innerHTML = move.san;
@@ -51,6 +52,12 @@ export function onDragStart(source, piece, position, orientation) {
     // if game is still going
     if (page == 'practice' && (finished || oppTurn() || getUnderscoredFen() != getPlayedSelected().getAttribute('data-fen'))) return false;
     setLastFen(getUnderscoredFen());
+    $('#myBoard').find('.square-' + source).addClass('highlight-' +  lightOrDark(source));
+    highlightBorder(source);
+};
+
+export function onDragMove (newLocation, oldLocation, source, piece, position, orientation) {
+    highlightBorder(newLocation, oldLocation);
 };
 
 function handlePromotionAttempt(move, source, target, before) {
@@ -95,12 +102,14 @@ export function validateMove(move, source, target, before, checkedPromo) {
                 playIllegal();
                 updateHintText(true);
             };
+            $('#myBoard').find('.square-' + source).removeClass('highlight-' +  lightOrDark(source));
             return 'snapback';
         };
     } else handleLegalMove(move, source, target);
 };
 
 export function onDrop(source, target) {
+    highlightBorder(target, target)
     var before = game.fen();
     var move = game.move({
         from: source,

@@ -16,10 +16,10 @@ class MoveInfo():
                                      self.move.parent.parent != None and
                                      len(self.move.parent.parent.variations) > 1)
         self.new_line = '\n' if ((self.move.is_mainline() and
-                                  (self.move.turn() or
+                                 (self.move.turn() or
                                   len(self.move.parent.variations) > 1)) or
                                   self.move.is_end()) else ''
-        self.move_num_san = self.move_turn() + ' ' + self.move.san() + self.new_line
+        self.move_num_san = self.move_turn() + (' ' if self.move_turn() else '') + self.move.san() + self.new_line
 
     def turn_number(self):
         return str(int(self.move.ply()/2) + int(not self.move.turn()))

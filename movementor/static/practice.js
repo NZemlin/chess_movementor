@@ -5,6 +5,11 @@ import { updateEvalBar, updateGameState, gameStart } from './update.js';
 import { makeComputerMove } from './move.js';
 import * as sounds from './sounds.js';
 
+$('#pgnBtn').on('click', function() {
+    var pgn = game.pgn();
+    navigator.clipboard.writeText(pgn);
+});
+
 $('#restartBtn').on('click', function() {
     console.clear();
     resetMoveList();

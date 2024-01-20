@@ -90,10 +90,15 @@ span.move.selected, .played-selected {
     overflow-y: auto;
     height: 636px;
     font-size: 2rem;
+    font-family: monospace;
 }
 
 .container {
     margin: 50px;
+}
+
+.dark-row {
+    background-color: rgb(233, 233, 233);
 }
 
 .white-1e1d7 {
@@ -118,6 +123,14 @@ span.move.selected, .played-selected {
 
 .highlight-right-click-dark {
     background-color: rgb(212,109,81);
+}
+
+.border-highlight-light {
+    border: 4.5px solid rgb(247,249,237);
+}
+
+.border-highlight-dark {
+    border: 4.5px solid rgb(208,219,195);
 }
 
 .container {
