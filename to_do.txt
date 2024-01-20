@@ -4,8 +4,8 @@
 *Don't display bad moves when swapping colors
 
 
+
 Improve visuals
-    - Add dots/circles for possible moves/captures when picking up a piece
     - Add color theme selector
     - Light/dark mode
 

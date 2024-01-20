@@ -1,6 +1,6 @@
 import { Chess } from 'https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.js';
-import { redrawArrows, ChessboardArrows } from './chessboard_arrows.js';
-import { toggleDifLineBtn, addClickListeners, clearCanvas, getBoardFen, swapArrows, recolorNotation, oppTurn } from './helpers.js';
+import { redrawArrows, ChessboardArrows, drawCircle, drawDot } from './chessboard_arrows.js';
+import { toggleDifLineBtn, addClickListeners, clearCanvas, getBoardFen, swapArrows, recolorNotation, oppTurn, calcCoords } from './helpers.js';
 import { highlightLastMove, clearRightClickHighlights, highlightRightClickedSquares, highlightBorder } from './highlight.js';
 import { onDragStart, onDragMove, onDrop, onSnapEnd } from './move.js';
 import { updateEvalBar, gameStart } from './update.js';
@@ -8,8 +8,11 @@ import { swapCapturedPieces } from './captured_pieces.js';
 
 export var page = document.getElementById('page').getAttribute('data-page');
 export var boardWidth = 700;
+export var squareSizeX = 86.3;
+export var squareSizeY = 84.1;
 export var startPosition = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR_w_KQkq_-_0_1';
 export var startElement = document.getElementById('-1');
+export var boardClass= 'board-b72b1';
 export var squareClass = 'square-55d63';
 export var pieceClass = 'piece-417db';
 export var lastFen = startPosition;
@@ -157,9 +160,29 @@ document.addEventListener('mousedown', e => {
     var ignore = document.getElementsByClassName('ignore');
     if ((Array.from(ignore)).includes(e.target)) return;
     if (e.button == 0) {
-        if (e.target.classList.contains(pieceClass) && !oppTurn()) highlightBorder(leftClickSquare);
         clearRightClickHighlights(true);
         modArrows();
+        if (e.target.classList.contains(pieceClass) && !finished) {
+            if (oppTurn()) highlightBorder(leftClickSquare);
+            const moves = game.moves({
+                square: leftClickSquare,
+                verbose: true,
+            });
+            if (moves.length === 0) return;
+            var c = document.getElementById('drawing_canvas');
+            var context = c.getContext('2d');
+            for (let i = 0; i < moves.length; i++) {
+                let coords = calcCoords(moves[i].to);
+                if (game.get(moves[i].to) != null) drawCircle(context, coords[0], coords[1], squareSizeY/2.075 - 1);
+                else drawDot(context, coords[0], coords[1], squareSizeY/6 - 1);
+            };
+        };
+    };
+});
+
+document.addEventListener('mouseup', e => {
+    if (e.button == 0) {
+        clearCanvas('drawing_canvas');
     };
 });
 

@@ -32,13 +32,32 @@ SOFTWARE.
 
 import { modArrows } from "./globals.js";
 
-var offsetX = -3;
-var offsetY = -14;
+var offsetXDot = 2.3;
+var offsetyDot = 1.5;
+
+export function drawDot(context, x, y, r) {
+    context.beginPath();
+    context.lineWidth = 5;
+    context.arc(x + offsetXDot, y + offsetyDot, r, 0, 2 * Math.PI);
+    context.fill();
+};
+
+var offsetXCircle = 2.2;
+var offsetyCircle = 1.5;
+
+export function drawCircle(context, x, y, r) {
+    context.beginPath();
+    context.lineWidth = 5;
+    context.arc(x + offsetXCircle, y + offsetyCircle, r, 0, 2 * Math.PI);
+    context.stroke();
+};
 
 // initialise vars
 var initialPoint = { x: null, y: null };
 var finalPoint = { x: null, y: null };
 var arrowWidth = 25;
+var offsetXArrow = -3;
+var offsetyArrow = -14;
 
 // source: https://stackoverflow.com/questions/808826/draw-arrow-on-canvas-tag
 function drawArrow(context, fromx, fromy, tox, toy, r) {
@@ -89,12 +108,12 @@ export function drawArrowToCanvas(context) {
     context.beginPath();
     context.lineCap = "square";
     context.lineWidth = 15;
-    context.moveTo(initialPoint.x + offsetX, initialPoint.y + offsetY);
-    context.lineTo(finalPoint.x - xFactor + offsetX, finalPoint.y - yFactor + offsetY);
+    context.moveTo(initialPoint.x + offsetXArrow, initialPoint.y + offsetyArrow);
+    context.lineTo(finalPoint.x - xFactor + offsetXArrow, finalPoint.y - yFactor + offsetyArrow);
     context.stroke();
 
     // draw arrow head
-    drawArrow(context, initialPoint.x + offsetX, initialPoint.y + offsetY, finalPoint.x - xFactor + offsetX, finalPoint.y - yFactor + offsetY, arrowWidth);
+    drawArrow(context, initialPoint.x + offsetXArrow, initialPoint.y + offsetyArrow, finalPoint.x - xFactor + offsetXArrow, finalPoint.y - yFactor + offsetyArrow, arrowWidth);
 }
 
 export function redrawArrows(context, initial, final) {
@@ -117,12 +136,12 @@ export function redrawArrows(context, initial, final) {
     context.beginPath();
     context.lineCap = "square";
     context.lineWidth = 15;
-    context.moveTo(initial.x + offsetX, initial.y + offsetY);
-    context.lineTo(final.x - xFactor + offsetX, final.y - yFactor + offsetY);
+    context.moveTo(initial.x + offsetXArrow, initial.y + offsetyArrow);
+    context.lineTo(final.x - xFactor + offsetXArrow, final.y - yFactor + offsetyArrow);
     context.stroke();
 
     // draw arrow head
-    drawArrow(context, initial.x + offsetX, initial.y + offsetY, final.x - xFactor + offsetX, final.y - yFactor + offsetY, arrowWidth);
+    drawArrow(context, initial.x + offsetXArrow, initial.y + offsetyArrow, final.x - xFactor + offsetXArrow, final.y - yFactor + offsetyArrow, arrowWidth);
 };
 
 export var ChessboardArrows = function (id, RES_FACTOR = 2, COLOUR = 'rgb(206,164,30)') {
@@ -136,7 +155,7 @@ export var ChessboardArrows = function (id, RES_FACTOR = 2, COLOUR = 'rgb(206,16
     // drawing canvas
     drawCanvas = document.getElementById('drawing_canvas');
     drawContext = changeResolution(drawCanvas, resFactor);
-    setContextStyle(drawContext);
+    drawContext.strokeStyle = drawContext.fillStyle = 'rgba(0,0,0,0.3)';
     
     // primary canvas
     primaryCanvas = document.getElementById('primary_canvas');
@@ -169,7 +188,7 @@ export var ChessboardArrows = function (id, RES_FACTOR = 2, COLOUR = 'rgb(206,16
         if (event.which == 3) { // right click
             mouseDown = true;
             initialPoint = finalPoint = getMousePos(drawCanvas, event);
-            drawCircle(drawContext, initialPoint.x, initialPoint.y, primaryCanvas.width/(resFactor*NUM_SQUARES*2) - 1);
+            // drawCircle(drawContext, initialPoint.x, initialPoint.y, primaryCanvas.width/(resFactor*NUM_SQUARES*2) - 1);
         } else if (event.which == 1) {
             var ignore = document.getElementsByClassName('ignore');
             if ((Array.from(ignore)).includes(event.target)) return;
@@ -181,7 +200,7 @@ export var ChessboardArrows = function (id, RES_FACTOR = 2, COLOUR = 'rgb(206,16
             mouseDown = false;
             // if starting position == ending position, draw a circle to primary canvas
             if (initialPoint.x == finalPoint.x && initialPoint.y == finalPoint.y) {
-                drawCircle(primaryContext, initialPoint.x, initialPoint.y, primaryCanvas.width/(resFactor*NUM_SQUARES*2) - 1); // reduce radius of square by 1px
+                // drawCircle(primaryContext, initialPoint.x, initialPoint.y, primaryCanvas.width/(resFactor*NUM_SQUARES*2) - 1); // reduce radius of square by 1px
             } else {
                 drawArrowToCanvas(primaryContext);
                 modArrows({
@@ -206,22 +225,14 @@ export var ChessboardArrows = function (id, RES_FACTOR = 2, COLOUR = 'rgb(206,16
         if (!mouseDown) return;
         if (initialPoint.x == finalPoint.x && initialPoint.y == finalPoint.y) return;
     
-        drawContext.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
-        drawArrowToCanvas(drawContext);
+        // drawContext.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+        // drawArrowToCanvas(drawContext);
     };
     
     
     function Q(x, d) {  // mid-tread quantiser
         d = primaryCanvas.width/(resFactor*NUM_SQUARES);
         return d*(Math.floor(x/d) + 0.5);
-    };
-    
-    function drawCircle(context, x, y, r) {
-        return;
-        context.beginPath();
-        context.lineWidth = 3;
-        context.arc(x, y, r, 0, 2 * Math.PI);
-        context.stroke();
     };
     
     // source: https://stackoverflow.com/questions/14488849/higher-dpi-graphics-with-html5-canvas

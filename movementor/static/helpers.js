@@ -1,4 +1,4 @@
-import { page, squareClass, startElement, mouseDownSquare, config, game, setMouseDownSquare, setLeftClickSquare, arrowMemory, drawArrows, boardWidth } from "./globals.js";
+import { page, squareClass, startElement, mouseDownSquare, config, game, setMouseDownSquare, setLeftClickSquare, arrowMemory, drawArrows, boardWidth, squareSizeY, squareSizeX } from "./globals.js";
 import { lightOrDark, toggleRightClickHighlight } from "./highlight.js";
 import { updateHintText } from "./update.js";
 import * as sounds from './sounds.js';
@@ -23,6 +23,13 @@ export function scrollIfNeeded(element) {
     };
     observer = new IntersectionObserver(callback, options);
     observer.observe(element);
+};
+
+export function calcCoords(square) {
+    var fileNum = square[0].charCodeAt(0) - 97;
+    var rankNum = square[1];
+    if (config.orientation[0] == 'b') return [(squareSizeX/2) + ((squareSizeX) * (7 - fileNum)), (squareSizeY/2) + ((squareSizeY) * (rankNum - 1))]
+    else return [(squareSizeX/2) + ((squareSizeX) * fileNum), (squareSizeY/2) + ((squareSizeY) * (8 - rankNum))]
 };
 
 export function updateFen(fen) {
@@ -141,8 +148,8 @@ export function addRightClickUpListeners() {
     };
 };
 
-export function clearCanvas() {
-    var c = document.getElementById('primary_canvas');
+export function clearCanvas(canvas='primary_canvas') {
+    var c = document.getElementById(canvas);
     var context = c.getContext('2d');
     context.clearRect(0,0, context.canvas.width, context.canvas.height);
 };
