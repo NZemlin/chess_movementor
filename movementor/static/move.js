@@ -1,5 +1,10 @@
-import { page, possibleMoves, finished, movementAllowed, config, board, game, setLastFen, setMovementAllowed, setOtherChoices, setKeepPlaying } from './globals.js';
-import { scrollIfNeeded, clearCanvas, getMoveNum, getSelected, getPlayedSelected, getUnderscoredFen, oppTurn } from './helpers.js';
+import { config, board, game, isOwnTurn } from './game.js';
+import { possibleMoves, finished, movementAllowed, setLastFen, setMovementAllowed, setOtherChoices, setKeepPlaying } from './globals.js';
+import { page } from './constants.js';
+import { scrollIfNeeded } from './visual_helpers.js';
+import { getMoveNum, getSelected, getPlayedSelected, getUnderscoredFen } from './getters.js';
+import { arrowContext } from './arrow.js';
+import { clearCanvas } from './canvas_helper.js';
 import { lightOrDark,clearRightClickHighlights, highlightBorder } from './highlight.js';
 import { opaqueBoardSquares, attemptPromotion } from './promotion.js';
 import { updateEvalBar, updateHintText, updateGameState } from './update.js';
@@ -24,7 +29,7 @@ function setPlayedMoveInfo(move) {
 };
 
 export function makeComputerMove() {
-    if (finished || game.game_over() || !oppTurn()) return;
+    if (finished || game.game_over() || !isOwnTurn()) return;
     var randomIdx = Math.floor(Math.random() * possibleMoves.length);
     var move = possibleMoves[randomIdx];
     console.log('Computer chose: ' + move);
@@ -33,7 +38,7 @@ export function makeComputerMove() {
     var data = game.move(move);
     board.position(game.fen(), false);
     clearRightClickHighlights();
-    clearCanvas();
+    clearCanvas(arrowContext);
     updateHintText(false);
     updateGameState(move, data.from, data.to);
     setPlayedMoveInfo(data);
@@ -50,7 +55,7 @@ export function onDragStart(source, piece, position, orientation) {
     // if on practice page, only pick up own side and if
     // current board position is current game position and
     // if game is still going
-    if (page == 'practice' && (finished || oppTurn() || getUnderscoredFen() != getPlayedSelected().getAttribute('data-fen'))) return false;
+    if (page == 'practice' && (finished || isOwnTurn() || getUnderscoredFen() != getPlayedSelected().getAttribute('data-fen'))) return false;
     setLastFen(getUnderscoredFen());
     $('#myBoard').find('.square-' + source).addClass('highlight-' +  lightOrDark(source));
     highlightBorder(source);
@@ -86,7 +91,7 @@ export function handleLegalMove(move, source, target) {
 
 export function validateMove(move, source, target, before, checkedPromo) {
     if (move === null || !(possibleMoves.includes(move.san))) {
-        if (page == 'view' && finished && move != null) {
+        if (page == 'study' && finished && move != null) {
             setKeepPlaying(true);
             handleLegalMove(move, source, target);
             return;

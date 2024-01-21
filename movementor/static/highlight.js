@@ -1,6 +1,9 @@
-import { squareClass, startPosition, game, highlightedSquares, rightClickMemory, setHighlightedSquares, modRightClickedSquares } from "./globals.js";
-import { getBoardFen } from "./helpers.js";
+import { game } from "./game.js";
+import { squareClass, startPosition } from './constants.js';
+import { getBoardFen } from "./getters.js";
 
+export var highlightedSquares = [];
+export var rightClickMemory = {};
 var $board = $('#myBoard');
 
 export function lightOrDark(square) {
@@ -18,6 +21,34 @@ export function highlightLastMove(source='', target='') {
         $board.find('.square-' + source).addClass('highlight-' +  lightOrDark(source));
         $board.find('.square-' + target).addClass('highlight-' +  lightOrDark(target));
         setHighlightedSquares([source, target])
+    };
+};
+
+export function highlightBorder(next='', old='') {
+    if (next && next != 'offboard') {
+        var NewHighlight = 'border-highlight-' + lightOrDark(next);
+        document.getElementsByClassName('square-' + next)[0].classList.add(NewHighlight);
+    };
+    if (old && old != 'offboard') {
+        var oldHighlight = 'border-highlight-' + lightOrDark(old);
+        document.getElementsByClassName('square-' + old)[0].classList.remove(oldHighlight);
+    };
+};
+
+export function setHighlightedSquares(squares=[]) {
+    highlightedSquares = squares;
+};
+
+export function modRightClickedSquares(square='', add=true) {
+    var fen = getBoardFen();
+    if (!(fen in rightClickMemory)) rightClickMemory[fen] = [];
+    if (!square) rightClickMemory[fen] = [];
+    else {
+        if (add && !rightClickMemory[fen].includes(square)) rightClickMemory[fen].push(square);
+        else if (rightClickMemory[fen].includes(square)) {
+            var index = rightClickMemory[fen].indexOf(square);
+            rightClickMemory[fen].splice(index, 1);
+        };
     };
 };
 
@@ -45,15 +76,4 @@ export function toggleRightClickHighlight(square) {
     if (highlighted) square.classList.remove(color);
     else square.classList.add(color);
     modRightClickedSquares(dataSquare, !highlighted);
-};
-
-export function highlightBorder(next='', old='') {
-    if (next) {
-        var NewHighlight = 'border-highlight-' + lightOrDark(next);
-        document.getElementsByClassName('square-' + next)[0].classList.add(NewHighlight);
-    };
-    if (old) {
-        var oldHighlight = 'border-highlight-' + lightOrDark(old);
-        document.getElementsByClassName('square-' + old)[0].classList.remove(oldHighlight);
-    };
 };

@@ -13,13 +13,13 @@ bp = Blueprint('openings', __name__)
 def index():
     return render_template('openings/index.html', openings = p.parsed_dict)
 
-@bp.route('/<string:name>/view', methods=('GET', 'POST'))
+@bp.route('/<string:name>/study', methods=('GET', 'POST'))
 @login_required
-def view(name):
+def study(name):
     if request.method == 'POST':
         return redirect(url_for('openings.index'))
     
-    return render_template_string(p.writer.write_view_html(name))
+    return render_template_string(p.writer.write_html(name, 'study'))
 
 @bp.route('/<string:name>/practice', methods=('GET', 'POST'))
 @login_required
@@ -27,7 +27,7 @@ def practice(name):
     if request.method == 'POST':
         return redirect(url_for('openings.index'))
 
-    return render_template_string(p.writer.write_practice_html(name))
+    return render_template_string(p.writer.write_html(name, 'practice'))
 
 @bp.route('/<string:name>/static/img/chesspieces/wikipedia/<string:image>', methods=('GET', 'POST'))
 @login_required

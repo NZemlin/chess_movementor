@@ -6,6 +6,7 @@
 
 
 Improve visuals
+    - Fix awkward materialDif placement
     - Add color theme selector
     - Light/dark mode
 

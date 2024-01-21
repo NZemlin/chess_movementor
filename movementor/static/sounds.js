@@ -1,3 +1,5 @@
+import { isOwnTurn } from "./game.js";
+
 export function playGameStart() {
     let gameStart = new Audio('./static/audio/game-start.mp3');
     gameStart.play();
@@ -41,4 +43,22 @@ export function playGameEnd() {
 export function playIllegal() {
     let illegal = new Audio('./static/audio/illegal.mp3');
     illegal.play();
+};
+
+export function playSound(move='') {
+    if (move.includes('#')) {
+        playGameEnd();
+    } else if (move.includes('+')) {
+        playMoveCheck();
+    } else if (move.includes('=')) {
+        playPromote();
+    } else if (move.includes('x')) {
+        playCapture();
+    } else if (move.includes('O')) {
+        playCastle();
+    } else if (isOwnTurn()) {
+        playMoveSelf();
+    } else if (move) {
+        playMoveOpponent();
+    } else playGameStart();
 };

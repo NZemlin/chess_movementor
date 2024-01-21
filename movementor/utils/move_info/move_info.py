@@ -11,6 +11,8 @@ class MoveInfo():
         self.space = space
         self.fen_dict = {}
         self.populate_fen_dict()
+        self.ep = (not self.move.board().has_legal_en_passant() and
+                   self.move.board().has_pseudo_legal_en_passant())
         self.black_variation_start = move.turn() and move.starts_variation()
         self.interrupted_mainline = (self.move.is_mainline() and
                                      self.move.parent.parent != None and

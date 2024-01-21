@@ -1,5 +1,5 @@
-import { config, game } from './globals.js';
-import { createChessPiece } from './helpers.js';
+import { config, game } from './game.js';
+import { createChessPiece } from './visual_helpers.js';
 
 var materialDif = 0;
 

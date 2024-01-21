@@ -9,7 +9,7 @@
         <div>
           <h3>{{ name }}</h3>
         </div>
-          <a href="{{ url_for('openings.view', name=name) }}">View</a>
+          <a href="{{ url_for('openings.study', name=name) }}">Study</a>
           <a href="{{ url_for('openings.practice', name=name) }}">Practice</a>
     {% if not loop.last %}
       <hr>

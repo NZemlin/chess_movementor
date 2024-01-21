@@ -1,5 +1,7 @@
-import { squareClass, board, game, setMovementAllowed } from './globals.js';
-import { createChessPiece } from './helpers.js';
+import { board, game } from './game.js';
+import { setMovementAllowed } from './globals.js';
+import { squareClass } from './constants.js';
+import { createChessPiece } from './visual_helpers.js';
 import { validateMove } from './move.js';
 
 var promotionOptionSquares;

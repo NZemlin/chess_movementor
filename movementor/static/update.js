@@ -1,16 +1,21 @@
-import { page, possibleMoves, keepPlaying, config, game, setPossibleMoves, declareFinished } from './globals.js';
-import { scrollIfNeeded, addClickListeners, playSound, lastMoveElement, nextMoveColor, getPlayedSelected, getSelected, recolorNotation } from './helpers.js';
+import { config, game } from './game.js';
+import { possibleMoves, keepPlaying, setPossibleMoves, setFinished } from './globals.js';
+import { page } from './constants.js';
+import { addListeners } from './listeners.js';
+import { scrollIfNeeded, recolorNotation, fixStudyRows } from './visual_helpers.js';
+import { getPlayedSelected, getSelected, getLastMoveElement, getNextMoveColor } from './getters.js';
 import { highlightLastMove } from './highlight.js';
 import { removeCapturedPieces, updateCapturedPieces } from './captured_pieces.js';
+import { playSound } from './sounds.js';
 
 function updateSelectedMoveElement() {
     if (keepPlaying) return;
     // console.log('Updating selected move element');
     var old = document.getElementsByClassName('selected');
     if (old.length != 0) old[0].classList.remove('selected');
-    var element = lastMoveElement();
+    var element = getLastMoveElement();
     element.classList.add('selected');
-    if (page == 'view') scrollIfNeeded(element);
+    if (page == 'study') scrollIfNeeded(element);
 };
 
 function updateAllowedMoves() {
@@ -20,19 +25,19 @@ function updateAllowedMoves() {
         return;
     };
     var curMoves = [];
-    var element = lastMoveElement();
+    var element = getLastMoveElement();
     var fen = element.getAttribute('data-child-1');
     if (fen == element.getAttribute('data-own')) {
-        declareFinished();
+        setFinished(true);
         return;
     };
     element = document.querySelectorAll("[data-own='" + fen + "']")[0];
     curMoves.push(element.getAttribute('data-san'));
-    if (lastMoveElement().getAttribute('data-own') == lastMoveElement().getAttribute('data-child-2')) {
+    if (getLastMoveElement().getAttribute('data-own') == getLastMoveElement().getAttribute('data-child-2')) {
         setPossibleMoves(curMoves);
         return;
     };
-    fen = lastMoveElement().getAttribute('data-child-2');
+    fen = getLastMoveElement().getAttribute('data-child-2');
     while (fen != element.getAttribute('data-own')) {
         element = document.querySelectorAll("[data-own='" + fen + "']")[0];
         if (game.turn() != element.getAttribute('data-color')[0]) break;
@@ -43,7 +48,7 @@ function updateAllowedMoves() {
 };
 
 export function updateHintText(own='') {
-    if (page == 'view') return;
+    if (page == 'study') return;
     document.getElementById('hints').innerHTML = (possibleMoves && own) ? ('Allowed moves are: ' + possibleMoves.join(', ')) : 'No hints currently';
 };
 
@@ -96,7 +101,7 @@ export function updateEvalBar() {
 
 function updateStatus() {
     // console.log('Updating status');
-    var nextColor = nextMoveColor().charAt(0).toUpperCase() + nextMoveColor().slice(1);
+    var nextColor = getNextMoveColor().charAt(0).toUpperCase() + getNextMoveColor().slice(1);
     var status = nextColor + ' to move';
     if (game.in_checkmate()) status = 'Game over, ' + nextColor + ' is in checkmate.';
     else if (game.in_draw()) status = 'Game over, drawn position';
@@ -119,7 +124,7 @@ export function updateGameState(move='', source='', target='', mute=false) {
 };
 
 export function gameStart() {
-    addClickListeners();
+    addListeners();
     recolorNotation();
     playSound();
     removeCapturedPieces();
@@ -128,4 +133,5 @@ export function gameStart() {
     updateStatus();
     console.log('Game started');
     if (page == 'practice') console.log('----------------------------------------------------');
+    else fixStudyRows();
 };

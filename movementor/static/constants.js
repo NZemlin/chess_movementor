@@ -1,0 +1,10 @@
+export var page = document.getElementById('page').getAttribute('data-page');
+export var boardWidth = 700;
+export var squareSizeX = 86.3;
+export var squareSizeY = 84.1;
+export var startPosition = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR_w_KQkq_-_0_1';
+export var startElement = document.getElementById('-1');
+export var boardClass= 'board-b72b1';
+export var squareClass = 'square-55d63';
+export var pieceClass = 'piece-417db';
+export var notationClass = 'notation-322f9';
