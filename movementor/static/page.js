@@ -1,4 +1,4 @@
-import { config, board, game, isOwnTurn, swapBoard, resetBoard } from './game.js';
+import { config, board, game, isOppTurn, swapBoard, resetBoard } from './game.js';
 import { otherChoices, setLastFen, setPossibleMoves, setFinished, setKeepPlaying } from './globals.js';
 import { page, squareClass, startPosition, startElement } from './constants.js';
 import { scrollIfNeeded } from './visual_helpers.js';
@@ -7,9 +7,12 @@ import { resetMoveList } from './page_helpers.js';
 import { getPlayedSelected, getUnderscoredFen, getBoardFen } from './getters.js';
 import { drawArrows } from './arrow.js';
 import { highlightLastMove, highlightRightClickedSquares, setHighlightedSquares, modRightClickedSquares } from './highlight.js';
-import { updateEvalBar, updateGameState, gameStart } from './update.js';
+import { updateGameState, gameStart } from './update.js';
 import { makeComputerMove } from './move.js';
 import { playMoveSelf, playMoveOpponent, playSound } from './sounds.js';
+import { tryEvaluation } from './eval.js';
+
+export var lastKeyCode;
 
 $('#copyBtn').on('click', function() {
     var text = (page == 'study') ? game.fen() : game.pgn();
@@ -32,7 +35,7 @@ $('#difLineBtn').on('click', function () {
     else {
         console.log('Different line chosen');
         console.log('----------------------------------------------------');
-        if (isOwnTurn()) game.undo();
+        if (isOppTurn()) game.undo();
         game.undo();
         board.position(game.fen(), false);
         setFinished(false);
@@ -65,7 +68,6 @@ $('#keepPlayingBtn').on('click', function () {
     setFinished(false);
     setKeepPlaying(true);
     updateGameState();
-    document.getElementById('evalBarBtn').click();
     document.getElementById('hintBtn').click();
     window.setTimeout(makeComputerMove, 500);
 });
@@ -87,7 +89,7 @@ export function clickUpdatePractice(element) {
     var latestMove = getBoardFen() == getUnderscoredFen();
     document.getElementById('difLineBtn').disabled = !latestMove;
     highlightLastMove(element.getAttribute('data-source'), element.getAttribute('data-target'));
-    updateEvalBar();
+    tryEvaluation();
     highlightRightClickedSquares();
     drawArrows();
     scrollIfNeeded(element);
@@ -96,6 +98,7 @@ export function clickUpdatePractice(element) {
 };
 
 export function checkKeyPractice(e) {
+    lastKeyCode = e.keyCode;
     var firstMove = document.getElementById('w1');
     if (firstMove.style.visibility == 'hidden') return;
     var old = getPlayedSelected();
@@ -110,6 +113,7 @@ export function checkKeyPractice(e) {
             $('#myBoard').find('.' + squareClass).removeClass('highlight-light');
             $('#myBoard').find('.' + squareClass).removeClass('highlight-dark');
             (config.orientation == 'w') ? playMoveOpponent() : playMoveSelf();
+            tryEvaluation();
             return;
         };
         clickUpdatePractice(document.getElementById(old.getAttribute('data-prev-move')));
@@ -172,12 +176,14 @@ export function clickUpdateStudy(element) {
     board.position(game.fen(), false);
     highlightRightClickedSquares();
     drawArrows();
+    scrollIfNeeded(element);
     var uci = element.getAttribute('data-uci');
     setKeepPlaying(false);
     updateGameState(element.getAttribute('data-san'), uci.slice(0, 2), uci.slice(2, 4));
 };
 
 export function checkKeyStudy(e) {
+    lastKeyCode = e.keyCode;
     var old = document.getElementsByClassName('selected');
     if (old.length == 0 || old[0] == startElement) {
         if (e.keyCode == '39') {

@@ -1,14 +1,17 @@
-import { notationClass } from "./constants.js";
+import { page, notationClass } from "./constants.js";
 import { lightOrDark } from "./highlight.js";
+import { lastKeyCode } from "./page.js";
 
 export function scrollIfNeeded(element) {
     var observer;
     var area = (page == 'study') ? ".moves-container-study" : ".move-list-container";
+    var container = document.querySelector(area);
     var options = {
-        root: document.querySelector(area),
+        root: container,
         rootMargin: "-100px",
         threshold: 0,
     };
+    if ('323738'.includes(lastKeyCode) && container.scrollLeft > 0 ) element = element.previousSibling;
     const callback = (entries, observer) => {
         entries.forEach((entry) => {
             if (!entry.isIntersecting) {

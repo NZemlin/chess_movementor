@@ -1,4 +1,4 @@
-import { config, board, game, isOwnTurn } from './game.js';
+import { config, board, game, isOppTurn } from './game.js';
 import { possibleMoves, finished, movementAllowed, setLastFen, setMovementAllowed, setOtherChoices, setKeepPlaying } from './globals.js';
 import { page } from './constants.js';
 import { scrollIfNeeded } from './visual_helpers.js';
@@ -7,8 +7,9 @@ import { arrowContext } from './arrow.js';
 import { clearCanvas } from './canvas_helper.js';
 import { lightOrDark,clearRightClickHighlights, highlightBorder } from './highlight.js';
 import { opaqueBoardSquares, attemptPromotion } from './promotion.js';
-import { updateEvalBar, updateHintText, updateGameState } from './update.js';
+import { updateHintText, updateGameState } from './update.js';
 import { playIllegal } from './sounds.js';
+import { tryEvaluation } from './eval.js';
 
 function setPlayedMoveInfo(move) {
     var color = game.turn() == 'w' ? 'b' : 'w';
@@ -19,17 +20,18 @@ function setPlayedMoveInfo(move) {
     getPlayedSelected().classList.remove('played-selected');
     element.innerHTML = move.san;
     element.style.visibility = 'visible';
+    element.setAttribute('data-own', getUnderscoredFen());
     element.setAttribute('data-fen', getUnderscoredFen());
     element.setAttribute('data-source', move.from);
     element.setAttribute('data-target', move.to);
     element.classList.add('played-selected');
     element.setAttribute('data-eval', getSelected().getAttribute('data-eval'));
     if (color == 'w') scrollIfNeeded(element);
-    updateEvalBar();
+    tryEvaluation();
 };
 
 export function makeComputerMove() {
-    if (finished || game.game_over() || !isOwnTurn()) return;
+    if (finished || game.game_over() || !isOppTurn()) return;
     var randomIdx = Math.floor(Math.random() * possibleMoves.length);
     var move = possibleMoves[randomIdx];
     console.log('Computer chose: ' + move);
@@ -55,7 +57,7 @@ export function onDragStart(source, piece, position, orientation) {
     // if on practice page, only pick up own side and if
     // current board position is current game position and
     // if game is still going
-    if (page == 'practice' && (finished || isOwnTurn() || getUnderscoredFen() != getPlayedSelected().getAttribute('data-fen'))) return false;
+    if (page == 'practice' && (finished || isOppTurn() || getUnderscoredFen() != getPlayedSelected().getAttribute('data-fen'))) return false;
     setLastFen(getUnderscoredFen());
     $('#myBoard').find('.square-' + source).addClass('highlight-' +  lightOrDark(source));
     highlightBorder(source);

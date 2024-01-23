@@ -1,4 +1,5 @@
-import { isOwnTurn } from "./game.js";
+import { isOppTurn } from "./game.js";
+import { keepPlaying } from "./globals.js";
 
 export function playGameStart() {
     let gameStart = new Audio('./static/audio/game-start.mp3');
@@ -56,9 +57,9 @@ export function playSound(move='') {
         playCapture();
     } else if (move.includes('O')) {
         playCastle();
-    } else if (isOwnTurn()) {
+    } else if (isOppTurn()) {
         playMoveSelf();
     } else if (move) {
         playMoveOpponent();
-    } else playGameStart();
+    } else if (!keepPlaying) playGameStart();
 };

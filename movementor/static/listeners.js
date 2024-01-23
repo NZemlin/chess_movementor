@@ -1,4 +1,4 @@
-import { game, isOwnTurn } from "./game.js";
+import { game, isOppTurn } from "./game.js";
 import { finished } from "./globals.js";
 import { page, squareClass, pieceClass, squareSizeY } from './constants.js';
 import { getUnderscoredFen, getBoardFen } from './getters.js';
@@ -109,7 +109,7 @@ export function addListeners() {
             modArrows();
             if (e.target.classList.contains(pieceClass) && !finished
                 && getUnderscoredFen() == getBoardFen()) {
-                if (isOwnTurn()) highlightBorder(leftClickDownSquare);
+                if (isOppTurn()) highlightBorder(leftClickDownSquare);
                 const moves = game.moves({
                     square: leftClickDownSquare,
                     verbose: true,

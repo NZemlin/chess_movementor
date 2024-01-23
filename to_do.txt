@@ -1,12 +1,9 @@
 *Add engine play and selectable strength for continued play
-*Display stockfish evaluation for continued play
-*Sort lines in view based on stockfish evaluation (need concurrency to make work?)
-*Don't display bad moves when swapping colors
+*Add stockfish lines for both pages
 
-
+Allow study page to go off prep at all times
 
 Improve visuals
-    - Fix awkward materialDif placement
     - Add color theme selector
     - Light/dark mode
 

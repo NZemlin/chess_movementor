@@ -1,12 +1,13 @@
-import { config, game } from './game.js';
+import { game } from './game.js';
 import { possibleMoves, keepPlaying, setPossibleMoves, setFinished } from './globals.js';
 import { page } from './constants.js';
 import { addListeners } from './listeners.js';
-import { scrollIfNeeded, recolorNotation, fixStudyRows } from './visual_helpers.js';
-import { getPlayedSelected, getSelected, getLastMoveElement, getNextMoveColor } from './getters.js';
+import { recolorNotation, fixStudyRows } from './visual_helpers.js';
+import { getLastMoveElement, getNextMoveColor } from './getters.js';
 import { highlightLastMove } from './highlight.js';
 import { removeCapturedPieces, updateCapturedPieces } from './captured_pieces.js';
 import { playSound } from './sounds.js';
+import { tryEvaluation } from './eval.js';
 
 function updateSelectedMoveElement() {
     if (keepPlaying) return;
@@ -15,7 +16,6 @@ function updateSelectedMoveElement() {
     if (old.length != 0) old[0].classList.remove('selected');
     var element = getLastMoveElement();
     element.classList.add('selected');
-    if (page == 'study') scrollIfNeeded(element);
 };
 
 function updateAllowedMoves() {
@@ -52,53 +52,6 @@ export function updateHintText(own='') {
     document.getElementById('hints').innerHTML = (possibleMoves && own) ? ('Allowed moves are: ' + possibleMoves.join(', ')) : 'No hints currently';
 };
 
-function displayEvaluation(dataEval = '0.22') {
-    var evalFloat = parseFloat(dataEval);
-    var blackBarHeight = 50 + ((config.orientation == 'white') ? -(evalFloat/15)*100 : (evalFloat/15)*100);
-    blackBarHeight = blackBarHeight>100 ? (blackBarHeight=100) : blackBarHeight;
-    blackBarHeight = blackBarHeight<0 ? (blackBarHeight=0) : blackBarHeight;
-    document.querySelector(".blackBar").style.height = blackBarHeight + "%";
-
-    var evalPopup = document.querySelector(".eval-pop-up");
-    var evalNumOwn = document.querySelector(".evalNumOwn");
-    var evalNumOpp = document.querySelector(".evalNumOpp");
-    var sign;
-    if (evalFloat > 0 && config.orientation == 'black' ||
-        evalFloat < 0 && config.orientation == 'white') {
-        evalPopup.style.backgroundColor = '#403d39';
-        evalPopup.style.color = 'white';
-        evalPopup.style.border = 'none';
-        evalNumOpp.style.visibility = 'visible';
-        evalNumOwn.style.visibility = 'hidden';
-        sign = '-';
-    } else {
-        evalPopup.style.backgroundColor = 'white';
-        evalPopup.style.color = 'black';
-        evalPopup.style.border = '1px solid lightgray';
-        evalNumOwn.style.visibility = 'visible';
-        evalNumOpp.style.visibility = 'hidden';
-        sign = '+';
-    };
-    evalFloat = (evalFloat > 0) ? evalFloat : -evalFloat;
-
-    evalNumOwn.style.color = (config.orientation == 'white') ? '#403d39' : 'white';
-    evalNumOwn.innerHTML = evalFloat.toFixed(1);
-
-    evalNumOpp.style.color = (config.orientation == 'white') ? 'white' : '#403d39';
-    evalNumOpp.innerHTML = evalFloat.toFixed(1);
-
-    evalPopup.innerHTML = sign + evalFloat.toFixed(2);
-};
-
-export function updateEvalBar() {
-    var blackBar = document.querySelector(".blackBar");
-    var evalBar = document.querySelector("#evalBar");
-    blackBar.style.backgroundColor = (config.orientation == 'white') ? '#403d39' : 'white';
-    evalBar.style.backgroundColor = (config.orientation == 'white') ? 'white' : '#403d39';
-    var element = (page == 'practice') ? getPlayedSelected() : getSelected();
-    displayEvaluation(element.getAttribute('data-eval'));
-};
-
 function updateStatus() {
     // console.log('Updating status');
     var nextColor = getNextMoveColor().charAt(0).toUpperCase() + getNextMoveColor().slice(1);
@@ -117,10 +70,10 @@ export function updateGameState(move='', source='', target='', mute=false) {
     updateCapturedPieces();
     updateAllowedMoves();
     updateHintText();
-    updateEvalBar();
     updateStatus();
     // console.log('Game state updated')
     if (page == 'practice') console.log('----------------------------------------------------');
+    tryEvaluation();
 };
 
 export function gameStart() {
@@ -129,9 +82,9 @@ export function gameStart() {
     playSound();
     removeCapturedPieces();
     setPossibleMoves([document.getElementById('0').getAttribute('data-san')]);
-    updateEvalBar();
     updateStatus();
     console.log('Game started');
     if (page == 'practice') console.log('----------------------------------------------------');
     else fixStudyRows();
+    tryEvaluation();
 };

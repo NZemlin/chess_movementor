@@ -1,13 +1,13 @@
 import { Chess } from 'https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.js';
 import { lastFen, setFinished, setKeepPlaying, setLastFen } from './globals.js';
 import { onDragStart, onDragMove, onDrop, onSnapEnd } from './move.js';
-import { addListeners } from './listeners.js';
 import { swapArrows } from './arrow.js';
 import { recolorNotation } from './visual_helpers.js';
 import { getBoardFen } from './getters.js';
 import { highlightLastMove,  highlightRightClickedSquares } from './highlight.js';
-import { updateEvalBar, gameStart } from './update.js';
+import { gameStart } from './update.js';
 import { swapCapturedPieces } from './captured_pieces.js';
+import { swapEvalBar } from './eval.js';
 
 export var config = {
     draggable: true,
@@ -49,7 +49,7 @@ export function fixFenEp(fen) {
     } else return fen;
 };
 
-export function isOwnTurn() {
+export function isOppTurn() {
     return (game.turn() == 'w' && config.orientation == 'black' || 
             game.turn() == 'b' && config.orientation == 'white');
 };
@@ -58,13 +58,12 @@ export function swapBoard() {
     config.orientation = (config.orientation == 'white' ? 'black' : 'white');
     config.position = getBoardFen().replace(/_/g, ' ');
     board = Chessboard('myBoard', config);
-    addListeners();
     recolorNotation();
     highlightLastMove();
     highlightRightClickedSquares();
+    swapEvalBar();
     swapCapturedPieces();
     swapArrows();
-    updateEvalBar();
 };
 
 export function resetBoard() {

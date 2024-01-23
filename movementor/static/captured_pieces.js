@@ -129,6 +129,10 @@ export function updateCapturedPieces() {
         materialDif *= materialDif < 0 ? -1 : 1;
         var materialScore = document.createElement('span');
         materialScore.classList.add('col-1', 'captured', 'material-dif');
+        var capturedRow = document.getElementsByClassName('captured-' + side)[0];
+        if (capturedRow.lastChild.lastChild.getAttribute('data-piece')[1] != 'P') {
+            materialScore.style.paddingLeft = '15px';
+        };
         materialScore.appendChild(document.createTextNode('+' + materialDif));
         document.getElementsByClassName('captured-' + side)[0].appendChild(materialScore);
     };

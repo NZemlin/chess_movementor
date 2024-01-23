@@ -1,6 +1,4 @@
 from .move_info.move_info import MoveInfo
-# import chess, chess.engine
-# import asyncio
 class PGNParser():
     def __init__(self, pgn, move_list = []):
         self.pgn = pgn
@@ -17,27 +15,6 @@ class PGNParser():
                     if prev_move.space:
                         prev_move.space = prev_move.space[0:len(cur_move.space)] + '|' + prev_move.space[len(cur_move.space) + 1:]
 
-    # async def reorder_lines(self, move):
-    #     transport, engine = await chess.engine.popen_uci('movementor\stockfish-windows-x86-64-avx2.exe')
-    #     evals = [0] * len(move.variations)
-    #     for i, line in enumerate(move.variations):
-    #         eval = await engine.analyse(line.board(), chess.engine.Limit(time=.01))
-    #         evals[i] = [eval['score'].white().score(mate_score=10000)/100, i, line]
-    #     await engine.quit()
-    #     evals = sorted(evals, reverse=True)
-    #     i = 0
-    #     while i < len(move.variations):
-    #         if evals[i][1] > i:
-    #             for _ in range(evals[i][1] - i):
-    #                 move.promote(evals[i][2])
-    #             old_index = evals[i][1]
-    #             evals[i][1] = i
-    #             for data in evals[i + 1:]:
-    #                 if data[1] < old_index:
-    #                     data[1] += 1
-    #         else:
-    #             i += 1
-
     def parse_variations(self, variations, parent_line):
         first_moves = []
         for cur_move in variations:
@@ -48,7 +25,6 @@ class PGNParser():
             space = cur_line
             while not cur_move.is_end():
                 if len(cur_move.variations) > 1:
-                    # asyncio.run(self.reorder_lines(cur_move))
                     variation_stack.append(cur_move.variations[1:])
                 cur_move_info = MoveInfo(cur_move, space=space)
                 self.move_list.append(cur_move_info)
@@ -77,7 +53,6 @@ class PGNParser():
         cur_line  = ''
         while True:
             if len(cur_move.variations) > 1:
-                # asyncio.run(self.reorder_lines(cur_move))
                 variations = cur_move.variations[1:]
             self.move_list.append(MoveInfo(cur_move))
             if cur_move.turn() and cur_line:
@@ -96,7 +71,6 @@ class PGNParser():
                 self.parse_variations(variations, cur_line)
                 cur_line = ''
                 if len(cur_move.variations) > 1:
-                    # asyncio.run(self.reorder_lines(cur_move))
                     variations = cur_move.variations[1:]
                 else:
                     variations = []

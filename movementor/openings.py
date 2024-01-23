@@ -1,5 +1,5 @@
 from flask import (
-    Blueprint, flash, g, redirect, render_template, render_template_string, request, url_for, send_file
+    Blueprint, flash, g, redirect, render_template, render_template_string, request, url_for, send_file, make_response
 )
 from werkzeug.exceptions import abort
 
@@ -19,6 +19,11 @@ def study(name):
     if request.method == 'POST':
         return redirect(url_for('openings.index'))
     
+    # resp = make_response(render_template_string(p.writer.write_html(name, 'study')))
+    # resp.headers['Cross-Origin-Opener-Policy'] = 'same-origin'
+    # resp.headers['Cross-Origin-Embedder-Policy'] = 'require-corp'
+    # return resp
+
     return render_template_string(p.writer.write_html(name, 'study'))
 
 @bp.route('/<string:name>/practice', methods=('GET', 'POST'))
@@ -26,6 +31,11 @@ def study(name):
 def practice(name):
     if request.method == 'POST':
         return redirect(url_for('openings.index'))
+
+    # resp = make_response(render_template_string(p.writer.write_html(name, 'practice')))
+    # resp.headers['Cross-Origin-Opener-Policy'] = 'same-origin'
+    # resp.headers['Cross-Origin-Embedder-Policy'] = 'require-corp'
+    # return resp
 
     return render_template_string(p.writer.write_html(name, 'practice'))
 

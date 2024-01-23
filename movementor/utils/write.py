@@ -16,7 +16,6 @@ class PGNWriter():
                        data-ep={str(move.ep).lower()}
                        data-color={('white' if not move.move.turn() else 'black')}
                        data-turn={move.turn_number()}
-                       data-eval={str(move.eval)}
                        class="move ignore">{move.move.san()}
                    </span>
                 '''
@@ -137,7 +136,7 @@ class PGNWriter():
                                         <div class="row">
                                             <h2 id="status"></h2>
                                         </div>
-                                        <div class="move-list-container">
+                                        <div class="row move-list-container">
                                     '''
         for i in range(1, 101):
                 practice_status_and_moves += f'''
@@ -148,6 +147,7 @@ class PGNWriter():
                                                     <div class="col-4">
                                                         <span id="w{str(i)}"
                                                             class="move-list played-move ignore"
+                                                            data-own=""
                                                             data-fen=""
                                                             data-source=""
                                                             data-target= ""
@@ -236,18 +236,7 @@ class PGNWriter():
 
             {% block content %} ''' + content_html + ''' {% endblock %}
             '''
-
-
-
-
-
-
-
-
-
-
-
-
+    
     def print_moves(self, name):
         for move_info in self.parsed_dict[name]:
             print(move_info.space, move_info.move_num_san, end='')

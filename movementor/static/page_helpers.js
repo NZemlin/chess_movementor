@@ -1,5 +1,6 @@
-import { page } from "./constants.js";
+import { page, startElement } from "./constants.js";
 import { updateHintText } from "./update.js";
+import { getPlayedSelected } from "./getters.js";
 
 export function timeoutBtn(btn, time=1) {
     btn.disabled = true;
