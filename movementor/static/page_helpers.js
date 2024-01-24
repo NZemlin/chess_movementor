@@ -1,6 +1,7 @@
 import { page, startElement } from "./constants.js";
 import { updateHintText } from "./update.js";
-import { getPlayedSelected } from "./getters.js";
+import { getPlayedSelected, getSelected } from "./getters.js";
+import { setKeepPlaying } from "./globals.js";
 
 export function timeoutBtn(btn, time=1) {
     btn.disabled = true;
@@ -17,12 +18,18 @@ export function toggleDifLineBtn(done) {
 };
 
 export function resetButtons() {
-    $('#keepPlayingBtn')[0].style.display = 'none';
+    if (page == 'practice') $('#keepPlayingBtn')[0].style.display = 'none';
+    setKeepPlaying(false);
     toggleDifLineBtn();
     updateHintText();
 };
 
 export function resetMoveList() {
+    if (page == 'study') {
+        getSelected().classList.remove('selected');
+        startElement.classList.add('selected');
+        return;
+    };
     var nums = document.getElementsByClassName('move-list-num');
     for (let i = 0; i < nums.length; i++) {
         nums[i].hidden = true;

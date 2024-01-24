@@ -1,9 +1,12 @@
+import { Chess } from 'https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.js';
 import { config } from "./game.js";
 import { curEval, setCurEval } from './globals.js'
 import { getBoardFen } from "./getters.js";
 
 var engine = null;
 var searchingOld = false;
+var evaluations;
+var lines;
 
 var timer = new Worker('/static/timer.js');
 timer.onmessage = function (event) {
@@ -17,17 +20,19 @@ timer.onerror = function (error) {
 };
 
 function displayEvaluation(dataEval) {
+    // dataEval is always initially from white's perspective
     var mate = dataEval[0] == 'M';
     var evalFloat = mate ? parseFloat(dataEval.slice(1)) : parseFloat(dataEval);
     var blackBarHeight = 50 + ((config.orientation == 'white') ? -(evalFloat/15)*100 : (evalFloat/15)*100);
-    blackBarHeight = (blackBarHeight>100 || mate) ? (blackBarHeight=100) : blackBarHeight;
-    blackBarHeight = (blackBarHeight<0 || mate) ? (blackBarHeight=0) : blackBarHeight;
+    if (mate) blackBarHeight = blackBarHeight > 50 ? 100 : 0;
+    blackBarHeight = (blackBarHeight>100) ? (blackBarHeight=100) : blackBarHeight;
+    blackBarHeight = (blackBarHeight<0) ? (blackBarHeight=0) : blackBarHeight;
     document.querySelector(".blackBar").style.height = blackBarHeight + "%";
 
     var evalPopup = document.querySelector(".eval-pop-up");
     var evalNumOwn = document.querySelector(".evalNumOwn");
     var evalNumOpp = document.querySelector(".evalNumOpp");
-    var sign;
+    var sign = (evalFloat >= 0 ) ? '+' : '-';
     if (evalFloat > 0 && config.orientation == 'black' ||
         evalFloat < 0 && config.orientation == 'white') {
         evalPopup.style.backgroundColor = '#403d39';
@@ -35,14 +40,12 @@ function displayEvaluation(dataEval) {
         evalPopup.style.border = 'none';
         evalNumOpp.style.visibility = 'visible';
         evalNumOwn.style.visibility = 'hidden';
-        sign = '-';
     } else {
         evalPopup.style.backgroundColor = 'white';
         evalPopup.style.color = 'black';
         evalPopup.style.border = '1px solid lightgray';
         evalNumOwn.style.visibility = 'visible';
         evalNumOpp.style.visibility = 'hidden';
-        sign = '+';
     };
     evalFloat = Math.abs(evalFloat);
 
@@ -55,9 +58,60 @@ function displayEvaluation(dataEval) {
     evalPopup.innerHTML = sign + (mate ? 'M' + parseInt(evalFloat) : evalFloat.toFixed(2));
 };
 
+function uciToSan(line) {
+    var curFen = getBoardFen().replace(/_/g, ' ');
+    var colorToMove = curFen.split(' ')[1];
+    var moveNumber = curFen.split(' ')[5];
+    var sanMoves = colorToMove == 'w' ? moveNumber + '. ' : moveNumber + '... ';
+    var newGame = new Chess(getBoardFen().replace(/_/g, ' '));
+    var moves = line.split(' ');
+    for (let i = 0; i < moves.length; i++) {
+        let source = moves[i][0] + moves[i][1];
+        let target = moves[i][2] + moves[i][3];
+        let promo = moves[i].length == 5 ? moves[i][4] : '';
+        let move = newGame.move({
+            from: source,
+            to: target,
+            promotion: promo,
+        });
+        if (move != null) {
+            sanMoves += move.san;
+            var colorToMove = newGame.fen().split(' ')[1];
+            var moveNumber = newGame.fen().split(' ')[5];
+            if (i < moves.length - 1) sanMoves += colorToMove == 'w' ? ' ' + moveNumber + '. ' : ' ';
+        } else console.log(curFen, sanMoves, source, target, promo);
+    };
+    return sanMoves;
+};
+
+function displayLines(lines, evaluations) {
+    // evaluations is always initially from white's perspective
+    if (getBoardFen().replace(/_/g, ' ').split(' ')[1] != config.orientation[0]) {
+        lines = lines.reverse();
+        evaluations = evaluations.reverse();
+    };
+    var len = lines.length;
+    for (let i = 0; i < 3; i++) {
+        let curEval = document.getElementsByClassName("eval"+(i+1))[0];
+        let line = document.getElementsByClassName("line"+(i+1))[0];
+        if (i >= len) {
+            curEval.innerHTML = '';
+            line.innerHTML = '';
+        } else {
+            var evalNum = String(evaluations[i]);
+            var mate = evalNum[0] == 'M';
+            if (mate) evalNum = evalNum.slice(1);
+            var sign = (evalNum[0] == '-') ? '-' : '+';
+            if (sign == '-') evalNum = evalNum.slice(1);
+            var evalFloat = parseFloat(evalNum);
+            curEval.innerHTML = sign + (mate ? 'M' + parseInt(evalFloat) : evalFloat.toFixed(2));
+            line.innerHTML = uciToSan(lines[i]);
+        };
+    };
+};
+
 function message(event) {
     let whiteTurn = getBoardFen().split('_')[1] == 'w';
-    let evaluations =[];
     let message = event.data;
     // console.log(message);
     if(message.startsWith("info depth")) {
@@ -82,9 +136,11 @@ function message(event) {
             let pvIndex = message.indexOf(" pv ");
             if(pvIndex !== -1) {
                 let pvString = message.slice(pvIndex+4).split(" ");
-                if (evaluations.length == 1 && !searchingOld) {
+                lines[multipv-1] = pvString.join(" ");
+                if (!searchingOld) {
                     setCurEval(evaluations[0]);
                     displayEvaluation(evaluations[0]);
+                    displayLines(lines, evaluations);
                 };
             };
         };
@@ -110,9 +166,12 @@ export function tryEvaluation(fen='') {
 };
 
 function getEvaluation(fen='') {
+    evaluations = [];
+    lines = [];
     if (!fen) fen = getBoardFen().replace(/_/g, ' ');
     engine.postMessage("ucinewgame");
     engine.postMessage("position fen "+fen);
+    engine.postMessage("go perft 1");
     engine.postMessage("go infinite");
 };
 
@@ -122,4 +181,28 @@ export function swapEvalBar() {
     blackBar.style.backgroundColor = (config.orientation == 'white') ? '#403d39' : 'white';
     evalBar.style.backgroundColor = (config.orientation == 'white') ? 'white' : '#403d39';
     displayEvaluation(curEval);
+};
+
+export function swapLines() {
+    let curEval1 = document.getElementsByClassName("eval1")[0];
+    let line1 = document.getElementsByClassName("line1")[0];
+    let curEval2 = document.getElementsByClassName("eval2")[0];
+    let line2 = document.getElementsByClassName("line2")[0];
+    let curEval3 = document.getElementsByClassName("eval3")[0];
+    let line3 = document.getElementsByClassName("line3")[0];
+    let oldEval1 = curEval1.innerHTML;
+    let oldLine1 = line1.innerHTML;
+    if (!curEval3.innerHTML) {
+        if (curEval2.innerHTML) {
+            curEval1.innerHTML = curEval2.innerHTML;
+            line1.innerHTML = line2.innerHTML;
+            curEval2.innerHTML = oldEval1;
+            line2.innerHTML = oldLine1;
+        };
+    } else {
+        curEval1.innerHTML = curEval3.innerHTML;
+        line1.innerHTML = line3.innerHTML;
+        curEval3.innerHTML = oldEval1;
+        line3.innerHTML = oldLine1;
+    };
 };

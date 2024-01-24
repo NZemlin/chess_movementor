@@ -13,6 +13,7 @@ import { playMoveSelf, playMoveOpponent, playSound } from './sounds.js';
 import { tryEvaluation } from './eval.js';
 
 export var lastKeyCode;
+var linesTableHeight = document.getElementsByClassName('lines-table')[0].offsetHeight;
 
 $('#copyBtn').on('click', function() {
     var text = (page == 'study') ? game.fen() : game.pgn();
@@ -54,7 +55,17 @@ $('#swapBtn').on('click', function () {
 
 $('#evalBarBtn').on('click', function () {
     this.innerHTML = this.innerHTML == 'Show Eval' ? 'Hide Eval' : 'Show Eval';
-    evalBar.hidden = !evalBar.hidden;
+    var evalBar = document.getElementById('evalBar');
+    evalBar.style.visibility = evalBar.style.visibility == 'hidden' ? 'visible' : 'hidden';
+});
+
+$('#lineBtn').on('click', function () {
+    this.innerHTML = this.innerHTML == 'Show Lines' ? 'Hide Lines' : 'Show Lines';
+    var linesTable = document.getElementsByClassName('lines-table')[0];
+    linesTable.hidden = !linesTable.hidden;
+    var containerName = (page == 'study') ? 'moves-container-study' : 'moves-container-study';
+    var container = document.getElementsByClassName(containerName)[0];
+    container.style.maxHeight = container.offsetHeight + (linesTable.hidden ? linesTableHeight + 14 : -(linesTableHeight + 14)) + 'px';
 });
 
 $('#hintBtn').on('click', function () {

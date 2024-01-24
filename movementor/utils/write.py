@@ -27,7 +27,6 @@ class PGNWriter():
         other = 'study' if page == 'practice' else 'practice'
         copy_button = 'PGN' if page == 'practice' else 'FEN'
         status = '''
-                    <div class="empty-row"></div>
                     <div class="row board-width">
                         <h2 id="status"></h2>
                     </div>
@@ -41,7 +40,6 @@ class PGNWriter():
                             data-parent={start_position}
                             data-child-1={moves[0].fen_dict['own']}
                             data-child-2={moves[0].fen_dict['own']}
-                            data-eval=0.22
                             class="move {hidden_move_class}">
                         </span>
                     '''
@@ -55,21 +53,19 @@ class PGNWriter():
                             <div class="row">
                                 <button id="swapBtn" class="ignore">Swap</button>
                             </div>
+                            <div class="row button-spacer"></div>
+                            <div class="row">
+                                <button id="restartBtn">Restart</button>
+                            </div>
                         '''
         
         practice_buttons = ''' 
-                                <div class="row button-spacer"></div>
-                                <div class="row">
-                                    <button id="restartBtn">Restart</button>
-                                </div>
+                                
                                 <div class="row button-spacer"></div>
                                 <div class="row">
                                     <button id="difLineBtn">Other Line</button>
                                 </div>
-                                <div class="row button-spacer"></div>
-                                <div class="row">
-                                    <button id="evalBarBtn" class="ignore">Hide Eval</button>
-                                </div>
+                                
                                 <div class="row button-spacer"></div>
                                 <div class="row">
                                     <button id="hintBtn" class="ignore">Hide Hints</button>
@@ -83,11 +79,11 @@ class PGNWriter():
         eval_bar = '''
                     <div class="empty-row"></div>
                     <div id="evalBar">
-                        <div class="eval-pop-up">0.22</div>
-                        <div class="evalNum evalNumOpp">0.22</div>
+                        <div class="eval-pop-up"></div>
+                        <div class="evalNum evalNumOpp"></div>
                         <div class="blackBar" style="height:50%;"></div>
                         <div class="zero"></div>
-                        <div class="evalNum evalNumOwn">0.22</div>
+                        <div class="evalNum evalNumOwn"></div>
                     </div>
                 '''
         
@@ -108,38 +104,64 @@ class PGNWriter():
         for i, move_info in enumerate(moves):
             hidden_practice_moves += self.move_element(move_info, i, 'practice')
         hidden_practice_moves += '</div>'
+
+        lines_table = '''
+                                    <div class="empty-row">
+                                        <button id="evalBarBtn" class="ignore">Hide Eval</button>
+                                        <button id="lineBtn" class="ignore">Hide Lines</button>
+                                    </div>
+                                    <table class="lines-table table">
+                                        <tbody>
+                                            <tr>
+                                                <th scope="row" class="eval1"></th>
+                                                <td class="line1"></td>
+                                            </tr>
+                                            <tr>
+                                                <th scope="row" class="eval2"></th>
+                                                <td class="line2"></td>
+                                            </tr>
+                                            <tr>
+                                                <th scope="row" class="eval3"></th>
+                                                <td class="line3"></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                            '''
         
-        study_status_and_moves = f'''
-                                    <div class="col-6">
+        study_lines_status_and_moves = f'''
+                                     <div class="col-6">
+                                        {lines_table}
                                         {status}
                                         <div class="row moves-container-study">
                                             {hidden_move}
                                             <span class="moves-line">
-                                '''
+                                  '''
         line_num = 0
         for i, move_info in enumerate(moves):
-            dark = 'dark-row' if (line_num % 2 == 0) else ''
+            dark = ' dark-row' if (line_num % 2 == 0) else ''
             if move_info.space:
-                study_status_and_moves += f'''<span> {move_info.space.replace(' ', '&nbsp;')} </span>'''
+                study_lines_status_and_moves += f'''<span> {move_info.space.replace(' ', '&nbsp;')} </span>'''
             if move_info.move_turn():
-                study_status_and_moves += f'''<span>{move_info.move_turn()}&nbsp;</span>'''
-            study_status_and_moves += self.move_element(move_info, i, 'study')
+                study_lines_status_and_moves += f'''<span>{move_info.move_turn()}&nbsp;</span>'''
+            study_lines_status_and_moves += self.move_element(move_info, i, 'study')
             if move_info.new_line:
                 line_num += 1
-                study_status_and_moves += f'''</span><span class="moves-line {dark}">'''
+                study_lines_status_and_moves += f'''</span><span class="moves-line{dark}">'''
             else:
-                study_status_and_moves += f'''<span> &nbsp; </span>'''
+                study_lines_status_and_moves += f'''<span> &nbsp; </span>'''
 
-        practice_status_and_moves = '''
-                                        <div class="col-3">
-                                        <div class="empty-row"></div>
-                                        <div class="row">
-                                            <h2 id="status"></h2>
-                                        </div>
-                                        <div class="row move-list-container">
-                                    '''
-        for i in range(1, 101):
-                practice_status_and_moves += f'''
+        practice_lines_status_and_moves = f'''
+                                              <div class="col-6">
+                                                  {lines_table}
+                                                  <div class='row'>
+                                                      <div class='col-6'>
+                                                          <div class="row">
+                                                              <h2 id="status"></h2>
+                                                          </div>
+                                                          <div class="row move-list-container">
+                                           '''
+        for i in range(1, 301):
+                practice_lines_status_and_moves += f'''
                                                 <div class="row">
                                                     <div hidden id="n{str(i)}" class="col-2 move-list-num">
                                                          &nbsp;{str(i)}.
@@ -171,26 +193,26 @@ class PGNWriter():
                                                     </div>
                                                 </div>
                                             '''
-        practice_status_and_moves += '</div></div>'
+        practice_lines_status_and_moves += '</div></div>'
 
         keep_playing_button = '''
-                                <div class="col-1">
+                                <div class="col-2">
                                     <div class="row empty-row"></div>
                                     <div class="row">
                                         <button id="keepPlayingBtn">Continue Playing</button>
                                     </div>
                                 </div>
-                                <div class="col-2"></div>
+                                <div class="col-4"></div></div></div>
                             '''
         
         if page == 'study':
             practice_buttons = ''
             hidden_practice_moves = ''
-            practice_status_and_moves = ''
+            practice_lines_status_and_moves = ''
             keep_playing_button = ''
 
         if page == 'practice':
-            study_status_and_moves = ''
+            study_lines_status_and_moves = ''
 
         header_html = f'''
                 <div class="container">
@@ -220,8 +242,8 @@ class PGNWriter():
                                 {captured_canvases_and_board}
                                 {hidden_practice_moves}
                             </div>
-                            {study_status_and_moves}
-                            {practice_status_and_moves}
+                            {study_lines_status_and_moves}
+                            {practice_lines_status_and_moves}
                             {keep_playing_button}
                         </div>
                     </div>

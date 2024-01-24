@@ -1,10 +1,6 @@
-*Add engine play and selectable strength for continued play
-*Add stockfish lines for both pages
-
-Allow study page to go off prep at all times
+Add engine play and selectable strength for continued play
 
 Improve visuals
+    - Make responsive
     - Add color theme selector
     - Light/dark mode
-
-* = engine needed
