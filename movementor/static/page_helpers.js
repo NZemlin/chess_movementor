@@ -18,6 +18,8 @@ export function toggleDifLineBtn(done) {
 };
 
 export function resetButtons() {
+    $('#skill-label')[0].style.display = 'none';
+    $('#skill-input')[0].style.display = 'none';
     if (page == 'practice') $('#keepPlayingBtn')[0].style.display = 'none';
     setKeepPlaying(false);
     toggleDifLineBtn();
@@ -42,6 +44,10 @@ export function resetMoveList() {
         playedMoves[i].setAttribute('data-source', '');
         playedMoves[i].setAttribute('data-target', '');
         playedMoves[i].setAttribute('data-eval', '');
+    };
+    var darkRows = document.getElementsByClassName('dark-row');
+    for (let i = 0; i < darkRows.length;) {
+        darkRows[i].classList.remove('dark-row');
     };
     getPlayedSelected().classList.remove('played-selected');
     startElement.classList.add('played-selected');

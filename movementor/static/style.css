@@ -153,7 +153,7 @@ span.move.selected, .played-selected {
     max-width: 100%;
 }
 
-#keepPlayingBtn {
+#keepPlayingBtn, #skill-label, #skill-input {
     display: none;
 }
 
@@ -300,12 +300,13 @@ span.move.selected, .played-selected {
 
 .lines-table td {
     flex-grow: 100;
-    padding: 3px;
+    padding: 2px;
+    padding-left: 6px;
 }
 
 .lines-table th {
     height: 30px;
     min-width: 72px;
-    padding: 3px;
+    padding: 2px;
     text-align: center;
 }

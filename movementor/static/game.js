@@ -7,7 +7,7 @@ import { getBoardFen } from './getters.js';
 import { highlightLastMove,  highlightRightClickedSquares } from './highlight.js';
 import { gameStart } from './update.js';
 import { swapCapturedPieces } from './captured_pieces.js';
-import { swapEvalBar, swapLines } from './eval.js';
+import { swapEvalBar, swapLines } from './eval_helpers.js';
 
 export var config = {
     draggable: true,

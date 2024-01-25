@@ -1,12 +1,17 @@
-import { Chess } from 'https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.js';
-import { config } from "./game.js";
-import { curEval, setCurEval } from './globals.js'
-import { getBoardFen } from "./getters.js";
+import { config, board, game } from "./game.js";
+import { setCurEval, setLastFen } from './globals.js'
+import { getBoardFen, getUnderscoredFen } from "./getters.js";
+import { uciToSan, createNewEngine, oppEngine } from "./eval_helpers.js";
+import { clearRightClickHighlights } from "./highlight.js";
+import { clearCanvas } from "./canvas_helper.js";
+import { arrowContext } from "./arrow.js";
+import { updateHintText, updateGameState } from "./update.js";
+import { setPlayedMoveInfo } from "./move.js";
+import { updateCapturedPieces } from "./captured_pieces.js";
 
-var engine = null;
+var evalEngine = null;
 var searchingOld = false;
-var evaluations;
-var lines;
+var evaluations, lines;
 
 var timer = new Worker('/static/timer.js');
 timer.onmessage = function (event) {
@@ -15,11 +20,8 @@ timer.onmessage = function (event) {
         getEvaluation();
     };
 };
-timer.onerror = function (error) {
-    console.log(error);
-};
 
-function displayEvaluation(dataEval) {
+export function displayEvaluation(dataEval) {
     // dataEval is always initially from white's perspective
     var mate = dataEval[0] == 'M';
     var evalFloat = mate ? parseFloat(dataEval.slice(1)) : parseFloat(dataEval);
@@ -32,19 +34,21 @@ function displayEvaluation(dataEval) {
     var evalPopup = document.querySelector(".eval-pop-up");
     var evalNumOwn = document.querySelector(".evalNumOwn");
     var evalNumOpp = document.querySelector(".evalNumOpp");
+    var evalBar = document.getElementById('evalBar');
+    var invis = evalBar.style.visibility == 'hidden';
     var sign = (evalFloat >= 0 ) ? '+' : '-';
     if (evalFloat > 0 && config.orientation == 'black' ||
         evalFloat < 0 && config.orientation == 'white') {
         evalPopup.style.backgroundColor = '#403d39';
         evalPopup.style.color = 'white';
         evalPopup.style.border = 'none';
-        evalNumOpp.style.visibility = 'visible';
+        evalNumOpp.style.visibility = invis ? 'hidden' : 'visible';
         evalNumOwn.style.visibility = 'hidden';
     } else {
         evalPopup.style.backgroundColor = 'white';
         evalPopup.style.color = 'black';
         evalPopup.style.border = '1px solid lightgray';
-        evalNumOwn.style.visibility = 'visible';
+        evalNumOwn.style.visibility = invis ? 'hidden' : 'visible';
         evalNumOpp.style.visibility = 'hidden';
     };
     evalFloat = Math.abs(evalFloat);
@@ -58,33 +62,7 @@ function displayEvaluation(dataEval) {
     evalPopup.innerHTML = sign + (mate ? 'M' + parseInt(evalFloat) : evalFloat.toFixed(2));
 };
 
-function uciToSan(line) {
-    var curFen = getBoardFen().replace(/_/g, ' ');
-    var colorToMove = curFen.split(' ')[1];
-    var moveNumber = curFen.split(' ')[5];
-    var sanMoves = colorToMove == 'w' ? moveNumber + '. ' : moveNumber + '... ';
-    var newGame = new Chess(getBoardFen().replace(/_/g, ' '));
-    var moves = line.split(' ');
-    for (let i = 0; i < moves.length; i++) {
-        let source = moves[i][0] + moves[i][1];
-        let target = moves[i][2] + moves[i][3];
-        let promo = moves[i].length == 5 ? moves[i][4] : '';
-        let move = newGame.move({
-            from: source,
-            to: target,
-            promotion: promo,
-        });
-        if (move != null) {
-            sanMoves += move.san;
-            var colorToMove = newGame.fen().split(' ')[1];
-            var moveNumber = newGame.fen().split(' ')[5];
-            if (i < moves.length - 1) sanMoves += colorToMove == 'w' ? ' ' + moveNumber + '. ' : ' ';
-        } else console.log(curFen, sanMoves, source, target, promo);
-    };
-    return sanMoves;
-};
-
-function displayLines(lines, evaluations) {
+export function displayLines(lines, evaluations) {
     // evaluations is always initially from white's perspective
     if (getBoardFen().replace(/_/g, ' ').split(' ')[1] != config.orientation[0]) {
         lines = lines.reverse();
@@ -110,7 +88,7 @@ function displayLines(lines, evaluations) {
     };
 };
 
-function message(event) {
+export function evalMessage(event) {
     let whiteTurn = getBoardFen().split('_')[1] == 'w';
     let message = event.data;
     // console.log(message);
@@ -147,21 +125,36 @@ function message(event) {
     } else if (message.startsWith('bestmove')) searchingOld = false;
 };
 
-function createNewEngine() {
-    var newEngine = new Worker("/static/stockfish-nnue-16-single.js#/static/stockfish-nnue-16-single.wasm");
-    newEngine.onmessage = function (event) { message(event) };
-    newEngine.postMessage("uci");
-    newEngine.postMessage("setoption name multipv value 3");
-    newEngine.postMessage("isready");
-    newEngine.postMessage("ucinewgame");
-    return newEngine;
+export function playMessage(event) {
+    let message = event.data;
+    // console.log(message);
+    if (message.startsWith('bestmove')) {
+        let dataMove = message.split(' ')[1];
+        let source = dataMove[0] + dataMove[1];
+        let target = dataMove[2] + dataMove[3];
+        let promo = dataMove.length == 5 ? dataMove[4] : '';
+        setLastFen(getUnderscoredFen());
+        let move = game.move({
+            from: source,
+            to: target,
+            promotion: promo,
+        });
+        board.position(game.fen(), false);
+        clearRightClickHighlights();
+        clearCanvas(arrowContext);
+        updateHintText(false);
+        updateGameState(move.san, source, target);
+        console.log('Engine chose: ' + move.san);
+        setPlayedMoveInfo(move);
+        updateCapturedPieces();
+    };
 };
 
 export function tryEvaluation(fen='') {
-    if (engine != null) {
-        engine.postMessage('stop');
+    if (evalEngine != null) {
+        evalEngine.postMessage('stop');
         searchingOld = true;
-    } else engine = createNewEngine();
+    } else evalEngine = createNewEngine();
     timer.postMessage('evaluate');
 };
 
@@ -169,40 +162,15 @@ function getEvaluation(fen='') {
     evaluations = [];
     lines = [];
     if (!fen) fen = getBoardFen().replace(/_/g, ' ');
-    engine.postMessage("ucinewgame");
-    engine.postMessage("position fen "+fen);
-    engine.postMessage("go perft 1");
-    engine.postMessage("go infinite");
+    evalEngine.postMessage("ucinewgame");
+    evalEngine.postMessage("position fen " + fen);
+    evalEngine.postMessage("go perft 1");
+    evalEngine.postMessage("go infinite");
 };
 
-export function swapEvalBar() {
-    var blackBar = document.querySelector(".blackBar");
-    var evalBar = document.querySelector("#evalBar");
-    blackBar.style.backgroundColor = (config.orientation == 'white') ? '#403d39' : 'white';
-    evalBar.style.backgroundColor = (config.orientation == 'white') ? 'white' : '#403d39';
-    displayEvaluation(curEval);
-};
-
-export function swapLines() {
-    let curEval1 = document.getElementsByClassName("eval1")[0];
-    let line1 = document.getElementsByClassName("line1")[0];
-    let curEval2 = document.getElementsByClassName("eval2")[0];
-    let line2 = document.getElementsByClassName("line2")[0];
-    let curEval3 = document.getElementsByClassName("eval3")[0];
-    let line3 = document.getElementsByClassName("line3")[0];
-    let oldEval1 = curEval1.innerHTML;
-    let oldLine1 = line1.innerHTML;
-    if (!curEval3.innerHTML) {
-        if (curEval2.innerHTML) {
-            curEval1.innerHTML = curEval2.innerHTML;
-            line1.innerHTML = line2.innerHTML;
-            curEval2.innerHTML = oldEval1;
-            line2.innerHTML = oldLine1;
-        };
-    } else {
-        curEval1.innerHTML = curEval3.innerHTML;
-        line1.innerHTML = line3.innerHTML;
-        curEval3.innerHTML = oldEval1;
-        line3.innerHTML = oldLine1;
-    };
+export function makeEngineMove(fen='') {
+    if (!fen) fen = getBoardFen().replace(/_/g, ' ');
+    oppEngine.postMessage("position fen " + fen);
+    oppEngine.postMessage("go perft 1");
+    oppEngine.postMessage("go depth 10");
 };

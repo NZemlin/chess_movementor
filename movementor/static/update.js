@@ -1,7 +1,6 @@
 import { game } from './game.js';
-import { possibleMoves, keepPlaying, setPossibleMoves, setFinished } from './globals.js';
+import { possibleMoves, keepPlaying, setPossibleMoves, setFinished, finished } from './globals.js';
 import { page } from './constants.js';
-import { addListeners } from './listeners.js';
 import { recolorNotation, fixStudyRows } from './visual_helpers.js';
 import { getLastMoveElement, getNextMoveColor } from './getters.js';
 import { highlightLastMove } from './highlight.js';
@@ -59,7 +58,8 @@ function updateStatus() {
     if (game.in_checkmate()) status = 'Game over, ' + nextColor + ' is in checkmate.';
     else if (game.in_draw()) status = 'Game over, drawn position';
     else if (game.in_check()) status += ', ' + nextColor + ' is in check';
-    if (keepPlaying) status = '(Out of prepared opening) ' + status;
+    if (finished) status = '(This line is finished) ' + status;
+    else if (keepPlaying) status = '(Out of prepared opening) ' + status;
     document.getElementById('status').innerHTML = status;
 };
 
@@ -77,7 +77,6 @@ export function updateGameState(move='', source='', target='', mute=false) {
 };
 
 export function gameStart() {
-    addListeners();
     recolorNotation();
     playSound();
     removeCapturedPieces();

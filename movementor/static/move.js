@@ -1,17 +1,17 @@
 import { config, board, game, isOppTurn } from './game.js';
-import { possibleMoves, finished, movementAllowed, setLastFen, setMovementAllowed, setOtherChoices, setKeepPlaying } from './globals.js';
+import { possibleMoves, finished, movementAllowed, setLastFen, setMovementAllowed, setOtherChoices, setKeepPlaying, keepPlaying } from './globals.js';
 import { page } from './constants.js';
 import { scrollIfNeeded } from './visual_helpers.js';
-import { getMoveNum, getSelected, getPlayedSelected, getUnderscoredFen } from './getters.js';
+import { getMoveNum, getPlayedSelected, getUnderscoredFen } from './getters.js';
 import { arrowContext } from './arrow.js';
 import { clearCanvas } from './canvas_helper.js';
 import { lightOrDark,clearRightClickHighlights, highlightBorder } from './highlight.js';
 import { opaqueBoardSquares, attemptPromotion } from './promotion.js';
 import { updateHintText, updateGameState } from './update.js';
 import { playIllegal } from './sounds.js';
-import { tryEvaluation } from './eval.js';
+import { tryEvaluation, makeEngineMove } from './eval.js';
 
-function setPlayedMoveInfo(move) {
+export function setPlayedMoveInfo(move) {
     var color = game.turn() == 'w' ? 'b' : 'w';
     var moveNum = (getMoveNum() - (color == 'b'));
     var element = document.getElementById(color + moveNum);
@@ -25,13 +25,16 @@ function setPlayedMoveInfo(move) {
     element.setAttribute('data-source', move.from);
     element.setAttribute('data-target', move.to);
     element.classList.add('played-selected');
-    element.setAttribute('data-eval', getSelected().getAttribute('data-eval'));
     if (color == 'w') scrollIfNeeded(element);
     tryEvaluation();
 };
 
 export function makeComputerMove() {
     if (finished || game.game_over() || !isOppTurn()) return;
+    if (keepPlaying) {
+        makeEngineMove();
+        return;
+    };
     var randomIdx = Math.floor(Math.random() * possibleMoves.length);
     var move = possibleMoves[randomIdx];
     console.log('Computer chose: ' + move);
@@ -42,8 +45,8 @@ export function makeComputerMove() {
     clearRightClickHighlights();
     clearCanvas(arrowContext);
     updateHintText(false);
-    updateGameState(move, data.from, data.to);
     setPlayedMoveInfo(data);
+    updateGameState(move, data.from, data.to);
     if (finished) console.log('Line is finished');
     else console.log('Your moves: ' + possibleMoves.join(', '));
 };
@@ -84,11 +87,13 @@ function handlePromotionAttempt(move, source, target, before) {
 
 export function handleLegalMove(move, source, target) {
     console.log('A legal move was played: ' + move.san);
-    updateGameState(move.san, source, target);
     if (page == 'practice') {
         setPlayedMoveInfo(move);
+        updateGameState(move.san, source, target);
         window.setTimeout(makeComputerMove, 500);
+        return;
     };
+    updateGameState(move.san, source, target);
 };
 
 export function validateMove(move, source, target, before, checkedPromo) {

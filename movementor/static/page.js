@@ -1,5 +1,5 @@
 import { config, board, game, isOppTurn, swapBoard, resetBoard } from './game.js';
-import { otherChoices, setLastFen, setPossibleMoves, setFinished, setKeepPlaying } from './globals.js';
+import { otherChoices, setLastFen, setPossibleMoves, setFinished, setKeepPlaying, curEval } from './globals.js';
 import { page, squareClass, startPosition, startElement } from './constants.js';
 import { scrollIfNeeded } from './visual_helpers.js';
 import { timeoutBtn, resetButtons } from './page_helpers.js';
@@ -10,14 +10,17 @@ import { highlightLastMove, highlightRightClickedSquares, setHighlightedSquares,
 import { updateGameState, gameStart } from './update.js';
 import { makeComputerMove } from './move.js';
 import { playMoveSelf, playMoveOpponent, playSound } from './sounds.js';
-import { tryEvaluation } from './eval.js';
+import { displayEvaluation, tryEvaluation } from './eval.js';
+import { createNewEngine } from './eval_helpers.js';
+import { addListeners } from './listeners.js';
+import { updateCapturedPieces } from './captured_pieces.js';
 
 export var lastKeyCode;
-var linesTableHeight = document.getElementsByClassName('lines-table')[0].offsetHeight;
 
 $('#copyBtn').on('click', function() {
     var text = (page == 'study') ? game.fen() : game.pgn();
     navigator.clipboard.writeText(text);
+    timeoutBtn(this, .1);
 });
 
 $('#restartBtn').on('click', function() {
@@ -28,6 +31,7 @@ $('#restartBtn').on('click', function() {
     setHighlightedSquares();
     modRightClickedSquares();
     gameStart();
+    timeoutBtn(this, .1);
     window.setTimeout(makeComputerMove, 500);
 });
   
@@ -57,29 +61,48 @@ $('#evalBarBtn').on('click', function () {
     this.innerHTML = this.innerHTML == 'Show Eval' ? 'Hide Eval' : 'Show Eval';
     var evalBar = document.getElementById('evalBar');
     evalBar.style.visibility = evalBar.style.visibility == 'hidden' ? 'visible' : 'hidden';
+    displayEvaluation(curEval);
+    timeoutBtn(this, .1);
 });
 
 $('#lineBtn').on('click', function () {
     this.innerHTML = this.innerHTML == 'Show Lines' ? 'Hide Lines' : 'Show Lines';
     var linesTable = document.getElementsByClassName('lines-table')[0];
-    linesTable.hidden = !linesTable.hidden;
-    var containerName = (page == 'study') ? 'moves-container-study' : 'moves-container-study';
+    if (linesTable.hidden) {
+        linesTable.hidden = !linesTable.hidden;
+        var linesTableHeight = -linesTable.offsetHeight - 14;
+    } else {
+        var linesTableHeight = linesTable.offsetHeight + 14;
+        linesTable.hidden = !linesTable.hidden;
+    };
+    var containerName = (page == 'study') ? 'moves-container-study' : 'move-list-container';
     var container = document.getElementsByClassName(containerName)[0];
-    container.style.maxHeight = container.offsetHeight + (linesTable.hidden ? linesTableHeight + 14 : -(linesTableHeight + 14)) + 'px';
+    if (page == 'study') container.style.maxHeight = container.offsetHeight + linesTableHeight + 'px';
+    else {
+        container.style.height = parseInt(container.style.height.slice(0, -2)) + linesTableHeight + 'px';
+        container.style.maxHeight = container.style.height;
+    };
+    timeoutBtn(this, .1);
 });
 
 $('#hintBtn').on('click', function () {
     this.innerHTML = this.innerHTML == 'Show Hints' ? 'Hide Hints' : 'Show Hints';
     var hintElement = document.getElementById('hints');
     hintElement.hidden = !hintElement.hidden;
+    timeoutBtn(this, .1);
 });
 
 $('#keepPlayingBtn').on('click', function () {
+    $('#skill-label')[0].style.display = 'none';
+    $('#skill-input')[0].style.display = 'none';
     this.style.display = 'none';
     setFinished(false);
     setKeepPlaying(true);
     updateGameState();
+    document.getElementById('evalBarBtn').click();
+    document.getElementById('lineBtn').click();
     document.getElementById('hintBtn').click();
+    createNewEngine();
     window.setTimeout(makeComputerMove, 500);
 });
 
@@ -105,6 +128,7 @@ export function clickUpdatePractice(element) {
     drawArrows();
     scrollIfNeeded(element);
     $('#keepPlayingBtn')[0].disabled = !latestMove;
+    updateCapturedPieces();
     if (latestMove) window.setTimeout(makeComputerMove, 500);
 };
 
@@ -191,6 +215,7 @@ export function clickUpdateStudy(element) {
     var uci = element.getAttribute('data-uci');
     setKeepPlaying(false);
     updateGameState(element.getAttribute('data-san'), uci.slice(0, 2), uci.slice(2, 4));
+    updateCapturedPieces();
 };
 
 export function checkKeyStudy(e) {
@@ -211,3 +236,5 @@ export function checkKeyStudy(e) {
         };
     };
 };
+
+addListeners();

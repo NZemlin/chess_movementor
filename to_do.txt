@@ -1,4 +1,5 @@
-Add engine play and selectable strength for continued play
+Sometimes uciToSan outputs null moves?
+Sometimes displayed lines aren't sorted by eval strength
 
 Improve visuals
     - Make responsive

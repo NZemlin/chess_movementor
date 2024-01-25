@@ -1,4 +1,5 @@
 import { config, game } from './game.js';
+import { getBoardFen } from './getters.js';
 import { createChessPiece } from './visual_helpers.js';
 
 var materialDif = 0;
@@ -57,14 +58,10 @@ function equalDictionaries(d1, d2) {
 };
 
 function countPieces() {
-    var pos = game.board();
+    var curFen = getBoardFen().split('_')[0];
     for (const [key, value] of Object.entries(pieceDict)) {
-        pieceDict[key] = 0;
-    };
-    for (let i = 0; i < 8; i++) {
-        for (let j = 0; j < 8; j++) {
-            if (pos[i][j] != null) pieceDict[pos[i][j].color + pos[i][j].type.toUpperCase()] += 1;
-        };
+        let piece = key[0] == 'w' ? key[1] : key[1].toLowerCase();
+        pieceDict[key] = curFen.split(piece).length - 1;
     };
 };
 
@@ -115,11 +112,17 @@ export function updateCapturedPieces() {
     for (const [key, value] of Object.entries(pieceDict)) {
         var dif = fullDict[key] - pieceDict[key];
         if (dif) {
+            let numOfPawns = 0;
+            if (key[1].toLowerCase() == 'p') numOfPawns = dif - 1;
             for (let i = 1; i <= dif; i++) {
                 var newDiv = document.createElement('div');
                 newDiv.classList.add('col-1', 'captured');
                 var newImg = createChessPiece(key[0], key[1], '', 30)
                 newDiv.appendChild(newImg);
+                if (numOfPawns) {
+                    newDiv.style.marginRight = '-3.5px';
+                    numOfPawns--;
+                };
                 document.getElementsByClassName('captured-' + ((own == key[0]) ? 'opp' : 'own'))[0].appendChild(newDiv);
             };
         };

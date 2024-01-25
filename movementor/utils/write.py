@@ -153,20 +153,18 @@ class PGNWriter():
         practice_lines_status_and_moves = f'''
                                               <div class="col-6">
                                                   {lines_table}
+                                                  {status}
                                                   <div class='row'>
-                                                      <div class='col-6'>
-                                                          <div class="row">
-                                                              <h2 id="status"></h2>
-                                                          </div>
-                                                          <div class="row move-list-container">
+                                                      <div class='col-4'>
+                                                          <div class="row move-list-container" style="height:532px;">
                                            '''
         for i in range(1, 301):
                 practice_lines_status_and_moves += f'''
                                                 <div class="row">
                                                     <div hidden id="n{str(i)}" class="col-2 move-list-num">
-                                                         &nbsp;{str(i)}.
+                                                         {str(i)}.
                                                     </div>
-                                                    <div class="col-4">
+                                                    <div class="col-5">
                                                         <span id="w{str(i)}"
                                                             class="move-list played-move ignore"
                                                             data-own=""
@@ -179,7 +177,7 @@ class PGNWriter():
                                                             style=visibility:"hidden";>
                                                         </span>
                                                     </div>
-                                                    <div class="col-4">
+                                                    <div class="col-5">
                                                         <span id="b{str(i)}"
                                                             class="move-list played-move ignore"
                                                             data-fen=""
@@ -196,9 +194,12 @@ class PGNWriter():
         practice_lines_status_and_moves += '</div></div>'
 
         keep_playing_button = '''
-                                <div class="col-2">
+                                <div class="col-4">
                                     <div class="row empty-row"></div>
                                     <div class="row">
+                                        <label id="skill-label">Skill (0-20):
+                                            <input type="number" id="skill-input" name="skill" min="0" max="20" value="0">
+                                        </label>
                                         <button id="keepPlayingBtn">Continue Playing</button>
                                     </div>
                                 </div>

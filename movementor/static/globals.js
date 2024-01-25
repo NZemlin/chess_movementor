@@ -8,7 +8,7 @@ export var otherChoices = [];
 export var finished = false;
 export var keepPlaying = false;
 export var movementAllowed = true;
-export var curEval;
+export var curEval = 0.22;
 
 export function setLastFen(fen=startPosition) {
     lastFen = fen;
@@ -29,9 +29,10 @@ export function setOtherChoices(moves, index) {
 
 export function setFinished(done) {
     finished = done;
-    if (done) {
-        document.getElementById('status').innerHTML = 'This line is finished';
-        if (page == 'practice' && !game.game_over()) $('#keepPlayingBtn')[0].style.display = 'block';
+    if (done && page == 'practice' && !game.game_over()) {
+        $('#skill-label')[0].style.display = 'block';
+        $('#skill-input')[0].style.display = 'block';
+        $('#keepPlayingBtn')[0].style.display = 'block';
     };
 };
 
