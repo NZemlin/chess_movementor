@@ -1,5 +1,8 @@
+Store computed html in sqlite?
+
 Sometimes uciToSan outputs null moves?
 Sometimes displayed lines aren't sorted by eval strength
+Upgrade stockfish
 
 Improve visuals
     - Make responsive

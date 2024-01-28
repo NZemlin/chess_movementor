@@ -51,5 +51,3 @@ class PGNScraper():
         for k, v in self.pgn_dict.items():
             p = PGNParser(v, [])
             self.parsed_dict[k] = p.move_list
-
-p = PGNScraper('NZemlin', 'R44NtztVqYrqSte!')

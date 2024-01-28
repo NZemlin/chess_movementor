@@ -1,18 +1,81 @@
 {% extends 'base.html' %}
 
+{% block header_icons %}
+  <li><i id="modalBtn" class="fa fa-question-circle" style="font-size:24px;padding-top:5px;cursor:pointer;"></i></li>
+{% endblock %}
+
 {% block header %}
   <h2>Your Chess.com Openings</h2>
 {% endblock %}
 
 {% block content %}
-  {% for name in openings.keys() %}
+  <div id="myModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+          <h2>Welcome to MoveMentor!</h2>
+          <span id="close" class="close">&times;</span>
+      </div>
+      <div class="modal-body">
+          <h3>This is a practice tool to help you memorize your opening preparation</h3>
+          <p>Listed below are the openings that you've added to your account</p>
+          <p>The "Study" link takes you to a page to help visualize the branching of the lines and lets you traverse them with ease</p>
+          <p>The "Practice" link takes you to a page that lets you play that opening against a computer that only plays moves included in your preparation</p>
+          <p>If you don't have any openings or want to add a new one, take the following steps:</p>
+          <p>1. Login to your www.chess.com account and go to www.chess.com/analysis/saved</p>
+          <p>2. Click on the saved analysis that you want to port over</p>
+          <p>3. Click on the share button in the bottom righthand corner</p>
+          <p>4. Copy the list of moves underneath the bracketed items on the PGN tab</p>
+          <p>5. Enter the name and copied PGN in the "Name:" and "PGN:" text boxes and click "Save"</p>
+          <p>6. You should see your new opening listed!</p>
+      </div>
+    </div>
+  </div>
+  {% for opening in openings %}
         <div>
-          <h3>{{ name }}</h3>
+          <h3>{{ opening['title'] }}</h3>
         </div>
-          <a href="{{ url_for('openings.study', name=name) }}">Study</a>
-          <a href="{{ url_for('openings.practice', name=name) }}">Practice</a>
-    {% if not loop.last %}
-      <hr>
-    {% endif %}
+        <div class="row">
+          <div class="col-6" style="height:fit-content;">
+            <a href="{{ url_for('openings.study', name=opening['title']) }}">Study</a>
+            <a href="{{ url_for('openings.practice', name=opening['title']) }}">Practice</a>
+          </div>
+          <div class="col-6" style="height:fit-content;">
+            <form action="{{ url_for('openings.delete', name=opening['title']) }}" method="post" style="float: right;margin: 0;">
+              <input class="danger" type="submit" value="Delete" onclick="return confirm('Are you sure you want to delete this opening?');" style="margin: 0;">
+            </form>
+          </div>
+        </div>
+        <hr>
   {% endfor %}
+        <div>
+          <h3>Add a New Opening</h3>
+        </div>
+        <form method="post" style="display: flex;flex-direction: row;">
+          <label for="name">Name:&nbsp;</label>
+          <input type="text" id="name" name="name" value="{{ request.form['title'] }}" required>
+          <label for="pgn" style="padding-left: 5px;">PGN:&nbsp;</label>
+          <input type="text" id="pgn" name="pgn" value="{{ request.form['pgn'] }}" style="margin-right: 5px;" required>
+          <input type="submit" value="Save">
+        </form>
+{% endblock %}
+
+{% block scripts %}
+  <script>
+      var modal = document.getElementById("myModal");
+          
+      // Display modal if clicked
+      document.getElementById("modalBtn").addEventListener('click', e=> {
+          modal.style.display = "block";
+      });
+
+      // Close modal if clicked
+      window.addEventListener("click", e => {
+          if (e.target == modal) modal.style.display = "none";
+      });
+
+      // Close modal if clicked
+      document.getElementById("close").addEventListener('click', e=> {
+          modal.style.display = "none";
+      });
+  </script>
 {% endblock %}

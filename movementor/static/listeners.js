@@ -62,6 +62,11 @@ function onMouseUp(e) {
 };
 
 export function addListeners() {
+    // Prevent contextmenu on right-click
+    document.addEventListener('contextmenu', e => {
+        e.preventDefault();
+    });
+
     // Prevent scrolling with keyboard
     window.addEventListener("keydown", e => {
         if(["Space","ArrowUp","ArrowDown",
@@ -69,9 +74,21 @@ export function addListeners() {
             .indexOf(e.code) > -1) e.preventDefault();
     }, false);
 
-    // Prevent contextmenu on right-click
-    document.addEventListener('contextmenu', e => {
-        e.preventDefault();
+    var modal = document.getElementById("myModal");
+    
+    // Display modal if clicked
+    document.getElementById("modalBtn").addEventListener('click', e=> {
+        modal.style.display = "block";
+    });
+
+    // Close modal if clicked
+    window.addEventListener("click", e => {
+        if (e.target == modal) modal.style.display = "none";
+    });
+
+    // Close modal if clicked
+    document.getElementById("close").addEventListener('click', e=> {
+        modal.style.display = "none";
     });
 
     // Add traversal functions to move elements
@@ -80,15 +97,10 @@ export function addListeners() {
     var container = document.getElementsByClassName(containerName)[0];
     var moveName = (page == 'practice') ? 'played-move' : 'move';
     container.addEventListener('click', e=> {
-        if (e.target.classList.contains(moveName)) {
-            whichClickUpdate(e.target);
-        }
+        if (e.target.classList.contains(moveName)) whichClickUpdate(e.target);
     });
     
     var board_wrapper = document.getElementById('board_wrapper');
-    board_wrapper.removeEventListener("mousedown", onMouseDown);
-    board_wrapper.removeEventListener("mouseup", onMouseMove);
-    board_wrapper.removeEventListener("mousemove", onMouseUp);
 
     // Record mouse coords on right-click mousedown
     board_wrapper.addEventListener("mousedown", onMouseDown);
