@@ -50,9 +50,9 @@
         <div>
           <h3>Add a New Opening</h3>
         </div>
-        <form method="post" style="display: flex;flex-direction: row;">
+        <form method="post" class='add-form' style="flex-direction:row;">
           <label for="name">Name:&nbsp;</label>
-          <input type="text" id="name" name="name" value="{{ request.form['title'] }}" required>
+          <input type="text" id="name" name="name" autocomplete="name" value="{{ request.form['title'] }}" required>
           <label for="pgn" style="padding-left: 5px;">PGN:&nbsp;</label>
           <input type="text" id="pgn" name="pgn" value="{{ request.form['pgn'] }}" style="margin-right: 5px;" required>
           <input type="submit" value="Save">
@@ -62,6 +62,9 @@
 {% block scripts %}
   <script>
       var modal = document.getElementById("myModal");
+      var content = document.getElementsByClassName('content')[0];
+      var addForm = document.getElementsByClassName('add-form')[0];
+      var pgnInput = document.getElementById('pgn');
           
       // Display modal if clicked
       document.getElementById("modalBtn").addEventListener('click', e=> {
@@ -77,5 +80,19 @@
       document.getElementById("close").addEventListener('click', e=> {
           modal.style.display = "none";
       });
+
+      function rearrangeForm() {
+        if (content.offsetWidth < 554) {
+          addForm.style.flexDirection = 'column';
+          pgnInput.style.marginRight = '0px';
+        };
+      };
+
+      // Resize moves column
+      window.addEventListener('resize', e=> {
+        rearrangeForm();
+      });
+
+      rearrangeForm();
   </script>
 {% endblock %}

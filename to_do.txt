@@ -1,10 +1,24 @@
-Store computed html in sqlite?
+Create PGN builder
+Create free play against computer
 
+Store computed html in sqlite?
 Sometimes uciToSan outputs null moves?
 Sometimes displayed lines aren't sorted by eval strength
 Upgrade stockfish
 
+Clean up css
+Dots and circles are dark when clicking on b7 pawn before 11. bxa8=N+
+Disallow clicking of other pieces during attempted promotion
+Allow attempted promotion to cancel
+Allow rightclicking squares with pieces on them
+Remove highlighted border when clicking pieces on opponent's turn
+
 Improve visuals
     - Make responsive
+        - Fix touchmove issues
+        - Fix bottom captured pieces on small displays
+        - Fix study page played moves on small displays
+        - Change font size on smaller displays
+        - Make responsive as viewport grows, not just shrinks
     - Add color theme selector
     - Light/dark mode

@@ -102,7 +102,7 @@ span.move.selected, .played-selected {
     font-size: 20px;
 }
 
-.board, .board-width, .board-container {
+.board-col, .board, .board-container {
     width: 700px;
 }
 
@@ -125,8 +125,17 @@ span.move.selected, .played-selected {
 
 #evalBarBtn {
     margin-right: 3px;
-    width: 72px;
+    width: 75px;
     text-align: center;
+}
+
+#lineBtn, #copyBtn, #swapBtn, #restartBtn, #difLineBtn, #hintBtn {
+    margin-right: 3px;
+}
+
+#difLineBtn, #hintBtn {
+    margin-bottom: 3px;
+    margin-top: 1px;
 }
 
 .move-list-container {
@@ -292,7 +301,7 @@ span.move.selected, .played-selected {
 }
 
 #arrow_canvas, #dot_and_circle_canvas, #myBoard {
-    position: absolute; 
+    position: absolute;
     top: 0px; 
     left: 0px;
 }
@@ -340,7 +349,7 @@ span.move.selected, .played-selected {
 
 .lines-table th {
     height: 30px;
-    min-width: 72px;
+    min-width: 75px;
     padding: 2px;
     text-align: center;
 }

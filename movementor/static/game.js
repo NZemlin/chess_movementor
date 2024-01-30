@@ -76,4 +76,9 @@ export function resetBoard() {
     setLastFen();
 };
 
+export function newBoard() {
+    config.position = getBoardFen().replace(/_/g, ' ');
+    board = Chessboard('myBoard', config);
+};
+
 gameStart();

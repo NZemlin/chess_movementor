@@ -43,6 +43,10 @@ var offsetyDot = 1.5;
 var offsetXCircle = 2.2;
 var offsetyCircle = 1.5;
 
+export function setDotAndCircleContext() {
+    dotAndCircleContext = changeResolution(dotAndCircleCanvas, resFactor);
+}
+
 function calcCoords(square) {
     var fileNum = square[0].charCodeAt(0) - 97;
     var rankNum = square[1];

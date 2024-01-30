@@ -40,11 +40,7 @@ export function createNewEngine() {
         newEngine.onerror = function (error) { console.log(error) };
     };
     newEngine.postMessage("uci");
-    if (keepPlaying) {
-        let skill = document.getElementById('skill-input').value;
-        console.log(skill);
-        newEngine.postMessage("setoption name Skill Level value " + String(skill));
-    };
+    if (keepPlaying) newEngine.postMessage("setoption name Skill Level value " + String(document.getElementById('skill-input').value));
     newEngine.postMessage("setoption name multipv value 3");
     newEngine.postMessage("isready");
     newEngine.postMessage("ucinewgame");

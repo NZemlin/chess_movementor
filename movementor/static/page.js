@@ -1,5 +1,5 @@
 import { config, board, game, isOppTurn, swapBoard, resetBoard } from './game.js';
-import { otherChoices, setLastFen, setPossibleMoves, setFinished, setKeepPlaying, curEval } from './globals.js';
+import { otherChoices, curEval, setLastFen, setPossibleMoves, setFinished, setKeepPlaying } from './globals.js';
 import { page, squareClass, startPosition, startElement } from './constants.js';
 import { scrollIfNeeded } from './visual_helpers.js';
 import { timeoutBtn, resetButtons } from './page_helpers.js';
@@ -12,7 +12,7 @@ import { makeComputerMove } from './move.js';
 import { playMoveSelf, playMoveOpponent, playSound } from './sounds.js';
 import { displayEvaluation, tryEvaluation } from './eval.js';
 import { createNewEngine } from './eval_helpers.js';
-import { addListeners } from './listeners.js';
+import { resizeCols, addListeners } from './listeners.js';
 import { updateCapturedPieces } from './captured_pieces.js';
 
 export var lastKeyCode;
@@ -32,7 +32,7 @@ $('#restartBtn').on('click', function() {
     modRightClickedSquares();
     gameStart();
     timeoutBtn(this, .1);
-    window.setTimeout(makeComputerMove, 500);
+    if (page == 'practice') window.setTimeout(makeComputerMove, 500);
 });
   
 $('#difLineBtn').on('click', function () {
@@ -96,6 +96,7 @@ $('#keepPlayingBtn').on('click', function () {
     $('#skill-label')[0].style.display = 'none';
     $('#skill-input')[0].style.display = 'none';
     this.style.display = 'none';
+    $('#difLineBtn')[0].style.display = 'none';
     setFinished(false);
     setKeepPlaying(true);
     updateGameState();
@@ -237,4 +238,5 @@ export function checkKeyStudy(e) {
     };
 };
 
+resizeCols();
 addListeners();

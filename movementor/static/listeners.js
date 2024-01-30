@@ -1,4 +1,4 @@
-import { game, isOppTurn } from "./game.js";
+import { config, game, isOppTurn, newBoard } from "./game.js";
 import { finished } from "./globals.js";
 import { page, squareClass, pieceClass, squareSizeY } from './constants.js';
 import { getUnderscoredFen, getBoardFen } from './getters.js';
@@ -12,6 +12,48 @@ import { resFactor } from "./canvas_helper.js";
 
 export var rightClickDownSquare;
 export var leftClickDownSquare;
+
+export function resizeCols() {
+    var container = document.getElementsByClassName('container')[1];
+    var evalCol = document.getElementsByClassName('eval-col')[0];
+    var boardCol = document.getElementsByClassName('board-col')[0];
+    var movesCol = document.getElementsByClassName('moves-col')[0];
+    var boardContainer = document.getElementsByClassName('board-container')[0];
+    var boardWrapper = document.getElementById('board_wrapper')
+    var myBoard = document.getElementsByClassName('board')[0];
+    var evalBar = document.getElementById('evalBar')
+    // Viewport >= 1600
+    if (container.offsetWidth >= 1233) movesCol.style.width = (container.offsetWidth - evalCol.offsetWidth - boardCol.offsetWidth - 7) + "px";
+    // Viewport >= 992
+    else if (container.offsetWidth >= 747) movesCol.style.width = evalCol.offsetWidth + boardCol.offsetWidth - 25 + "px";
+    else {
+        var curWidth = container.offsetWidth - 47;
+        while (curWidth % 8 != 0) curWidth--;
+        boardCol.style.width = curWidth + 'px';
+        boardCol.style.width = curWidth + 'px';
+        boardContainer.style.width = curWidth + 'px';
+        boardContainer.style.height = curWidth + 'px';
+        boardWrapper.style.width = curWidth + 'px';
+        myBoard.style.width = curWidth + 'px';
+        boardWrapper.style.height = myBoard.offsetHeight + 'px';
+        if (container.offsetWidth < 568) {
+            config.showNotation = false;
+            var evalBarBtn = document.getElementById('evalBarBtn');
+            var lineBtn = document.getElementById('lineBtn');
+            if (evalBarBtn.innerHTML == 'Hide Eval') evalBarBtn.click();
+            if (lineBtn.innerHTML == 'Hide Lines') lineBtn.click();
+            document.getElementById('evalBarBtn').style.display = 'none';
+            document.getElementById('lineBtn').style.display = 'none';
+        };
+        newBoard();
+        evalBar.style.height = myBoard.offsetHeight + 'px';
+        arrowCanvas.style.width = myBoard.offsetWidth + 'px';
+        arrowCanvas.style.height = myBoard.offsetHeight + 'px';
+        dotAndCircleCanvas.style.width = myBoard.offsetWidth + 'px';
+        dotAndCircleCanvas.style.height = myBoard.offsetHeight + 'px';
+        movesCol.style.width = evalCol.offsetWidth + boardCol.offsetWidth - 25 + "px";
+    };
+};
 
 export function setRightClickDownSquare(square) {
     rightClickDownSquare = square;
@@ -67,6 +109,11 @@ export function addListeners() {
         e.preventDefault();
     });
 
+    // Resize moves column
+    window.addEventListener('resize', e=> {
+        resizeCols();
+    });
+
     // Prevent scrolling with keyboard
     window.addEventListener("keydown", e => {
         if(["Space","ArrowUp","ArrowDown",
@@ -101,6 +148,16 @@ export function addListeners() {
     });
     
     var board_wrapper = document.getElementById('board_wrapper');
+
+    if ('ontouchstart' in document.documentElement) {    
+        board_wrapper.addEventListener('touchstart', function() {
+            document.documentElement.style.overflow = 'hidden';
+        });
+        
+        document.addEventListener('touchend', function() {
+            document.documentElement.style.overflow = 'auto';
+        });
+    };
 
     // Record mouse coords on right-click mousedown
     board_wrapper.addEventListener("mousedown", onMouseDown);

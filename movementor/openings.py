@@ -34,7 +34,7 @@ def get_opening(name, check_author=True):
 
 def parse_and_write_pgn(name, pgn, page):
     parser = PGNParser(chess.pgn.read_game(io.StringIO(pgn)), [])
-    return writer.write_html_from_move_list(name, parser.move_list, page)
+    return writer.write_html(name, parser.move_list, page)
 
 @bp.route('/', methods=('GET', 'POST',))
 @login_required

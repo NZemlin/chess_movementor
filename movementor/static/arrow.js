@@ -44,6 +44,10 @@ var offsetXArrow = -3;
 var offsetyArrow = -14;
 var arrowWidth = 25;
 
+export function setArrowContext() {
+    arrowContext = changeResolution(arrowCanvas, resFactor);
+};
+
 function drawArrowHead(fromx, fromy, tox, toy, r) {
     // source: https://stackoverflow.com/questions/808826/draw-arrow-on-canvas-tag
     var x_center = tox;
