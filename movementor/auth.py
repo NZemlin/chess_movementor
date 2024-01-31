@@ -9,9 +9,6 @@ from movementor.db import get_db
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 
-import chess.pgn
-import io
-
 @bp.route('/register', methods=('GET', 'POST'))
 def register():
     if request.method == 'POST':
