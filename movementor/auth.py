@@ -5,7 +5,7 @@ from flask import (
 )
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from movementor.db import get_db
+from movementor.db import get_db, init_db
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -15,6 +15,11 @@ def register():
         username = request.form['username']
         password = request.form['password']
         db = get_db()
+        db_exists = db.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='user';").fetchall()
+        print(db_exists)
+        if not db_exists:
+            init_db()
+            db = get_db()
         error = None
 
         if not username:
@@ -48,7 +53,6 @@ def register():
                          Nc6 12. Ne3 Nh5 13. Bc4+ Kh8 14. Rhg1 Qe8 15. Bg5 Bxg5 16. Rxg5 Nf4 17. Ng2 Nxg2
                          18. Rxg2 Rxf3 19. Rdg1) 8... Be7 9. h4 O-O 10. h5 Qf7 11. h6 g6 12. Bc4 Be6 *
                       '''
-                db = get_db()
                 db.execute(
                     'INSERT INTO opening (title, pgn, author_id)'
                     ' VALUES (?, ?, ?)',
