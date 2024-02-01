@@ -22,9 +22,6 @@ def create_app(test_config=None):
         os.makedirs(app.instance_path)
     except OSError:
         pass
-
-    from db import init_db
-    init_db()
     
     from . import db
     db.init_app(app)
