@@ -16,7 +16,6 @@ def register():
         password = request.form['password']
         db = get_db()
         db_exists = db.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='user';").fetchall()
-        print(db_exists)
         if not db_exists:
             init_db()
             db = get_db()
@@ -92,6 +91,11 @@ def login():
 
 @bp.before_app_request
 def load_logged_in_user():
+    db = get_db()
+    db_exists = db.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='user';").fetchall()
+    if not db_exists:
+        init_db()
+        return render_template('auth/register.html')
     user_id = session.get('user_id')
 
     if user_id is None:
