@@ -10,6 +10,9 @@ class MoveInfo():
         self.interrupted_mainline = (self.move.is_mainline() and
                                      self.move.parent.parent != None and
                                      len(self.move.parent.parent.variations) > 1)
+        if (self.move_turn() and int(self.turn_number()) < 10 and
+            (self.move.is_mainline() or self.move.starts_variation())):
+            self.space += ' '
         self.new_line = '\n' if ((self.move.is_mainline() and
                                  (self.move.turn() or
                                   len(self.move.parent.variations) > 1)) or

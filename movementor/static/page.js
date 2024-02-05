@@ -16,14 +16,22 @@ import { resizeCols, addListeners } from './listeners.js';
 import { updateCapturedPieces } from './captured_pieces.js';
 
 export var lastKeyCode;
+export var copyBtn = $('#copyBtn');
+export var restartBtn = $('#restartBtn');
+export var difLineBtn = $('#difLineBtn');
+export var swapBtn = $('#swapBtn');
+export var evalBarBtn = $('#evalBarBtn');
+export var lineBtn = $('#lineBtn');
+export var hintBtn = $('#hintBtn');
+export var keepPlayingBtn = $('#keepPlayingBtn');
 
-$('#copyBtn').on('click', function() {
+copyBtn.on('click', function() {
     var text = (page == 'study') ? game.fen() : game.pgn();
     navigator.clipboard.writeText(text);
     timeoutBtn(this, .1);
 });
 
-$('#restartBtn').on('click', function() {
+restartBtn.on('click', function() {
     console.clear();
     resetMoveList();
     resetBoard();
@@ -35,7 +43,7 @@ $('#restartBtn').on('click', function() {
     if (page == 'practice') window.setTimeout(makeComputerMove, 500);
 });
   
-$('#difLineBtn').on('click', function () {
+difLineBtn.on('click', function () {
     if (!otherChoices) console.log('No other lines were available');
     else {
         console.log('Different line chosen');
@@ -51,13 +59,13 @@ $('#difLineBtn').on('click', function () {
     };
 });
 
-$('#swapBtn').on('click', function () {
+swapBtn.on('click', function () {
     swapBoard();
     if (page != 'study' && getBoardFen() == getUnderscoredFen()) window.setTimeout(makeComputerMove, 500);
     timeoutBtn(this);
 });
 
-$('#evalBarBtn').on('click', function () {
+evalBarBtn.on('click', function () {
     this.innerHTML = this.innerHTML == 'Show Eval' ? 'Hide Eval' : 'Show Eval';
     var evalBar = document.getElementById('evalBar');
     evalBar.style.visibility = evalBar.style.visibility == 'hidden' ? 'visible' : 'hidden';
@@ -65,7 +73,7 @@ $('#evalBarBtn').on('click', function () {
     timeoutBtn(this, .1);
 });
 
-$('#lineBtn').on('click', function () {
+lineBtn.on('click', function () {
     this.innerHTML = this.innerHTML == 'Show Lines' ? 'Hide Lines' : 'Show Lines';
     var linesTable = document.getElementsByClassName('lines-table')[0];
     if (linesTable.hidden) {
@@ -85,14 +93,14 @@ $('#lineBtn').on('click', function () {
     timeoutBtn(this, .1);
 });
 
-$('#hintBtn').on('click', function () {
+hintBtn.on('click', function () {
     this.innerHTML = this.innerHTML == 'Show Hints' ? 'Hide Hints' : 'Show Hints';
     var hintElement = document.getElementById('hints');
     hintElement.hidden = !hintElement.hidden;
     timeoutBtn(this, .1);
 });
 
-$('#keepPlayingBtn').on('click', function () {
+keepPlayingBtn.on('click', function () {
     $('#skill-label')[0].style.display = 'none';
     $('#skill-input')[0].style.display = 'none';
     this.style.display = 'none';
@@ -100,9 +108,9 @@ $('#keepPlayingBtn').on('click', function () {
     setFinished(false);
     setKeepPlaying(true);
     updateGameState();
-    document.getElementById('evalBarBtn').click();
-    document.getElementById('lineBtn').click();
-    document.getElementById('hintBtn').click();
+    if (evalBarBtn[0].innerHTML == 'Hide Eval') evalBarBtn[0].click();
+    if (lineBtn[0].innerHTML == 'Hide Lines') lineBtn[0].click();
+    if (hintBtn[0].innerHTML == 'Hide Hints') hintBtn[0].click();
     createNewEngine();
     window.setTimeout(makeComputerMove, 500);
 });

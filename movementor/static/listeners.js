@@ -1,4 +1,4 @@
-import { config, game, isOppTurn, newBoard } from "./game.js";
+import { config, game, newBoard } from "./game.js";
 import { finished } from "./globals.js";
 import { page, squareClass, pieceClass, squareSizeY } from './constants.js';
 import { getUnderscoredFen, getBoardFen } from './getters.js';
@@ -6,9 +6,10 @@ import { modArrows } from "./arrow.js";
 import { drawCircle, drawDot, dotAndCircleCanvas, dotAndCircleContext } from './dot_circle.js';
 import { initialPoint, finalPoint, clearCanvas, setInitialPoint, setFinalPoint } from './canvas_helper.js';
 import { clearRightClickHighlights, toggleRightClickHighlight, highlightBorder } from "./highlight.js";
-import { whichCheckKey, whichClickUpdate } from './page.js';
+import { evalBarBtn, lineBtn, whichCheckKey, whichClickUpdate } from './page.js';
 import { arrowCanvas } from "./arrow.js";
 import { resFactor } from "./canvas_helper.js";
+import { clearPromotionOptions, isPromoting } from "./promotion.js";
 
 export var rightClickDownSquare;
 export var leftClickDownSquare;
@@ -38,12 +39,10 @@ export function resizeCols() {
         boardWrapper.style.height = myBoard.offsetHeight + 'px';
         if (container.offsetWidth < 568) {
             config.showNotation = false;
-            var evalBarBtn = document.getElementById('evalBarBtn');
-            var lineBtn = document.getElementById('lineBtn');
-            if (evalBarBtn.innerHTML == 'Hide Eval') evalBarBtn.click();
-            if (lineBtn.innerHTML == 'Hide Lines') lineBtn.click();
-            document.getElementById('evalBarBtn').style.display = 'none';
-            document.getElementById('lineBtn').style.display = 'none';
+            if (evalBarBtn[0].innerHTML == 'Hide Eval') evalBarBtn[0].click();
+            if (lineBtn[0].innerHTML == 'Hide Lines') lineBtn[0].click();
+            evalBarBtn[0].style.display = 'none';
+            lineBtn[0].style.display = 'none';
         };
         newBoard();
         evalBar.style.height = myBoard.offsetHeight + 'px';
@@ -92,8 +91,8 @@ function onMouseMove(e) {
 
 function onMouseUp(e) {
     if (e.button == 2) {
-        if (e.target.classList.contains(squareClass) &&
-            rightClickDownSquare == e.target) toggleRightClickHighlight(e.target);
+        let element = (e.target.classList.contains(squareClass)) ? e.target : e.target.parentElement;
+        if (rightClickDownSquare == element) toggleRightClickHighlight(element);
         if (initialPoint.x != finalPoint.x || initialPoint.y != finalPoint.y) {
             modArrows({
                 initial: initialPoint,
@@ -132,8 +131,6 @@ export function addListeners() {
     window.addEventListener("click", e => {
         if (e.target == modal) modal.style.display = "none";
     });
-
-    // Close modal if clicked
     document.getElementById("close").addEventListener('click', e=> {
         modal.style.display = "none";
     });
@@ -153,7 +150,6 @@ export function addListeners() {
         board_wrapper.addEventListener('touchstart', function() {
             document.documentElement.style.overflow = 'hidden';
         });
-        
         document.addEventListener('touchend', function() {
             document.documentElement.style.overflow = 'auto';
         });
@@ -176,17 +172,22 @@ export function addListeners() {
         if (e.button == 0) {
             clearRightClickHighlights(true);
             modArrows();
-            if (e.target.classList.contains(pieceClass) && !finished
-                && getUnderscoredFen() == getBoardFen()) {
-                if (isOppTurn()) highlightBorder(leftClickDownSquare);
+            if (isPromoting) {
+                if (!(e.target.classList.contains('promotionOption'))) clearPromotionOptions();
+                return;
+            };
+            if (e.target.classList.contains(pieceClass) &&
+                !finished && getUnderscoredFen() == getBoardFen()) {
+                if (e.target.getAttribute('data-piece')[0] == game.turn()) highlightBorder(leftClickDownSquare);
                 const moves = game.moves({
                     square: leftClickDownSquare,
                     verbose: true,
                 });
                 if (moves.length === 0) return;
-                for (let i = 0; i < moves.length; i++) {
-                    if (game.get(moves[i].to) != null) drawCircle(moves[i].to, squareSizeY/2.075 - 1);
-                    else drawDot(moves[i].to, squareSizeY/6 - 1);
+                let scalar = (moves[0].promotion != null) ? 4 : 1;
+                for (let i = 0; scalar*i < moves.length; i++) {
+                    if (game.get(moves[scalar*i].to) != null) drawCircle(moves[scalar*i].to, squareSizeY/2.075 - 1);
+                    else drawDot(moves[scalar*i].to, squareSizeY/6 - 1);
                 };
             };
         };

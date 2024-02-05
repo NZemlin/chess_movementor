@@ -197,10 +197,12 @@ class PGNWriter():
                         </div>
                     </div>
                 '''
-        practice_buttons = ''' 
-                              <button id="difLineBtn">Other Line</button>
-                              <button id="hintBtn" class="ignore">Hide Hints</button>
-                              <span id="hints" class="text-wrap">No hints currently</span>
+        practice_buttons = '''
+                              <div class="empty-row"> 
+                                   <button id="difLineBtn">Other Line</button>
+                                   <button id="hintBtn" class="ignore">Hide Hints</button>
+                                   <span id="hints" class="text-wrap">No hints currently</span>
+                              </div>
                            '''
         hidden_practice_moves = f'''
                                     <div class="row moves-container-practice">

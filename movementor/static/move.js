@@ -1,12 +1,12 @@
 import { config, board, game, isOppTurn } from './game.js';
-import { possibleMoves, finished, movementAllowed, setLastFen, setMovementAllowed, setOtherChoices, setKeepPlaying, keepPlaying } from './globals.js';
+import { possibleMoves, finished, setLastFen, setOtherChoices, setKeepPlaying, keepPlaying } from './globals.js';
 import { page } from './constants.js';
 import { scrollIfNeeded } from './visual_helpers.js';
 import { getMoveNum, getPlayedSelected, getUnderscoredFen } from './getters.js';
 import { arrowContext } from './arrow.js';
 import { clearCanvas } from './canvas_helper.js';
 import { lightOrDark,clearRightClickHighlights, highlightBorder } from './highlight.js';
-import { opaqueBoardSquares, attemptPromotion } from './promotion.js';
+import { opaqueBoardSquares, attemptPromotion, isPromoting } from './promotion.js';
 import { updateHintText, updateGameState } from './update.js';
 import { playIllegal } from './sounds.js';
 import { tryEvaluation, makeEngineMove } from './eval.js';
@@ -53,10 +53,11 @@ export function makeComputerMove() {
 
 export function onDragStart(source, piece, position, orientation) {
     // only pick up pieces for the side to move,
-    // if game is still going, and if movement is allowed
+    // if game is still going, and if promotion is
+    // not being attempted
     if ((game.turn() === 'w' && piece.search(/^b/) !== -1) ||
         (game.turn() === 'b' && piece.search(/^w/) !== -1) ||
-         game.game_over() || !movementAllowed) return false;
+         game.game_over() || isPromoting) return false;
     // if on practice page, only pick up own side and if
     // current board position is current game position and
     // if game is still going
@@ -79,7 +80,6 @@ function handlePromotionAttempt(move, source, target, before) {
     if (((left != null && target == left + rank && game.get(left + rank) != null) ||
          (right != null && target == right + rank && game.get(right + rank) != null) ||
          (target == source.charAt(0) + rank && game.get(target) == null))) {
-        setMovementAllowed(false);
         opaqueBoardSquares(config.orientation[0], target);
         attemptPromotion(config.orientation[0], source, target, before);
     } else return validateMove(move, source, target, before, true);

@@ -1,6 +1,6 @@
 import { config, board, game } from "./game.js";
-import { setCurEval, setLastFen } from './globals.js'
-import { getBoardFen, getUnderscoredFen } from "./getters.js";
+import { curEval, setCurEval, setLastFen } from './globals.js'
+import { getBoardFen, getNextMoveColor, getUnderscoredFen } from "./getters.js";
 import { uciToSan, createNewEngine, oppEngine } from "./eval_helpers.js";
 import { clearRightClickHighlights } from "./highlight.js";
 import { clearCanvas } from "./canvas_helper.js";
@@ -8,6 +8,7 @@ import { arrowContext } from "./arrow.js";
 import { updateHintText, updateGameState } from "./update.js";
 import { setPlayedMoveInfo } from "./move.js";
 import { updateCapturedPieces } from "./captured_pieces.js";
+import { lineBtn } from "./page.js";
 
 var evalEngine = null;
 var searchingOld = false;
@@ -22,47 +23,70 @@ timer.onmessage = function (event) {
 };
 
 export function displayEvaluation(dataEval) {
-    // dataEval is always initially from white's perspective
-    var mate = dataEval[0] == 'M';
-    var evalFloat = mate ? parseFloat(dataEval.slice(1)) : parseFloat(dataEval);
-    var blackBarHeight = 50 + ((config.orientation == 'white') ? -(evalFloat/15)*100 : (evalFloat/15)*100);
-    if (mate) blackBarHeight = blackBarHeight > 50 ? 100 : 0;
-    blackBarHeight = (blackBarHeight>100) ? (blackBarHeight=100) : blackBarHeight;
-    blackBarHeight = (blackBarHeight<0) ? (blackBarHeight=0) : blackBarHeight;
+    // dataEval is always from white's perspective
+    var mate, evalFloat, blackBarHeight;
+    if (game.game_over()) {
+        if (dataEval.length == 3) {
+            evalFloat = (dataEval[0] == '1') ? 100 : -100;
+            if (dataEval[0] == '1') blackBarHeight = (config.orientation == 'white') ? 0 : 100;
+            else blackBarHeight = (config.orientation == 'white') ? 100 : 0;
+        } else {
+            evalFloat = 0;
+            blackBarHeight = 50;
+        };
+    } else {
+        mate = dataEval[0] == 'M';
+        evalFloat = mate ? parseFloat(dataEval.slice(1)) : parseFloat(dataEval);
+        blackBarHeight = 50 + ((config.orientation == 'white') ? -(evalFloat/15)*100 : (evalFloat/15)*100);
+        if (mate) blackBarHeight = blackBarHeight > 50 ? 100 : 0;
+        blackBarHeight = (blackBarHeight>100) ? (blackBarHeight=100) : blackBarHeight;
+        blackBarHeight = (blackBarHeight<0) ? (blackBarHeight=0) : blackBarHeight;
+    };
     document.querySelector(".blackBar").style.height = blackBarHeight + "%";
 
-    var evalPopup = document.querySelector(".eval-pop-up");
     var evalNumOwn = document.querySelector(".evalNumOwn");
     var evalNumOpp = document.querySelector(".evalNumOpp");
     var evalBar = document.getElementById('evalBar');
     var invis = evalBar.style.visibility == 'hidden';
-    var sign = (evalFloat >= 0 ) ? '+' : '-';
     if (evalFloat > 0 && config.orientation == 'black' ||
         evalFloat < 0 && config.orientation == 'white') {
-        evalPopup.style.backgroundColor = '#403d39';
-        evalPopup.style.color = 'white';
-        evalPopup.style.border = 'none';
-        evalNumOpp.style.visibility = invis ? 'hidden' : 'visible';
         evalNumOwn.style.visibility = 'hidden';
+        evalNumOpp.style.visibility = invis ? 'hidden' : 'visible';
     } else {
-        evalPopup.style.backgroundColor = 'white';
-        evalPopup.style.color = 'black';
-        evalPopup.style.border = '1px solid lightgray';
         evalNumOwn.style.visibility = invis ? 'hidden' : 'visible';
         evalNumOpp.style.visibility = 'hidden';
     };
+
+    var evalPopup = document.querySelector(".eval-pop-up");
+    if (evalFloat > 0 || evalFloat == 0 && config.orientation == 'white') {
+        evalPopup.style.backgroundColor = 'white';
+        evalPopup.style.color = 'black';
+        evalPopup.style.border = '1px solid lightgray';
+    } else {
+        evalPopup.style.backgroundColor = '#403d39';
+        evalPopup.style.color = 'white';
+        evalPopup.style.border = 'none';
+    };
+    if (game.game_over()) {
+        evalNumOwn.style.color = (config.orientation == 'white') ? '#403d39' : 'white';
+        evalNumOpp.style.color = (config.orientation == 'white') ? 'white' : '#403d39';
+        let fractionText = '<sup>1</sup>&frasl;<sub>2</sub>';
+        evalNumOwn.innerHTML = fractionText;
+        evalNumOpp.innerHTML = fractionText;
+        evalPopup.innerHTML = fractionText += '-<sup>1</sup>&frasl;<sub>2</sub>';
+        return;
+    };
     evalFloat = Math.abs(evalFloat);
+    evalPopup.innerHTML = ((evalFloat >= 0 ) ? '+' : '-') + (mate ? 'M' + parseInt(evalFloat) : evalFloat.toFixed(2));
 
     evalNumOwn.style.color = (config.orientation == 'white') ? '#403d39' : 'white';
     evalNumOwn.innerHTML = mate ? 'M' + parseInt(evalFloat) : evalFloat.toFixed(1);
 
     evalNumOpp.style.color = (config.orientation == 'white') ? 'white' : '#403d39';
     evalNumOpp.innerHTML = mate ? 'M' + parseInt(evalFloat) : evalFloat.toFixed(1);
-
-    evalPopup.innerHTML = sign + (mate ? 'M' + parseInt(evalFloat) : evalFloat.toFixed(2));
 };
 
-export function displayLines(lines, evaluations) {
+export function displayLines(lines=['', '', ''], evaluations=['', '', '']) {
     // evaluations is always initially from white's perspective
     if (getBoardFen().replace(/_/g, ' ').split(' ')[1] != config.orientation[0]) {
         lines = lines.reverse();
@@ -70,20 +94,24 @@ export function displayLines(lines, evaluations) {
     };
     var len = lines.length;
     for (let i = 0; i < 3; i++) {
-        let curEval = document.getElementsByClassName("eval"+(i+1))[0];
-        let line = document.getElementsByClassName("line"+(i+1))[0];
+        let curLineEval = document.getElementsByClassName("eval"+(i+1))[0];
+        let curLine = document.getElementsByClassName("line"+(i+1))[0];
         if (i >= len) {
-            curEval.innerHTML = '';
-            line.innerHTML = '';
+            curLineEval.innerHTML = '';
+            curLine.innerHTML = '';
         } else {
-            var evalNum = String(evaluations[i]);
-            var mate = evalNum[0] == 'M';
-            if (mate) evalNum = evalNum.slice(1);
-            var sign = (evalNum[0] == '-') ? '-' : '+';
-            if (sign == '-') evalNum = evalNum.slice(1);
-            var evalFloat = parseFloat(evalNum);
-            curEval.innerHTML = sign + (mate ? 'M' + parseInt(evalFloat) : evalFloat.toFixed(2));
-            line.innerHTML = uciToSan(lines[i]);
+            if (!evaluations[i]) curLineEval.innerHTML = '';
+            else {
+                var evalNum = String(evaluations[i]);
+                var mate = evalNum[0] == 'M';
+                if (mate) evalNum = evalNum.slice(1);
+                var sign = (evalNum[0] == '-') ? '-' : '+';
+                if (sign == '-') evalNum = evalNum.slice(1);
+                var evalFloat = parseFloat(evalNum);
+                curLineEval.innerHTML = sign + (mate ? 'M' + parseInt(evalFloat) : evalFloat.toFixed(2));
+            };
+            if (!lines[i]) curLine.innerHTML = '';
+            else curLine.innerHTML = uciToSan(lines[i]);
         };
     };
 };
@@ -150,11 +178,27 @@ export function playMessage(event) {
     };
 };
 
-export function tryEvaluation(fen='') {
+export function tryEvaluation() {
+    if (game.game_over()) {
+        if (game.in_checkmate()) {
+            if (getNextMoveColor() == 'black') setCurEval('1-0');
+            else setCurEval('0-1');
+        } else if (game.in_draw()) setCurEval('1/2-1/2');
+        displayEvaluation(curEval);
+        if (evalEngine != null) evalEngine.postMessage('stop');
+        searchingOld = true;
+        evalEngine = null;
+        displayLines();
+        if (lineBtn[0].innerHTML == 'Hide Lines') lineBtn[0].click();
+        return;
+    };
     if (evalEngine != null) {
         evalEngine.postMessage('stop');
         searchingOld = true;
-    } else evalEngine = createNewEngine();
+    } else {
+        evalEngine = createNewEngine();
+        searchingOld = false;
+    };
     timer.postMessage('evaluate');
 };
 
@@ -162,10 +206,12 @@ function getEvaluation(fen='') {
     evaluations = [];
     lines = [];
     if (!fen) fen = getBoardFen().replace(/_/g, ' ');
-    evalEngine.postMessage("ucinewgame");
-    evalEngine.postMessage("position fen " + fen);
-    evalEngine.postMessage("go perft 1");
-    evalEngine.postMessage("go infinite");
+    if (evalEngine != null) {
+        evalEngine.postMessage("ucinewgame");
+        evalEngine.postMessage("position fen " + fen);
+        evalEngine.postMessage("go perft 1");
+        evalEngine.postMessage("go infinite");
+    } else console.log('Prompted an evaluation without an engine');
 };
 
 export function makeEngineMove(fen='') {

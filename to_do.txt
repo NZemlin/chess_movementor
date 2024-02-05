@@ -1,17 +1,23 @@
 Create PGN builder
 Create free play against computer
+Add comment functionality
+Connect to chess.com account and compare openings to games
+Add blitz mode to practice (new game starts right when line finishes)
+Add limit line option to practice mode (choose computer moves up to a certain point)
+Add speedrun mode to practice
+    - Play through every line in prep in random order
+    - Record number/location of mistakes (accuracy)
+    - Record time (overall and keep track of slower lines)
+Add improve prep feature
+    - Looks to fill holes by suggesting to answer popular moves that aren't included
+    - Looks to extend lines that don't go as deep as most others
+Upgrade stockfish
+Make register/login system more robust
+Clean up css
 
 Store computed html in sqlite?
 Sometimes uciToSan outputs null moves?
-Sometimes displayed lines aren't sorted by eval strength
-Upgrade stockfish
-
-Clean up css
-Dots and circles are dark when clicking on b7 pawn before 11. bxa8=N+
-Disallow clicking of other pieces during attempted promotion
-Allow attempted promotion to cancel
-Allow rightclicking squares with pieces on them
-Remove highlighted border when clicking pieces on opponent's turn
+Sometimes displayed lines aren't sorted by eval strength?
 
 Improve visuals
     - Make responsive

@@ -7,8 +7,7 @@ export var possibleMoves = [];
 export var otherChoices = [];
 export var finished = false;
 export var keepPlaying = false;
-export var movementAllowed = true;
-export var curEval = 0.22;
+export var curEval = 0;
 
 export function setLastFen(fen=startPosition) {
     lastFen = fen;
@@ -38,10 +37,6 @@ export function setFinished(done) {
 
 export function setKeepPlaying(cont) {
     keepPlaying = cont;
-};
-
-export function setMovementAllowed(allowed) {
-    movementAllowed = allowed;
 };
 
 export function setCurEval(val) {

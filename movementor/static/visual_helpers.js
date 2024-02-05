@@ -27,10 +27,19 @@ export function scrollIfNeeded(element) {
 };
 
 export function fixStudyRows() {
-    var width = String(document.getElementsByClassName('moves-container-study')[0].scrollWidth);
     var movesLines = document.getElementsByClassName('moves-line');
+    let max = 0;
+    let cur = 0;
     for (let i = 0; i < movesLines.length; i++) {
-        movesLines[i].style.minWidth = width + 'px';
+        let children = movesLines[i].children
+        for (let j = 0; j < children.length; j++) {
+            cur += children[j].offsetWidth;
+        };
+        if (cur > max) max = cur;
+        cur = 0;
+    };
+    for (let i = 0; i < movesLines.length; i++) {
+        movesLines[i].style.minWidth = max + 10 + 'px'
     };
 };
 

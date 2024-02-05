@@ -2,6 +2,7 @@ import { page, startElement } from "./constants.js";
 import { updateHintText } from "./update.js";
 import { getPlayedSelected, getSelected } from "./getters.js";
 import { setFinished, setKeepPlaying } from "./globals.js";
+import { difLineBtn, keepPlayingBtn } from "./page.js";
 
 export function timeoutBtn(btn, time=1) {
     btn.disabled = true;
@@ -21,8 +22,8 @@ export function resetButtons() {
     if (page == 'practice') {
         $('#skill-label')[0].style.display = 'none';
         $('#skill-input')[0].style.display = 'none';
-        $('#keepPlayingBtn')[0].style.display = 'none';
-        $('#difLineBtn')[0].style.display = 'block';
+        keepPlayingBtn[0].style.display = 'none';
+        difLineBtn[0].style.display = 'block';
     };
     setFinished(false);
     setKeepPlaying(false);

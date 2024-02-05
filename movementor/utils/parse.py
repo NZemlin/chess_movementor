@@ -8,7 +8,7 @@ class PGNParser():
     def insert_bars(self):
         for i, cur_move in enumerate(self.move_list[::-1]):
             index = len(self.move_list) - i - 1
-            if cur_move.space:
+            if not cur_move.move.is_mainline() and cur_move.space:
                 for prev_move in [move_info for move_info in self.move_list[index - 1:0:-1]]:
                     if int(prev_move.turn_number()) <= int(cur_move.turn_number()):
                         break
