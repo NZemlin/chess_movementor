@@ -1,12 +1,16 @@
 import { game } from './game.js';
 import { page, startPosition } from './constants.js';
 import { toggleDifLineBtn } from './page_helpers.js';
+import { restartBtn } from './page.js';
+import { updateHintText, updateStatus } from './update.js';
 
 export var lastFen = startPosition;
 export var possibleMoves = [];
 export var otherChoices = [];
 export var finished = false;
 export var keepPlaying = false;
+export var isPromoting = false;
+export var isBlitzing = false;
 export var curEval = 0;
 
 export function setLastFen(fen=startPosition) {
@@ -27,6 +31,16 @@ export function setOtherChoices(moves, index) {
 };
 
 export function setFinished(done) {
+    if (done && isBlitzing) {
+        window.setTimeout(function () {
+            updateHintText();
+            updateStatus();
+            // console.log('Game state updated')
+            console.log('----------------------------------------------------');
+            restartBtn[0].click();
+        }, 500);
+        return;
+    };
     finished = done;
     if (done && page == 'practice' && !game.game_over()) {
         $('#skill-label')[0].style.display = 'block';
@@ -37,6 +51,14 @@ export function setFinished(done) {
 
 export function setKeepPlaying(cont) {
     keepPlaying = cont;
+};
+
+export function setIsPromoting(promoting) {
+    isPromoting = promoting;
+};
+
+export function setIsBlitzing(blitzing) {
+    isBlitzing = blitzing;
 };
 
 export function setCurEval(val) {

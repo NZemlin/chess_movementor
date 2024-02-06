@@ -1,8 +1,6 @@
 Create PGN builder
 Create free play against computer
-Add comment functionality
 Connect to chess.com account and compare openings to games
-Add blitz mode to practice (new game starts right when line finishes)
 Add limit line option to practice mode (choose computer moves up to a certain point)
 Add speedrun mode to practice
     - Play through every line in prep in random order
@@ -11,20 +9,22 @@ Add speedrun mode to practice
 Add improve prep feature
     - Looks to fill holes by suggesting to answer popular moves that aren't included
     - Looks to extend lines that don't go as deep as most others
+Add consolidate feature
+    - Play against all openings included in prep
+Implement premoves in practice mode
 Upgrade stockfish
 Make register/login system more robust
 Clean up css
 
-Store computed html in sqlite?
 Sometimes uciToSan outputs null moves?
 Sometimes displayed lines aren't sorted by eval strength?
 
 Improve visuals
     - Make responsive
         - Fix touchmove issues
+        - Change font size on smaller displays
         - Fix bottom captured pieces on small displays
         - Fix study page played moves on small displays
-        - Change font size on smaller displays
         - Make responsive as viewport grows, not just shrinks
     - Add color theme selector
     - Light/dark mode

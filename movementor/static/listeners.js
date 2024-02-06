@@ -1,58 +1,19 @@
-import { config, game, newBoard } from "./game.js";
-import { finished } from "./globals.js";
+import { game } from "./game.js";
+import { finished, isPromoting } from "./globals.js";
 import { page, squareClass, pieceClass, squareSizeY } from './constants.js';
 import { getUnderscoredFen, getBoardFen } from './getters.js';
 import { modArrows } from "./arrow.js";
 import { drawCircle, drawDot, dotAndCircleCanvas, dotAndCircleContext } from './dot_circle.js';
 import { initialPoint, finalPoint, clearCanvas, setInitialPoint, setFinalPoint } from './canvas_helper.js';
 import { clearRightClickHighlights, toggleRightClickHighlight, highlightBorder } from "./highlight.js";
-import { evalBarBtn, lineBtn, whichCheckKey, whichClickUpdate } from './page.js';
+import { whichCheckKey, whichClickUpdate } from './page.js';
 import { arrowCanvas } from "./arrow.js";
 import { resFactor } from "./canvas_helper.js";
-import { clearPromotionOptions, isPromoting } from "./promotion.js";
+import { clearPromotionOptions } from "./promotion.js";
+import { resizeCols } from "./visual_helpers.js";
 
 export var rightClickDownSquare;
 export var leftClickDownSquare;
-
-export function resizeCols() {
-    var container = document.getElementsByClassName('container')[1];
-    var evalCol = document.getElementsByClassName('eval-col')[0];
-    var boardCol = document.getElementsByClassName('board-col')[0];
-    var movesCol = document.getElementsByClassName('moves-col')[0];
-    var boardContainer = document.getElementsByClassName('board-container')[0];
-    var boardWrapper = document.getElementById('board_wrapper')
-    var myBoard = document.getElementsByClassName('board')[0];
-    var evalBar = document.getElementById('evalBar')
-    // Viewport >= 1600
-    if (container.offsetWidth >= 1233) movesCol.style.width = (container.offsetWidth - evalCol.offsetWidth - boardCol.offsetWidth - 7) + "px";
-    // Viewport >= 992
-    else if (container.offsetWidth >= 747) movesCol.style.width = evalCol.offsetWidth + boardCol.offsetWidth - 25 + "px";
-    else {
-        var curWidth = container.offsetWidth - 47;
-        while (curWidth % 8 != 0) curWidth--;
-        boardCol.style.width = curWidth + 'px';
-        boardCol.style.width = curWidth + 'px';
-        boardContainer.style.width = curWidth + 'px';
-        boardContainer.style.height = curWidth + 'px';
-        boardWrapper.style.width = curWidth + 'px';
-        myBoard.style.width = curWidth + 'px';
-        boardWrapper.style.height = myBoard.offsetHeight + 'px';
-        if (container.offsetWidth < 568) {
-            config.showNotation = false;
-            if (evalBarBtn[0].innerHTML == 'Hide Eval') evalBarBtn[0].click();
-            if (lineBtn[0].innerHTML == 'Hide Lines') lineBtn[0].click();
-            evalBarBtn[0].style.display = 'none';
-            lineBtn[0].style.display = 'none';
-        };
-        newBoard();
-        evalBar.style.height = myBoard.offsetHeight + 'px';
-        arrowCanvas.style.width = myBoard.offsetWidth + 'px';
-        arrowCanvas.style.height = myBoard.offsetHeight + 'px';
-        dotAndCircleCanvas.style.width = myBoard.offsetWidth + 'px';
-        dotAndCircleCanvas.style.height = myBoard.offsetHeight + 'px';
-        movesCol.style.width = evalCol.offsetWidth + boardCol.offsetWidth - 25 + "px";
-    };
-};
 
 export function setRightClickDownSquare(square) {
     rightClickDownSquare = square;

@@ -20,6 +20,7 @@ class PGNWriter():
                        data-ep={str(move.ep).lower()}
                        data-color={('white' if not move.move.turn() else 'black')}
                        data-turn={move.turn_number()}
+                       data-comment={move.comment}
                        class="move ignore">{move.move.san()}
                    </span>
                 '''
@@ -105,6 +106,11 @@ class PGNWriter():
                         <h2 id="status"></h2>
                     </div>
                  '''
+        comment = '''
+                     <div class="row">
+                         <p id="comment" style="margin-bottom:6.5px;">Comment:</p>
+                     </div>
+                  '''
 
         # Study HTML
         study_modal = '''
@@ -166,6 +172,7 @@ class PGNWriter():
                                     {shared_buttons}
                                     {lines_table}
                                     {status}
+                                    {comment}
                                     {study_moves}
                                 </div>
                             </div>
@@ -198,7 +205,8 @@ class PGNWriter():
                     </div>
                 '''
         practice_buttons = '''
-                              <div class="empty-row"> 
+                              <div class="empty-row">
+                                   <button id="blitzBtn">Blitz: Off</button>
                                    <button id="difLineBtn">Other Line</button>
                                    <button id="hintBtn" class="ignore">Hide Hints</button>
                                    <span id="hints" class="text-wrap">No hints currently</span>
@@ -230,7 +238,7 @@ class PGNWriter():
                                                             data-prev-move=b{str(i-1)}
                                                             data-next-move=b{str(i)}
                                                             data-eval=""
-                                                            style=visibility:"hidden";>
+                                                            style="visibility:hidden";>
                                                         </span>
                                                     </div>
                                                     <div class="col-5">
@@ -242,7 +250,7 @@ class PGNWriter():
                                                             data-prev-move=w{str(i)}
                                                             data-next-move=w{str(i+1)}
                                                             data-eval=""
-                                                            style=visibility:"hidden";>
+                                                            style="visibility:hidden";>
                                                         </span>
                                                     </div>
                                                 </div>

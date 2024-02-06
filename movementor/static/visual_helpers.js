@@ -1,6 +1,9 @@
+import { config, newBoard } from "./game.js";
 import { page, notationClass } from "./constants.js";
 import { lightOrDark } from "./highlight.js";
-import { lastKeyCode } from "./page.js";
+import { lastKeyCode, evalBarBtn, lineBtn } from "./page.js";
+import { arrowCanvas } from "./arrow.js";
+import { dotAndCircleCanvas } from "./dot_circle.js";
 
 export function scrollIfNeeded(element) {
     var observer;
@@ -40,6 +43,46 @@ export function fixStudyRows() {
     };
     for (let i = 0; i < movesLines.length; i++) {
         movesLines[i].style.minWidth = max + 10 + 'px'
+    };
+};
+
+export function resizeCols() {
+    var container = document.getElementsByClassName('container')[1];
+    var evalCol = document.getElementsByClassName('eval-col')[0];
+    var boardCol = document.getElementsByClassName('board-col')[0];
+    var movesCol = document.getElementsByClassName('moves-col')[0];
+    var boardContainer = document.getElementsByClassName('board-container')[0];
+    var boardWrapper = document.getElementById('board_wrapper')
+    var myBoard = document.getElementsByClassName('board')[0];
+    var evalBar = document.getElementById('evalBar')
+    // Viewport >= 1600
+    if (container.offsetWidth >= 1233) movesCol.style.width = (container.offsetWidth - evalCol.offsetWidth - boardCol.offsetWidth - 7) + "px";
+    // Viewport >= 992
+    else if (container.offsetWidth >= 747) movesCol.style.width = evalCol.offsetWidth + boardCol.offsetWidth - 25 + "px";
+    else {
+        var curWidth = container.offsetWidth - 47;
+        while (curWidth % 8 != 0) curWidth--;
+        boardCol.style.width = curWidth + 'px';
+        boardCol.style.width = curWidth + 'px';
+        boardContainer.style.width = curWidth + 'px';
+        boardContainer.style.height = curWidth + 'px';
+        boardWrapper.style.width = curWidth + 'px';
+        myBoard.style.width = curWidth + 'px';
+        boardWrapper.style.height = myBoard.offsetHeight + 'px';
+        if (container.offsetWidth < 568) {
+            config.showNotation = false;
+            if (evalBarBtn[0].innerHTML == 'Hide Eval') evalBarBtn[0].click();
+            if (lineBtn[0].innerHTML == 'Hide Lines') lineBtn[0].click();
+            evalBarBtn[0].style.display = 'none';
+            lineBtn[0].style.display = 'none';
+        };
+        newBoard();
+        evalBar.style.height = myBoard.offsetHeight + 'px';
+        arrowCanvas.style.width = myBoard.offsetWidth + 'px';
+        arrowCanvas.style.height = myBoard.offsetHeight + 'px';
+        dotAndCircleCanvas.style.width = myBoard.offsetWidth + 'px';
+        dotAndCircleCanvas.style.height = myBoard.offsetHeight + 'px';
+        movesCol.style.width = evalCol.offsetWidth + boardCol.offsetWidth - 25 + "px";
     };
 };
 

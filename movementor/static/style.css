@@ -66,7 +66,7 @@ input[type=submit] { align-self: start; min-width: 10em; }
     position: relative;
     overflow-x: auto;
     overflow-y: auto;
-    max-height: 532px;
+    max-height: 506px;
     font-size: 14px;
 }
 
@@ -129,11 +129,11 @@ span.move.selected, .played-selected {
     text-align: center;
 }
 
-#lineBtn, #copyBtn, #swapBtn, #restartBtn, #difLineBtn, #hintBtn {
+#lineBtn, #copyBtn, #swapBtn, #restartBtn, #difLineBtn, #hintBtn, #blitzBtn {
     margin-right: 3px;
 }
 
-#difLineBtn, #hintBtn {
+#difLineBtn, #hintBtn, #blitzBtn {
     margin-bottom: 3px;
     margin-top: 1px;
 }
@@ -141,7 +141,7 @@ span.move.selected, .played-selected {
 .move-list-container {
     overflow-x: hidden;
     overflow-y: auto;
-    max-height: 532px;
+    max-height: 506px;
     font-size: 2rem;
     font-family: monospace;
 }

@@ -2,10 +2,10 @@ import { board, game } from './game.js';
 import { pieceClass, squareClass } from './constants.js';
 import { createChessPiece } from './visual_helpers.js';
 import { validateMove } from './move.js';
+import { setIsPromoting } from './globals.js'
 
 var targetSquare, squareBehind1, squareBehind2, squareBehind3;
 var promotionOptionSquares;
-export var isPromoting = false;
 
 function setPromotionOptionSquares(color, target) {
     var file = target[0];
@@ -36,7 +36,7 @@ export function opaqueBoardSquares(color, target) {
 };
   
 export function clearPromotionOptions() {
-    isPromoting = false;
+    setIsPromoting(false);
     var boardSquares = document.getElementsByClassName(squareClass);
     for (let i = 0; i < boardSquares.length; i++) {
         if (!(promotionOptionSquares.includes(boardSquares[i].getAttribute('data-square')))) {
@@ -71,7 +71,7 @@ export function clearPromotionOptions() {
 };
 
 function performPromotion(pieceType, source, target, before) {
-    isPromoting = false;
+    setIsPromoting(false);
     var move = game.move({
         from: source,
         to: target,
@@ -82,7 +82,7 @@ function performPromotion(pieceType, source, target, before) {
 };
 
 export function attemptPromotion(color, source, target, before) {
-    isPromoting = true;
+    setIsPromoting(true);
 
     targetSquare = document.getElementsByClassName('square-' + promotionOptionSquares[0])[0];
     squareBehind1 = document.getElementsByClassName('square-' + promotionOptionSquares[1])[0];

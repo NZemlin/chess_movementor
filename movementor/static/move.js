@@ -1,12 +1,12 @@
 import { config, board, game, isOppTurn } from './game.js';
-import { possibleMoves, finished, setLastFen, setOtherChoices, setKeepPlaying, keepPlaying } from './globals.js';
+import { possibleMoves, finished, isPromoting, setLastFen, setOtherChoices, setKeepPlaying, keepPlaying } from './globals.js';
 import { page } from './constants.js';
 import { scrollIfNeeded } from './visual_helpers.js';
 import { getMoveNum, getPlayedSelected, getUnderscoredFen } from './getters.js';
 import { arrowContext } from './arrow.js';
 import { clearCanvas } from './canvas_helper.js';
 import { lightOrDark,clearRightClickHighlights, highlightBorder } from './highlight.js';
-import { opaqueBoardSquares, attemptPromotion, isPromoting } from './promotion.js';
+import { opaqueBoardSquares, attemptPromotion } from './promotion.js';
 import { updateHintText, updateGameState } from './update.js';
 import { playIllegal } from './sounds.js';
 import { tryEvaluation, makeEngineMove } from './eval.js';

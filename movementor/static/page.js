@@ -1,7 +1,7 @@
 import { config, board, game, isOppTurn, swapBoard, resetBoard } from './game.js';
-import { otherChoices, curEval, setLastFen, setPossibleMoves, setFinished, setKeepPlaying } from './globals.js';
-import { page, squareClass, startPosition, startElement } from './constants.js';
-import { scrollIfNeeded } from './visual_helpers.js';
+import { otherChoices, isBlitzing, curEval, setLastFen, setPossibleMoves, setFinished, setKeepPlaying, setIsBlitzing } from './globals.js';
+import { page, startPosition, startElement } from './constants.js';
+import { scrollIfNeeded, resizeCols } from './visual_helpers.js';
 import { timeoutBtn, resetButtons } from './page_helpers.js';
 import { resetMoveList } from './page_helpers.js';
 import { getPlayedSelected, getUnderscoredFen, getBoardFen } from './getters.js';
@@ -12,7 +12,7 @@ import { makeComputerMove } from './move.js';
 import { playMoveSelf, playMoveOpponent, playSound } from './sounds.js';
 import { displayEvaluation, tryEvaluation } from './eval.js';
 import { createNewEngine } from './eval_helpers.js';
-import { resizeCols, addListeners } from './listeners.js';
+import { addListeners } from './listeners.js';
 import { updateCapturedPieces } from './captured_pieces.js';
 
 export var lastKeyCode;
@@ -24,6 +24,7 @@ export var evalBarBtn = $('#evalBarBtn');
 export var lineBtn = $('#lineBtn');
 export var hintBtn = $('#hintBtn');
 export var keepPlayingBtn = $('#keepPlayingBtn');
+export var blitzBtn = $('#blitzBtn');
 
 copyBtn.on('click', function() {
     var text = (page == 'study') ? game.fen() : game.pgn();
@@ -74,13 +75,13 @@ evalBarBtn.on('click', function () {
 });
 
 lineBtn.on('click', function () {
-    this.innerHTML = this.innerHTML == 'Show Lines' ? 'Hide Lines' : 'Show Lines';
+    this.innerHTML = (this.innerHTML == 'Show Lines') ? 'Hide Lines' : 'Show Lines';
     var linesTable = document.getElementsByClassName('lines-table')[0];
     if (linesTable.hidden) {
         linesTable.hidden = !linesTable.hidden;
-        var linesTableHeight = -linesTable.offsetHeight - 14;
+        var linesTableHeight = -linesTable.offsetHeight - 13;
     } else {
-        var linesTableHeight = linesTable.offsetHeight + 14;
+        var linesTableHeight = linesTable.offsetHeight + 13;
         linesTable.hidden = !linesTable.hidden;
     };
     var containerName = (page == 'study') ? 'moves-container-study' : 'move-list-container';
@@ -88,7 +89,7 @@ lineBtn.on('click', function () {
     if (page == 'study') container.style.maxHeight = container.offsetHeight + linesTableHeight + 'px';
     else {
         container.style.height = parseInt(container.style.height.slice(0, -2)) + linesTableHeight + 'px';
-        container.style.maxHeight = container.style.height;
+        container.style.maxHeight = parseInt(container.style.height.slice(0, -2)) - 28 + 'px';
     };
     timeoutBtn(this, .1);
 });
@@ -113,6 +114,12 @@ keepPlayingBtn.on('click', function () {
     if (hintBtn[0].innerHTML == 'Hide Hints') hintBtn[0].click();
     createNewEngine();
     window.setTimeout(makeComputerMove, 500);
+});
+
+blitzBtn.on('click', function () {
+    this.innerHTML = isBlitzing ? 'Blitz: Off' : 'Blitz: On';
+    setIsBlitzing(!isBlitzing);
+    timeoutBtn(this, .1);
 });
 
 export function whichCheckKey() {
@@ -148,19 +155,8 @@ export function checkKeyPractice(e) {
     var old = getPlayedSelected();
     if (e.keyCode == 37) {
         if (old == startElement) return;
-        if (old == firstMove) {
-            old.classList.remove('played-selected');
-            startElement.classList.add('played-selected');
-            board.position(startPosition.replace(/_/g, ' '), false);
-            highlightRightClickedSquares();
-            drawArrows();
-            $('#myBoard').find('.' + squareClass).removeClass('highlight-light');
-            $('#myBoard').find('.' + squareClass).removeClass('highlight-dark');
-            (config.orientation == 'w') ? playMoveOpponent() : playMoveSelf();
-            tryEvaluation();
-            return;
-        };
-        clickUpdatePractice(document.getElementById(old.getAttribute('data-prev-move')));
+        else if (old == firstMove) clickUpdatePractice(startElement);
+        else clickUpdatePractice(document.getElementById(old.getAttribute('data-prev-move')));
     } else if (e.keyCode == 39) {
         var nextMove = (old == startElement) ? firstMove : document.getElementById(old.getAttribute('data-next-move'));
         if (nextMove.style.visibility != 'visible') return;
@@ -221,6 +217,8 @@ export function clickUpdateStudy(element) {
     highlightRightClickedSquares();
     drawArrows();
     scrollIfNeeded(element);
+    var comment = element.getAttribute('data-comment').replace(/_/g, ' ');
+    document.getElementById('comment').innerHTML = 'Comment: ' + ((comment != 'none') ? comment : '');
     var uci = element.getAttribute('data-uci');
     setKeepPlaying(false);
     updateGameState(element.getAttribute('data-san'), uci.slice(0, 2), uci.slice(2, 4));

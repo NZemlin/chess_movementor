@@ -11,9 +11,9 @@ export function lightOrDark(square) {
 };
 
 export function highlightLastMove(source='', target='') {
-    if (game.fen() == startPosition.replace(/_/g, ' ')) return;
     $board.find('.' + squareClass).removeClass('highlight-light');
     $board.find('.' + squareClass).removeClass('highlight-dark');
+    if (getBoardFen() == startPosition) return;
     if (!(source && target)) {
         $board.find('.square-' + highlightedSquares[0]).addClass('highlight-' +  lightOrDark(highlightedSquares[0]));
         $board.find('.square-' + highlightedSquares[1]).addClass('highlight-' +  lightOrDark(highlightedSquares[1]));

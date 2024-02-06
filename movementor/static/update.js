@@ -51,7 +51,7 @@ export function updateHintText(own='') {
     document.getElementById('hints').innerHTML = (possibleMoves && own) ? ('Allowed moves are: ' + possibleMoves.join(', ')) : 'No hints currently';
 };
 
-function updateStatus() {
+export function updateStatus() {
     // console.log('Updating status');
     var nextColor = getNextMoveColor().charAt(0).toUpperCase() + getNextMoveColor().slice(1);
     var status = nextColor + ' to move';
