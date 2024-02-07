@@ -11,6 +11,8 @@ export var finished = false;
 export var keepPlaying = false;
 export var isPromoting = false;
 export var isBlitzing = false;
+export var freePlay = document.getElementById('0') == null;
+export var engineLevel = (page == 'practice') ? document.getElementById('skill-input').value : 0;
 export var curEval = 0;
 
 export function setLastFen(fen=startPosition) {
@@ -19,7 +21,7 @@ export function setLastFen(fen=startPosition) {
 
 export function setPossibleMoves(moves) {
     possibleMoves = moves;
-    toggleDifLineBtn(otherChoices.length == 0);
+    if (page != 'create') toggleDifLineBtn(otherChoices.length == 0);
     finished = false;
 };
 
@@ -43,9 +45,9 @@ export function setFinished(done) {
     };
     finished = done;
     if (done && page == 'practice' && !game.game_over()) {
-        $('#skill-label')[0].style.display = 'block';
-        $('#skill-input')[0].style.display = 'block';
-        $('#keepPlayingBtn')[0].style.display = 'block';
+        $('#skill-label')[0].style.display = 'inline-block';
+        $('#skill-input')[0].style.display = 'inline-block';
+        $('#keepPlayingBtn')[0].style.display = 'inline-block';
     };
 };
 
@@ -59,6 +61,10 @@ export function setIsPromoting(promoting) {
 
 export function setIsBlitzing(blitzing) {
     isBlitzing = blitzing;
+};
+
+export function setEngineLevel() {
+    engineLevel = document.getElementById('skill-input').value;
 };
 
 export function setCurEval(val) {

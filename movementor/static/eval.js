@@ -171,8 +171,8 @@ export function playMessage(event) {
         clearRightClickHighlights();
         clearCanvas(arrowContext);
         updateHintText(false);
-        updateGameState(move.san, source, target);
         console.log('Engine chose: ' + move.san);
+        updateGameState(move.san, source, target);
         setPlayedMoveInfo(move);
         updateCapturedPieces();
     };

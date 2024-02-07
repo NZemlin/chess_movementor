@@ -57,6 +57,12 @@ def register():
                     ' VALUES (?, ?, ?)',
                     (title, pgn, user['id'])
                 )
+                title = 'Free Play'
+                db.execute(
+                    'INSERT INTO opening (title, pgn, author_id)'
+                    ' VALUES (?, ?, ?)',
+                    (title, '', user['id'])
+                )
                 db.commit()
                 return redirect(url_for("auth.login"))
 

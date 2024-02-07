@@ -1,5 +1,5 @@
 import { game } from './game.js';
-import { possibleMoves, keepPlaying, setPossibleMoves, setFinished, finished } from './globals.js';
+import { possibleMoves, keepPlaying, setPossibleMoves, setFinished, finished, freePlay, setKeepPlaying } from './globals.js';
 import { page } from './constants.js';
 import { recolorNotation, fixStudyRows } from './visual_helpers.js';
 import { getLastMoveElement, getNextMoveColor } from './getters.js';
@@ -7,6 +7,7 @@ import { highlightLastMove } from './highlight.js';
 import { removeCapturedPieces, updateCapturedPieces } from './captured_pieces.js';
 import { playSound } from './sounds.js';
 import { tryEvaluation } from './eval.js';
+import { createNewEngine } from './eval_helpers.js';
 
 function updateSelectedMoveElement() {
     if (keepPlaying) return;
@@ -19,7 +20,7 @@ function updateSelectedMoveElement() {
 
 function updateAllowedMoves() {
     // console.log('Updating allowed moves');
-    if (keepPlaying) {
+    if (keepPlaying || page == 'create') {
         setPossibleMoves(game.moves());
         return;
     };
@@ -47,7 +48,7 @@ function updateAllowedMoves() {
 };
 
 export function updateHintText(own='') {
-    if (page == 'study') return;
+    if (page != 'practice') return;
     document.getElementById('hints').innerHTML = (possibleMoves && own) ? ('Allowed moves are: ' + possibleMoves.join(', ')) : 'No hints currently';
 };
 
@@ -59,7 +60,7 @@ export function updateStatus() {
     else if (game.in_draw()) status = 'Game over, drawn position';
     else if (game.in_check()) status += ', ' + nextColor + ' is in check';
     if (finished) status = '(This line is finished) ' + status;
-    else if (keepPlaying) status = '(Out of prepared opening) ' + status;
+    else if (keepPlaying && !freePlay) status = '(Out of prepared opening) ' + status;
     document.getElementById('status').innerHTML = status;
 };
 
@@ -76,11 +77,26 @@ export function updateGameState(move='', source='', target='', mute=false) {
     tryEvaluation();
 };
 
+function startFreePlay() {
+    tryEvaluation();
+    setFinished(true);
+    setKeepPlaying(true);
+    createNewEngine();
+    setPossibleMoves(game.moves());
+    $('#keepPlayingBtn')[0].innerHTML = 'Play';
+    document.getElementById('status').innerHTML = 'White to move';
+    console.log('Game started');
+};
+
 export function gameStart() {
     recolorNotation();
     playSound();
     removeCapturedPieces();
-    setPossibleMoves([document.getElementById('0').getAttribute('data-san')]);
+    if (freePlay && page == 'practice') {
+        startFreePlay();
+        return;
+    } else if (!freePlay) setPossibleMoves([document.getElementById('0').getAttribute('data-san')]);
+    else setPossibleMoves(game.moves());
     updateStatus();
     console.log('Game started');
     if (page == 'practice') console.log('----------------------------------------------------');

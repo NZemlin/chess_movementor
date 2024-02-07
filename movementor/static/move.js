@@ -110,7 +110,8 @@ export function validateMove(move, source, target, before, checkedPromo) {
         if (!checkedPromo) handlePromotionAttempt(move, source, target, before);
         else {
             if (source != target) {
-                console.log('Move not in prepared opening.  Allowed moves are: ' + possibleMoves.join(', '));
+                console.log((!keepPlaying ? 'Move not in prepared opening.  ' : '') +
+                            'Allowed moves are: ' + possibleMoves.join(', '));
                 playIllegal();
                 updateHintText(true);
             };

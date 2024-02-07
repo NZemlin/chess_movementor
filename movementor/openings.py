@@ -33,8 +33,11 @@ def get_opening(name, check_author=True):
     return opening
 
 def parse_and_write_pgn(name, pgn, page):
-    parser = PGNParser(chess.pgn.read_game(io.StringIO(pgn)), [])
-    return writer.write_html(name, parser.move_list, page)
+    if pgn:
+        parser = PGNParser(chess.pgn.read_game(io.StringIO(pgn)), [])
+        return writer.write_html(name, parser.move_list, page)
+    else:
+        return writer.write_html(name, [], page)
 
 @bp.route('/', methods=('GET', 'POST',))
 @login_required
@@ -115,10 +118,24 @@ def practice(name):
     # resp.headers['Cross-Origin-Opener-Policy'] = 'same-origin'
     # resp.headers['Cross-Origin-Embedder-Policy'] = 'require-corp'
     # return resp
-    
+    if name == 'free_play':
+        name = 'Free Play'
     opening = get_opening(name)
 
     return render_template_string(parse_and_write_pgn(opening['title'], opening['pgn'], 'practice'))
+
+@bp.route('/create_analysis', methods=('GET', 'POST'))
+@login_required
+def create_analysis():
+    if request.method == 'POST':
+        return redirect(url_for('openings.index'))
+    
+    # resp = make_response(render_template_string(p.writer.write_html(name, 'study')))
+    # resp.headers['Cross-Origin-Opener-Policy'] = 'same-origin'
+    # resp.headers['Cross-Origin-Embedder-Policy'] = 'require-corp'
+    # return resp
+
+    return render_template_string(parse_and_write_pgn('', '', 'create'))
 
 @bp.route('/<string:name>/static/img/chesspieces/wikipedia/<string:image>', methods=('GET', 'POST'))
 @login_required

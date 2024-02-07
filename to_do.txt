@@ -1,16 +1,21 @@
-Create PGN builder
-Create free play against computer
+Implement PGN builder
+    - Allow moves to be played and displayed
+    - Allow comments to be saved to current move/position
+    - Allow board to restart
+    - Allow analysis to be named and saved
+Allow editing of analyses
 Connect to chess.com account and compare openings to games
-Add limit line option to practice mode (choose computer moves up to a certain point)
-Add speedrun mode to practice
-    - Play through every line in prep in random order
-    - Record number/location of mistakes (accuracy)
-    - Record time (overall and keep track of slower lines)
 Add improve prep feature
     - Looks to fill holes by suggesting to answer popular moves that aren't included
     - Looks to extend lines that don't go as deep as most others
 Add consolidate feature
     - Play against all openings included in prep
+
+Add limit line option to practice mode (choose computer moves up to a certain point)
+Add speedrun mode to practice
+    - Play through every line in prep in random order
+    - Record number/location of mistakes (accuracy)
+    - Record time (overall and keep track of slower lines)
 Implement premoves in practice mode
 Upgrade stockfish
 Make register/login system more robust

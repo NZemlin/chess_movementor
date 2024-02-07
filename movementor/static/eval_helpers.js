@@ -1,5 +1,5 @@
 import { Chess } from 'https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.js';
-import { curEval, keepPlaying } from './globals.js';
+import { curEval, keepPlaying, engineLevel } from './globals.js';
 import { config } from './game.js';
 import { getBoardFen } from './getters.js';
 import { evalMessage, playMessage, displayEvaluation } from './eval.js';
@@ -41,7 +41,7 @@ export function createNewEngine() {
         newEngine.onerror = function (error) { console.log(error) };
     };
     newEngine.postMessage("uci");
-    if (keepPlaying) newEngine.postMessage("setoption name Skill Level value " + String(document.getElementById('skill-input').value));
+    if (keepPlaying) newEngine.postMessage("setoption name Skill Level value " + String(engineLevel));
     newEngine.postMessage("setoption name multipv value 3");
     newEngine.postMessage("isready");
     newEngine.postMessage("ucinewgame");

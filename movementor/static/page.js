@@ -1,5 +1,5 @@
 import { config, board, game, isOppTurn, swapBoard, resetBoard } from './game.js';
-import { otherChoices, isBlitzing, curEval, setLastFen, setPossibleMoves, setFinished, setKeepPlaying, setIsBlitzing } from './globals.js';
+import { otherChoices, isBlitzing, freePlay, curEval, setLastFen, setPossibleMoves, setFinished, setKeepPlaying, setIsBlitzing, setEngineLevel } from './globals.js';
 import { page, startPosition, startElement } from './constants.js';
 import { scrollIfNeeded, resizeCols } from './visual_helpers.js';
 import { timeoutBtn, resetButtons } from './page_helpers.js';
@@ -62,7 +62,7 @@ difLineBtn.on('click', function () {
 
 swapBtn.on('click', function () {
     swapBoard();
-    if (page != 'study' && getBoardFen() == getUnderscoredFen()) window.setTimeout(makeComputerMove, 500);
+    if (page == 'practice' && getBoardFen() == getUnderscoredFen()) window.setTimeout(makeComputerMove, 500);
     timeoutBtn(this);
 });
 
@@ -84,12 +84,12 @@ lineBtn.on('click', function () {
         var linesTableHeight = linesTable.offsetHeight + 13;
         linesTable.hidden = !linesTable.hidden;
     };
-    var containerName = (page == 'study') ? 'moves-container-study' : 'move-list-container';
+    var containerName = (page != 'practice') ? 'moves-container-study' : 'move-list-container';
     var container = document.getElementsByClassName(containerName)[0];
     if (page == 'study') container.style.maxHeight = container.offsetHeight + linesTableHeight + 'px';
     else {
         container.style.height = parseInt(container.style.height.slice(0, -2)) + linesTableHeight + 'px';
-        container.style.maxHeight = parseInt(container.style.height.slice(0, -2)) - 28 + 'px';
+        container.style.maxHeight = parseInt(container.style.height.slice(0, -2)) - 28 + (freePlay ? 30 : 0) + 'px';
     };
     timeoutBtn(this, .1);
 });
@@ -102,6 +102,7 @@ hintBtn.on('click', function () {
 });
 
 keepPlayingBtn.on('click', function () {
+    setEngineLevel();
     $('#skill-label')[0].style.display = 'none';
     $('#skill-input')[0].style.display = 'none';
     this.style.display = 'none';
@@ -244,5 +245,10 @@ export function checkKeyStudy(e) {
     };
 };
 
+if (freePlay && page == 'practice') {
+    evalBarBtn[0].click();
+    lineBtn[0].click();
+    document.getElementsByClassName('practice-buttons')[0].style.display = 'none';
+};
 resizeCols();
 addListeners();
