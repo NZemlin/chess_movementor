@@ -1,6 +1,6 @@
 import { Chess } from 'https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.js';
 import { lastFen, setFinished, setKeepPlaying, setLastFen } from './globals.js';
-import { onDragStart, onDragMove, onDrop, onSnapEnd } from './move.js';
+import { onDragStart, onDragMove, onDrop, onSnapEnd, onChange } from './move.js';
 import { swapArrows } from './arrow.js';
 import { recolorNotation } from './visual_helpers.js';
 import { getBoardFen } from './getters.js';
@@ -18,6 +18,7 @@ export var config = {
     onDragStart: onDragStart,
     onDrop: onDrop,
     onSnapEnd: onSnapEnd,
+    onChange: onChange,
 };
 export var board = Chessboard('myBoard', config);
 export var game = new Chess();

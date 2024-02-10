@@ -16,7 +16,6 @@ Add speedrun mode to practice
     - Play through every line in prep in random order
     - Record number/location of mistakes (accuracy)
     - Record time (overall and keep track of slower lines)
-Implement premoves in practice mode
 Upgrade stockfish
 Make register/login system more robust
 Clean up css
@@ -31,5 +30,6 @@ Improve visuals
         - Fix bottom captured pieces on small displays
         - Fix study page played moves on small displays
         - Make responsive as viewport grows, not just shrinks
+        - Use board.resize on window.resize event
     - Add color theme selector
     - Light/dark mode

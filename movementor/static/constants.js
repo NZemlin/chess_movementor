@@ -8,3 +8,7 @@ export var boardClass= 'board-b72b1';
 export var squareClass = 'square-55d63';
 export var pieceClass = 'piece-417db';
 export var notationClass = 'notation-322f9';
+export var whiteClass = 'white-1e1d7';
+export var whiteOpaqueClass = 'white-opaque-1e1d7';
+export var blackClass = 'black-3c85d';
+export var blackOpaqueClass = 'black-opaque-3c85d';

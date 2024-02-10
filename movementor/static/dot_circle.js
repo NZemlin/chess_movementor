@@ -30,9 +30,13 @@ SOFTWARE.
 
 */
 
-import { config } from "./game.js";
+import { config, game, isOppTurn } from "./game.js";
+import { getBoardFen, getUnderscoredFen } from "./getters.js";
 import { changeResolution, resFactor } from "./canvas_helper.js";
-import { squareSizeY, squareSizeX } from './constants.js';
+import { squareSizeY, squareSizeX, page } from './constants.js';
+import { dotAndCircleMoves } from "./premove.js";
+import { leftClickDownSquare } from "./listeners.js";
+import { draggedMoves, preMoveGame, setDraggedMoves } from "./globals.js";
 
 export var dotAndCircleCanvas = document.getElementById('dot_and_circle_canvas');
 export var dotAndCircleContext = changeResolution(dotAndCircleCanvas, resFactor);
@@ -45,7 +49,7 @@ var offsetyCircle = 1.5;
 
 export function setDotAndCircleContext() {
     dotAndCircleContext = changeResolution(dotAndCircleCanvas, resFactor);
-}
+};
 
 function calcCoords(square) {
     var fileNum = square[0].charCodeAt(0) - 97;
@@ -74,4 +78,23 @@ export function drawCircle(square, r) {
     dotAndCircleContext.lineWidth = 5;
     dotAndCircleContext.arc(x + offsetXCircle, y + offsetyCircle, r, 0, 2 * Math.PI);
     dotAndCircleContext.stroke();
+};
+
+export function drawMoveOptions(fen='') {
+    if (fen == '') fen = getBoardFen().split('_')[0];
+    setDraggedMoves(dotAndCircleMoves(leftClickDownSquare, fen));
+    if (draggedMoves.length === 0) return;
+    let scalar = (draggedMoves[0].promotion != null) ? 4 : 1;
+    if ((!isOppTurn() && fen == getUnderscoredFen().split('_')[0]) || page != 'practice') {    
+        for (let i = 0; scalar*i < draggedMoves.length; i++) {
+            if (game.get(draggedMoves[scalar*i].to) != null) drawCircle(draggedMoves[scalar*i].to, squareSizeY/2.075 - 1);
+            else drawDot(draggedMoves[scalar*i].to, squareSizeY/6 - 1);
+        };
+    } else {
+        let g = (preMoveGame == null) ? game : preMoveGame;
+        for (let i = 0; scalar*i < draggedMoves.length; i++) {
+            if (g.get(draggedMoves[scalar*i]) != null) drawCircle(draggedMoves[scalar*i].slice(0, 2), squareSizeY/2.075 - 1);
+            else drawDot(draggedMoves[scalar*i].slice(0, 2), squareSizeY/6 - 1);
+        };
+    };
 };

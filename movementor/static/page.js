@@ -1,13 +1,12 @@
-import { config, board, game, isOppTurn, swapBoard, resetBoard } from './game.js';
-import { otherChoices, isBlitzing, freePlay, curEval, setLastFen, setPossibleMoves, setFinished, setKeepPlaying, setIsBlitzing, setEngineLevel } from './globals.js';
+import { config, game, isOppTurn, swapBoard, resetBoard } from './game.js';
+import { otherChoices, isBlitzing, freePlay, curEval, setLastFen, setPossibleMoves, setFinished, setKeepPlaying, setIsBlitzing, setEngineLevel, modPreMoves } from './globals.js';
 import { page, startPosition, startElement } from './constants.js';
 import { scrollIfNeeded, resizeCols } from './visual_helpers.js';
-import { timeoutBtn, resetButtons } from './page_helpers.js';
-import { resetMoveList } from './page_helpers.js';
+import { timeoutBtn, resetButtons, resetMoveList } from './page_helpers.js';
 import { getPlayedSelected, getUnderscoredFen, getBoardFen } from './getters.js';
 import { drawArrows } from './arrow.js';
 import { highlightLastMove, highlightRightClickedSquares, setHighlightedSquares, modRightClickedSquares } from './highlight.js';
-import { updateGameState, gameStart } from './update.js';
+import { updateBoard, updateGameState, gameStart } from './update.js';
 import { makeComputerMove } from './move.js';
 import { playMoveSelf, playMoveOpponent, playSound } from './sounds.js';
 import { displayEvaluation, tryEvaluation } from './eval.js';
@@ -39,28 +38,28 @@ restartBtn.on('click', function() {
     resetButtons();
     setHighlightedSquares();
     modRightClickedSquares();
+    modPreMoves('clear');
     gameStart();
     timeoutBtn(this, .1);
     if (page == 'practice') window.setTimeout(makeComputerMove, 500);
 });
   
 difLineBtn.on('click', function () {
-    if (!otherChoices) console.log('No other lines were available');
-    else {
-        console.log('Different line chosen');
-        console.log('----------------------------------------------------');
-        if (isOppTurn()) game.undo();
-        game.undo();
-        board.position(game.fen(), false);
-        setFinished(false);
-        $('#keepPlayingBtn')[0].style.display = 'none';
-        setPossibleMoves(otherChoices);
-        this.disabled = true;
-        window.setTimeout(makeComputerMove, 500);
-    };
+    console.log('Different line chosen');
+    console.log('----------------------------------------------------');
+    modPreMoves('clear');
+    if (isOppTurn()) game.undo();
+    game.undo();
+    updateBoard(game.fen(), false);
+    setFinished(false);
+    $('#keepPlayingBtn')[0].style.display = 'none';
+    setPossibleMoves(otherChoices);
+    this.disabled = true;
+    window.setTimeout(makeComputerMove, 500);
 });
 
 swapBtn.on('click', function () {
+    modPreMoves('clear');
     swapBoard();
     if (page == 'practice' && getBoardFen() == getUnderscoredFen()) window.setTimeout(makeComputerMove, 500);
     timeoutBtn(this);
@@ -106,7 +105,7 @@ keepPlayingBtn.on('click', function () {
     $('#skill-label')[0].style.display = 'none';
     $('#skill-input')[0].style.display = 'none';
     this.style.display = 'none';
-    $('#difLineBtn')[0].style.display = 'none';
+    difLineBtn[0].style.display = 'none';
     setFinished(false);
     setKeepPlaying(true);
     updateGameState();
@@ -132,19 +131,20 @@ export function whichClickUpdate(element) {
 };
 
 export function clickUpdatePractice(element) {
+    modPreMoves('clear');
     var curPosition = element.getAttribute('data-fen').replace(/_/g, ' ');
-    board.position(curPosition, false);
+    updateBoard(curPosition, false);
     playSound(element.innerHTML);
     getPlayedSelected().classList.remove('played-selected');
     element.classList.add('played-selected');
     var latestMove = getBoardFen() == getUnderscoredFen();
-    document.getElementById('difLineBtn').disabled = !latestMove;
     highlightLastMove(element.getAttribute('data-source'), element.getAttribute('data-target'));
     tryEvaluation();
     highlightRightClickedSquares();
     drawArrows();
     scrollIfNeeded(element);
-    $('#keepPlayingBtn')[0].disabled = !latestMove;
+    keepPlayingBtn[0].disabled = !latestMove;
+    difLineBtn[0].disabled = (!latestMove || otherChoices.length == 0);
     updateCapturedPieces();
     if (latestMove) window.setTimeout(makeComputerMove, 500);
 };
@@ -185,7 +185,7 @@ function requestedFen(keyCode, old) {
             if (old == document.getElementById('0')) {
                 fen = startPosition;
                 game.load(fen.replace(/_/g, ' '));
-                board.position(game.fen(), false);
+                updateBoard(game.fen(), false);
                 highlightRightClickedSquares();
                 drawArrows();
                 updateGameState('', '', '', true);
@@ -214,7 +214,7 @@ export function clickUpdateStudy(element) {
     if (element == document.getElementsByClassName('selected')[0]) return;
     setLastFen(element.getAttribute('data-parent'));
     game.load(element.getAttribute('data-own').replace(/_/g, ' '));
-    board.position(game.fen(), false);
+    updateBoard(game.fen(), false);
     highlightRightClickedSquares();
     drawArrows();
     scrollIfNeeded(element);

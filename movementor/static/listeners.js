@@ -1,9 +1,9 @@
-import { game } from "./game.js";
-import { finished, isPromoting } from "./globals.js";
-import { page, squareClass, pieceClass, squareSizeY } from './constants.js';
+import { config, game } from "./game.js";
+import { finished, isPromoting, modPreMoves, preMoves } from "./globals.js";
+import { page, squareClass, pieceClass } from './constants.js';
 import { getUnderscoredFen, getBoardFen } from './getters.js';
 import { modArrows } from "./arrow.js";
-import { drawCircle, drawDot, dotAndCircleCanvas, dotAndCircleContext } from './dot_circle.js';
+import { dotAndCircleCanvas, dotAndCircleContext, drawMoveOptions } from './dot_circle.js';
 import { initialPoint, finalPoint, clearCanvas, setInitialPoint, setFinalPoint } from './canvas_helper.js';
 import { clearRightClickHighlights, toggleRightClickHighlight, highlightBorder } from "./highlight.js";
 import { whichCheckKey, whichClickUpdate } from './page.js';
@@ -40,9 +40,14 @@ function onMouseDown(e) {
     let element = (e.target.classList.contains(squareClass)) ? e.target : e.target.parentElement;
     if (e.button == 0) setLeftClickDownSquare(element.getAttribute('data-square'));
     if (e.button == 2) {
-        setInitialPoint(getMousePos(dotAndCircleCanvas, e));
-        setFinalPoint(getMousePos(dotAndCircleCanvas, e));
-        setRightClickDownSquare(element);
+        if (preMoves.length == 0 && !isPromoting) {
+            setInitialPoint(getMousePos(dotAndCircleCanvas, e));
+            setFinalPoint(getMousePos(dotAndCircleCanvas, e));
+            setRightClickDownSquare(element);
+        } else {
+            if (preMoves.length > 0) modPreMoves('clear');
+            if (isPromoting && !(e.target.classList.contains('promotionOption'))) clearPromotionOptions();
+        };
     };
 };
 
@@ -54,7 +59,8 @@ function onMouseUp(e) {
     if (e.button == 2) {
         let element = (e.target.classList.contains(squareClass)) ? e.target : e.target.parentElement;
         if (rightClickDownSquare == element) toggleRightClickHighlight(element);
-        if (initialPoint.x != finalPoint.x || initialPoint.y != finalPoint.y) {
+        if ((initialPoint.x != null && initialPoint.y != null) &&
+            (initialPoint.x != finalPoint.x || initialPoint.y != finalPoint.y)) {
             modArrows({
                 initial: initialPoint,
                 final: finalPoint,
@@ -137,19 +143,12 @@ export function addListeners() {
                 if (!(e.target.classList.contains('promotionOption'))) clearPromotionOptions();
                 return;
             };
-            if (e.target.classList.contains(pieceClass) &&
-                !finished && getUnderscoredFen() == getBoardFen()) {
-                if (e.target.getAttribute('data-piece')[0] == game.turn()) highlightBorder(leftClickDownSquare);
-                const moves = game.moves({
-                    square: leftClickDownSquare,
-                    verbose: true,
-                });
-                if (moves.length === 0) return;
-                let scalar = (moves[0].promotion != null) ? 4 : 1;
-                for (let i = 0; scalar*i < moves.length; i++) {
-                    if (game.get(moves[scalar*i].to) != null) drawCircle(moves[scalar*i].to, squareSizeY/2.075 - 1);
-                    else drawDot(moves[scalar*i].to, squareSizeY/6 - 1);
-                };
+            if (!e.target.classList.contains(pieceClass) || getUnderscoredFen() != getBoardFen()) return;
+            let pieceColor = e.target.getAttribute('data-piece')[0];
+            if ((page == 'practice' && !finished && pieceColor == config.orientation[0]) ||
+                (page != 'practice' && pieceColor == game.turn())) {
+                highlightBorder(leftClickDownSquare);
+                drawMoveOptions();
             };
         };
     });

@@ -1,12 +1,12 @@
-import { config, board, game } from "./game.js";
-import { curEval, setCurEval, setLastFen } from './globals.js'
+import { config, game } from "./game.js";
+import { curEval, preMoves, setCurEval, setLastFen } from './globals.js'
 import { getBoardFen, getNextMoveColor, getUnderscoredFen } from "./getters.js";
 import { uciToSan, createNewEngine, oppEngine } from "./eval_helpers.js";
 import { clearRightClickHighlights } from "./highlight.js";
 import { clearCanvas } from "./canvas_helper.js";
 import { arrowContext } from "./arrow.js";
-import { updateHintText, updateGameState } from "./update.js";
-import { setPlayedMoveInfo } from "./move.js";
+import { updateHintText, updateGameState, updateBoard } from "./update.js";
+import { setPlayedMoveInfo, attemptPreMove } from "./move.js";
 import { updateCapturedPieces } from "./captured_pieces.js";
 import { lineBtn } from "./page.js";
 
@@ -167,7 +167,7 @@ export function playMessage(event) {
             to: target,
             promotion: promo,
         });
-        board.position(game.fen(), false);
+        updateBoard(game.fen(), false);
         clearRightClickHighlights();
         clearCanvas(arrowContext);
         updateHintText(false);
@@ -175,6 +175,7 @@ export function playMessage(event) {
         updateGameState(move.san, source, target);
         setPlayedMoveInfo(move);
         updateCapturedPieces();
+        if (preMoves.length != 0) attemptPreMove();
     };
 };
 

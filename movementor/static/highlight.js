@@ -1,4 +1,3 @@
-import { game } from "./game.js";
 import { squareClass, startPosition } from './constants.js';
 import { getBoardFen } from "./getters.js";
 
@@ -15,11 +14,11 @@ export function highlightLastMove(source='', target='') {
     $board.find('.' + squareClass).removeClass('highlight-dark');
     if (getBoardFen() == startPosition) return;
     if (!(source && target)) {
-        $board.find('.square-' + highlightedSquares[0]).addClass('highlight-' +  lightOrDark(highlightedSquares[0]));
-        $board.find('.square-' + highlightedSquares[1]).addClass('highlight-' +  lightOrDark(highlightedSquares[1]));
+        $board.find('.square-' + highlightedSquares[0]).addClass('highlight-' + lightOrDark(highlightedSquares[0]));
+        $board.find('.square-' + highlightedSquares[1]).addClass('highlight-' + lightOrDark(highlightedSquares[1]));
     } else {
-        $board.find('.square-' + source).addClass('highlight-' +  lightOrDark(source));
-        $board.find('.square-' + target).addClass('highlight-' +  lightOrDark(target));
+        $board.find('.square-' + source).addClass('highlight-' + lightOrDark(source));
+        $board.find('.square-' + target).addClass('highlight-' + lightOrDark(target));
         setHighlightedSquares([source, target])
     };
 };
@@ -76,4 +75,19 @@ export function toggleRightClickHighlight(square) {
     if (highlighted) square.classList.remove(color);
     else square.classList.add(color);
     modRightClickedSquares(dataSquare, !highlighted);
+};
+
+export function highlightPremove(source, target) {
+    $board.find('.square-' + source).addClass('highlight-premove-' + lightOrDark(source));
+    $board.find('.square-' + target).addClass('highlight-premove-' + lightOrDark(target));
+};
+
+export function clearPremoveHighlights(source='', target='') {
+    if (!(source || target)) {
+        $board.find('.' + squareClass).removeClass('highlight-premove-light');
+        $board.find('.' + squareClass).removeClass('highlight-premove-dark');
+    } else {
+        $board.find('.square-' + source).removeClass('highlight-premove-' + lightOrDark(source));
+        $board.find('.square-' + target).removeClass('highlight-premove-' + lightOrDark(target));
+    };
 };

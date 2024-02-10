@@ -1,5 +1,5 @@
-import { game } from './game.js';
-import { possibleMoves, keepPlaying, setPossibleMoves, setFinished, finished, freePlay, setKeepPlaying } from './globals.js';
+import { board, game } from './game.js';
+import { possibleMoves, keepPlaying, setPossibleMoves, setFinished, finished, freePlay, setKeepPlaying, draggedPieceSource } from './globals.js';
 import { page } from './constants.js';
 import { recolorNotation, fixStudyRows } from './visual_helpers.js';
 import { getLastMoveElement, getNextMoveColor } from './getters.js';
@@ -8,6 +8,13 @@ import { removeCapturedPieces, updateCapturedPieces } from './captured_pieces.js
 import { playSound } from './sounds.js';
 import { tryEvaluation } from './eval.js';
 import { createNewEngine } from './eval_helpers.js';
+import { keepPlayingBtn } from './page.js';
+
+export function updateBoard(fen, animation) {
+    board.position(fen, animation);
+    let piece = $('#myBoard').find('.square-' + draggedPieceSource).children('img')[0];
+    if (draggedPieceSource != null && piece != null) piece.style.display = 'none';
+};
 
 function updateSelectedMoveElement() {
     if (keepPlaying) return;
@@ -64,16 +71,16 @@ export function updateStatus() {
     document.getElementById('status').innerHTML = status;
 };
 
-export function updateGameState(move='', source='', target='', mute=false) {
+export function updateGameState(move='', source='', target='', mute=false, preMove=false) {
     if (!mute) playSound(move);
-    highlightLastMove(source, target);
+    if (!preMove) highlightLastMove(source, target);
     updateSelectedMoveElement();
     updateCapturedPieces();
     updateAllowedMoves();
     updateHintText();
     updateStatus();
     // console.log('Game state updated')
-    if (page == 'practice') console.log('----------------------------------------------------');
+    // if (page == 'practice') console.log('----------------------------------------------------');
     tryEvaluation();
 };
 
@@ -83,7 +90,7 @@ function startFreePlay() {
     setKeepPlaying(true);
     createNewEngine();
     setPossibleMoves(game.moves());
-    $('#keepPlayingBtn')[0].innerHTML = 'Play';
+    keepPlayingBtn[0].innerHTML = 'Play';
     document.getElementById('status').innerHTML = 'White to move';
     console.log('Game started');
 };
@@ -98,8 +105,8 @@ export function gameStart() {
     } else if (!freePlay) setPossibleMoves([document.getElementById('0').getAttribute('data-san')]);
     else setPossibleMoves(game.moves());
     updateStatus();
-    console.log('Game started');
-    if (page == 'practice') console.log('----------------------------------------------------');
-    else fixStudyRows();
+    // console.log('Game started');
+    // if (page == 'practice') console.log('----------------------------------------------------');
+    if (page != 'practice') fixStudyRows();
     tryEvaluation();
 };

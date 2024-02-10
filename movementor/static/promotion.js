@@ -1,8 +1,9 @@
-import { board, game } from './game.js';
-import { pieceClass, squareClass } from './constants.js';
+import { game } from './game.js';
+import { pieceClass, squareClass, whiteClass, whiteOpaqueClass, blackClass, blackOpaqueClass } from './constants.js';
 import { createChessPiece } from './visual_helpers.js';
 import { validateMove } from './move.js';
-import { setIsPromoting } from './globals.js'
+import { setIsPromoting, modPreMoves } from './globals.js'
+import { updateBoard } from './update.js';
 
 var targetSquare, squareBehind1, squareBehind2, squareBehind3;
 var promotionOptionSquares;
@@ -27,10 +28,12 @@ export function opaqueBoardSquares(color, target) {
         if (!(promotionOptionSquares.includes(boardSquares[i].getAttribute('data-square')))) {
             boardSquares[i].style.opacity = 0.5;
         } else {
-            var style = getComputedStyle(boardSquares[i]);
-            var backgroundColor = style.backgroundColor;
-            var rgbaColor = backgroundColor.replace('rgb', 'rgba').replace(')', ',0.5)');
-            boardSquares[i].style.backgroundColor = rgbaColor;
+            boardSquares[i].classList.replace(whiteClass, whiteOpaqueClass);
+            boardSquares[i].classList.replace(blackClass, blackOpaqueClass);
+            boardSquares[i].classList.replace('highlight-light', 'highlight-opaque-light');
+            boardSquares[i].classList.replace('highlight-dark', 'highlight-opaque-dark');
+            boardSquares[i].classList.replace('highlight-premove-light', 'highlight-opaque-premove-light');
+            boardSquares[i].classList.replace('highlight-premove-dark', 'highlight-opaque-premove-dark');
         };
     };
 };
@@ -42,11 +45,12 @@ export function clearPromotionOptions() {
         if (!(promotionOptionSquares.includes(boardSquares[i].getAttribute('data-square')))) {
             boardSquares[i].style.opacity = 1;
         } else {
-            var style = getComputedStyle(boardSquares[i]);
-            var backgroundColor = style.backgroundColor;
-            var rgbaColor = backgroundColor.replace('0.5)', '1)');
-            boardSquares[i].style.backgroundColor = rgbaColor;
-            boardSquares[i].style.opacity = 1;
+            boardSquares[i].classList.replace(whiteOpaqueClass, whiteClass);
+            boardSquares[i].classList.replace(blackOpaqueClass, blackClass);
+            boardSquares[i].classList.replace('highlight-opaque-light', 'highlight-light');
+            boardSquares[i].classList.replace('highlight-opaque-dark', 'highlight-dark');
+            boardSquares[i].classList.replace('highlight-opaque-premove-light', 'highlight-premove-light');
+            boardSquares[i].classList.replace('highlight-opaque-premove-dark', 'highlight-premove-dark');
         };
     };
     var elementsToRemove = document.querySelectorAll('.promotionOption');
@@ -70,18 +74,21 @@ export function clearPromotionOptions() {
     });
 };
 
-function performPromotion(pieceType, source, target, before) {
+export function performPromotion(pieceType, source, target, before, preMove) {
     setIsPromoting(false);
-    var move = game.move({
-        from: source,
-        to: target,
-        promotion: pieceType.toLowerCase(),
-    });
-    board.position(game.fen(), false);
-    validateMove(move, source, target, before, true);
+    if (preMove) modPreMoves('push', source, target, pieceType.toLowerCase());
+    else {
+        var move = game.move({
+            from: source,
+            to: target,
+            promotion: pieceType.toLowerCase(),
+        });
+        updateBoard(game.fen(), false);
+        validateMove(move, source, target, before, true, preMove);
+    };
 };
 
-export function attemptPromotion(color, source, target, before) {
+export function attemptPromotion(color, source, target, before, preMove) {
     setIsPromoting(true);
 
     targetSquare = document.getElementsByClassName('square-' + promotionOptionSquares[0])[0];
@@ -119,7 +126,7 @@ export function attemptPromotion(color, source, target, before) {
         let pieceType = promotionOptions[i].classList[1];
         promotionOptions[i].addEventListener('click', function () {
             clearPromotionOptions();
-            performPromotion(pieceType, source, target, before);
+            performPromotion(pieceType, source, target, before, preMove);
         });
     };
 };

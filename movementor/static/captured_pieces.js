@@ -1,4 +1,4 @@
-import { config, game } from './game.js';
+import { config } from './game.js';
 import { getBoardFen } from './getters.js';
 import { createChessPiece } from './visual_helpers.js';
 
