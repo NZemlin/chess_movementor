@@ -1755,6 +1755,9 @@
       // piece drag
       var $window = $(window)
       $window
+        .on('mousedown', e=> {
+          if (e.button == 2) stopDraggedPiece('offboard') 
+        })
         .on('mousemove', throttledMousemoveWindow)
         .on('mouseup', mouseupWindow)
 

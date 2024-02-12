@@ -1,8 +1,8 @@
 import { Chess } from 'https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.js';
 import { game } from './game.js';
-import { page, startPosition } from './constants.js';
+import { computerPauseTime, page, startPosition } from './constants.js';
 import { toggleDifLineBtn } from './page_helpers.js';
-import { restartBtn } from './page.js';
+import { restartBtn, limitLineBtn } from './page.js';
 import { updateBoard, updateHintText, updateStatus } from './update.js';
 import { clearPremoveHighlights, highlightLastMove, highlightPremove } from './highlight.js';
 import { playMoveSelf } from './sounds.js';
@@ -14,6 +14,7 @@ export var finished = false;
 export var keepPlaying = false;
 export var isPromoting = false;
 export var isBlitzing = false;
+export var limitedLineId = '';
 export var freePlay = document.getElementById('0') == null;
 export var engineLevel = (page == 'practice') ? document.getElementById('skill-input').value : 0;
 export var curEval = 0;
@@ -37,7 +38,7 @@ export function setOtherChoices(moves, index) {
     otherChoices = moves;
     otherChoices.splice(index, 1);
     toggleDifLineBtn(otherChoices.length == 0);
-    if (otherChoices.length != 0) console.log('Other choices were: ' + otherChoices.join(', '));
+    // if (otherChoices.length != 0) console.log('Other choices were: ' + otherChoices.join(', '));
 };
 
 export function setFinished(done) {
@@ -46,9 +47,9 @@ export function setFinished(done) {
             updateHintText();
             updateStatus();
             // console.log('Game state updated')
-            console.log('----------------------------------------------------');
+            // console.log('----------------------------------------------------');
             restartBtn[0].click();
-        }, 500);
+        }, computerPauseTime);
         return;
     };
     finished = done;
@@ -57,7 +58,7 @@ export function setFinished(done) {
         $('#skill-input')[0].style.display = 'inline-block';
         $('#keepPlayingBtn')[0].style.display = 'inline-block';
     };
-    modPreMoves('clear');
+    if (preMoves.length != 0) modPreMoves('clear');
 };
 
 export function setKeepPlaying(cont) {
@@ -70,6 +71,10 @@ export function setIsPromoting(promoting) {
 
 export function setIsBlitzing(blitzing) {
     isBlitzing = blitzing;
+};
+
+export function setLimitedLineId(id) {
+    limitedLineId = id;
 };
 
 export function setEngineLevel() {
@@ -100,12 +105,15 @@ export function modPreMoves(action, source='', target='', promotion='') {
         preMoveGame = null;
         clearPremoveHighlights();
         updateBoard(game.fen(), false);
+        limitLineBtn[0].disabled = false;
     } else if (action == 'pop') {
         preMoves.shift();
         clearPremoveHighlights(source, target);
+        limitLineBtn[0].disabled = (preMoves.length != 0);
     } else if (action == 'push') {
         preMoves.push([source, target, promotion]);
         highlightPremove(source, target);
+        limitLineBtn[0].disabled = true;
     };
     if (action == 'pop' || action == 'push') {
         updateBoard(game.fen(), false);

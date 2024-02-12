@@ -1,5 +1,5 @@
 import { config, game } from "./game.js";
-import { finished, isPromoting, modPreMoves, preMoves } from "./globals.js";
+import { draggedPieceSource, finished, isPromoting, modPreMoves, preMoves } from "./globals.js";
 import { page, squareClass, pieceClass } from './constants.js';
 import { getUnderscoredFen, getBoardFen } from './getters.js';
 import { modArrows } from "./arrow.js";
@@ -73,6 +73,17 @@ export function addListeners() {
     // Prevent contextmenu on right-click
     document.addEventListener('contextmenu', e => {
         e.preventDefault();
+    });
+    
+    // Clear legal/premove indicators and remove border highlights when right-clicking
+    // while holding a piece
+    document.addEventListener('mousedown', e=> {
+        if (e.button == 2 && draggedPieceSource != null) {
+            clearCanvas(dotAndCircleContext);
+            var $board = $('#myBoard');
+            $board.find('.' + squareClass).removeClass('border-highlight-light');
+            $board.find('.' + squareClass).removeClass('border-highlight-dark');
+        };
     });
 
     // Resize moves column

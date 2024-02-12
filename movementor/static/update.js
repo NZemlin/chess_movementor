@@ -90,9 +90,8 @@ function startFreePlay() {
     setKeepPlaying(true);
     createNewEngine();
     setPossibleMoves(game.moves());
-    keepPlayingBtn[0].innerHTML = 'Play';
     document.getElementById('status').innerHTML = 'White to move';
-    console.log('Game started');
+    // console.log('Game started');
 };
 
 export function gameStart() {

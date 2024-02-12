@@ -129,11 +129,11 @@ span.move.selected, .played-selected {
     text-align: center;
 }
 
-#lineBtn, #copyBtn, #swapBtn, #restartBtn, #difLineBtn, #hintBtn, #blitzBtn {
+#lineBtn, #copyBtn, #swapBtn, #restartBtn, #difLineBtn, #limitLineBtn, #hintBtn, #blitzBtn {
     margin-right: 3px;
 }
 
-#difLineBtn, #hintBtn, #blitzBtn {
+#difLineBtn, #limitLineBtn, #hintBtn, #blitzBtn {
     margin-bottom: 3px;
     margin-top: 1px;
 }

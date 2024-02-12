@@ -27,8 +27,9 @@ export function uciToSan(line) {
             var colorToMove = newGame.fen().split(' ')[1];
             var moveNumber = newGame.fen().split(' ')[5];
             if (i < moves.length - 1) sanMoves += colorToMove == 'w' ? ' ' + moveNumber + '. ' : ' ';
+        };
         // } else console.log(curFen, sanMoves, source, target, promo);
-        } else console.log('uciToSan produced a null move');
+        // } else console.log('uciToSan produced a null move');
     };
     return sanMoves;
 };

@@ -216,6 +216,7 @@ class PGNWriter():
             <div class="empty-row practice-buttons">
                 <button id="blitzBtn">Blitz: Off</button>
                 <button id="difLineBtn">Other Line</button>
+                <button id="limitLineBtn">Limit Line</button>
                 <button id="hintBtn" class="ignore">Hide Hints</button>
                 <span id="hints" class="text-wrap">No hints currently</span>
             </div>

@@ -12,3 +12,4 @@ export var whiteClass = 'white-1e1d7';
 export var whiteOpaqueClass = 'white-opaque-1e1d7';
 export var blackClass = 'black-3c85d';
 export var blackOpaqueClass = 'black-opaque-3c85d';
+export var computerPauseTime = 500;

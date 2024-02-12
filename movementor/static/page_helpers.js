@@ -1,13 +1,14 @@
 import { page, startElement } from "./constants.js";
 import { updateHintText } from "./update.js";
 import { getPlayedSelected, getSelected } from "./getters.js";
-import { setFinished, setKeepPlaying } from "./globals.js";
-import { difLineBtn, keepPlayingBtn } from "./page.js";
+import { limitedLineId, setFinished, setKeepPlaying } from "./globals.js";
+import { difLineBtn, limitLineBtn, keepPlayingBtn } from "./page.js";
 
 export function timeoutBtn(btn, time=1) {
+    let before = btn.disabled;
     btn.disabled = true;
     setTimeout(()=>{
-      btn.disabled = false;
+      btn.disabled = before;
     }, time*1000);
 };
 
@@ -15,7 +16,7 @@ export function toggleDifLineBtn(done) {
     if (page == 'study') return;
     var difLineBtn = document.getElementById('difLineBtn');
     difLineBtn.innerHTML = done ? 'No Other Lines' : 'Different Line';
-    difLineBtn.disabled = done;
+    difLineBtn.disabled = done || limitedLineId != '';
 };
 
 export function resetButtons() {
@@ -24,6 +25,11 @@ export function resetButtons() {
         $('#skill-input')[0].style.display = 'none';
         keepPlayingBtn[0].style.display = 'none';
         difLineBtn[0].style.display = 'block';
+        limitLineBtn[0].style.display = 'block';
+        if (limitedLineId != '') {
+            limitLineBtn[0].innerHTML = 'Any Line';
+            difLineBtn[0].disabled = true;
+        } else difLineBtn[0].disabled = false;
     };
     setFinished(false);
     setKeepPlaying(false);

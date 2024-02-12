@@ -1,9 +1,9 @@
 import { config, game, isOppTurn, swapBoard, resetBoard } from './game.js';
-import { otherChoices, isBlitzing, freePlay, curEval, setLastFen, setPossibleMoves, setFinished, setKeepPlaying, setIsBlitzing, setEngineLevel, modPreMoves } from './globals.js';
-import { page, startPosition, startElement } from './constants.js';
+import { otherChoices, isBlitzing, freePlay, curEval, setLastFen, setPossibleMoves, setFinished, setKeepPlaying, setIsBlitzing, setLimitedLineId, setEngineLevel, modPreMoves } from './globals.js';
+import { page, startPosition, startElement, computerPauseTime } from './constants.js';
 import { scrollIfNeeded, resizeCols } from './visual_helpers.js';
 import { timeoutBtn, resetButtons, resetMoveList } from './page_helpers.js';
-import { getPlayedSelected, getUnderscoredFen, getBoardFen } from './getters.js';
+import { getSelected, getPlayedSelected, getUnderscoredFen, getBoardFen } from './getters.js';
 import { drawArrows } from './arrow.js';
 import { highlightLastMove, highlightRightClickedSquares, setHighlightedSquares, modRightClickedSquares } from './highlight.js';
 import { updateBoard, updateGameState, gameStart } from './update.js';
@@ -18,6 +18,7 @@ export var lastKeyCode;
 export var copyBtn = $('#copyBtn');
 export var restartBtn = $('#restartBtn');
 export var difLineBtn = $('#difLineBtn');
+export var limitLineBtn = $('#limitLineBtn');
 export var swapBtn = $('#swapBtn');
 export var evalBarBtn = $('#evalBarBtn');
 export var lineBtn = $('#lineBtn');
@@ -41,12 +42,12 @@ restartBtn.on('click', function() {
     modPreMoves('clear');
     gameStart();
     timeoutBtn(this, .1);
-    if (page == 'practice') window.setTimeout(makeComputerMove, 500);
+    if (page == 'practice') window.setTimeout(makeComputerMove, computerPauseTime);
 });
   
 difLineBtn.on('click', function () {
-    console.log('Different line chosen');
-    console.log('----------------------------------------------------');
+    // console.log('Different line chosen');
+    // console.log('----------------------------------------------------');
     modPreMoves('clear');
     if (isOppTurn()) game.undo();
     game.undo();
@@ -55,13 +56,20 @@ difLineBtn.on('click', function () {
     $('#keepPlayingBtn')[0].style.display = 'none';
     setPossibleMoves(otherChoices);
     this.disabled = true;
-    window.setTimeout(makeComputerMove, 500);
+    window.setTimeout(makeComputerMove, computerPauseTime);
+});
+
+limitLineBtn.on('click', function () {
+    setLimitedLineId((this.innerHTML == 'Limit Line') ? getSelected().id : '');
+    this.innerHTML = this.innerHTML == 'Limit Line' ? 'Any Line' : 'Limit Line';
+    restartBtn[0].click();
+    timeoutBtn(this, .1);
 });
 
 swapBtn.on('click', function () {
     modPreMoves('clear');
     swapBoard();
-    if (page == 'practice' && getBoardFen() == getUnderscoredFen()) window.setTimeout(makeComputerMove, 500);
+    if (page == 'practice' && getBoardFen() == getUnderscoredFen()) window.setTimeout(makeComputerMove, computerPauseTime);
     timeoutBtn(this);
 });
 
@@ -106,6 +114,7 @@ keepPlayingBtn.on('click', function () {
     $('#skill-input')[0].style.display = 'none';
     this.style.display = 'none';
     difLineBtn[0].style.display = 'none';
+    limitLineBtn[0].style.display = 'none';
     setFinished(false);
     setKeepPlaying(true);
     updateGameState();
@@ -113,7 +122,7 @@ keepPlayingBtn.on('click', function () {
     if (lineBtn[0].innerHTML == 'Hide Lines') lineBtn[0].click();
     if (hintBtn[0].innerHTML == 'Hide Hints') hintBtn[0].click();
     createNewEngine();
-    window.setTimeout(makeComputerMove, 500);
+    window.setTimeout(makeComputerMove, computerPauseTime);
 });
 
 blitzBtn.on('click', function () {
@@ -146,7 +155,7 @@ export function clickUpdatePractice(element) {
     keepPlayingBtn[0].disabled = !latestMove;
     difLineBtn[0].disabled = (!latestMove || otherChoices.length == 0);
     updateCapturedPieces();
-    if (latestMove) window.setTimeout(makeComputerMove, 500);
+    if (latestMove) window.setTimeout(makeComputerMove, computerPauseTime);
 };
 
 export function checkKeyPractice(e) {
@@ -237,11 +246,11 @@ export function checkKeyStudy(e) {
         var result = requestedFen(e.keyCode, old[0]);
         if (result[0] == startPosition || result[0] == null) return;
         var element = document.querySelectorAll("[data-own='" + result[0] + "']");
-        if (element[0] == old[0]) console.log(result[1]);
-        else {
+        if (element[0] != old[0]) {
             if (e.keyCode == 32) element = nearestMainlineParent(element[0]);
             clickUpdateStudy(element[0]);
         };
+        // } else console.log(result[1]);
     };
 };
 
@@ -249,6 +258,7 @@ if (freePlay && page == 'practice') {
     evalBarBtn[0].click();
     lineBtn[0].click();
     document.getElementsByClassName('practice-buttons')[0].style.display = 'none';
+    keepPlayingBtn[0].innerHTML = 'Play';
 };
 resizeCols();
 addListeners();

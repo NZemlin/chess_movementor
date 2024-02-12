@@ -1,6 +1,6 @@
 import { config, game, isOppTurn } from './game.js';
-import { possibleMoves, finished, isPromoting, preMoves, modPreMoves, setLastFen, setOtherChoices, setKeepPlaying, keepPlaying, setDraggedPieceSource, draggedPieceSource, preMoveGame, draggedMoves, setDraggedMoves } from './globals.js';
-import { page } from './constants.js';
+import { possibleMoves, finished, isPromoting, limitedLineId, preMoves, modPreMoves, setLastFen, setOtherChoices, setKeepPlaying, keepPlaying, setDraggedPieceSource, draggedPieceSource, preMoveGame, draggedMoves, setDraggedMoves } from './globals.js';
+import { computerPauseTime, page } from './constants.js';
 import { scrollIfNeeded } from './visual_helpers.js';
 import { getBoardFen, getMoveNum, getPlayedSelected, getUnderscoredFen } from './getters.js';
 import { arrowContext } from './arrow.js';
@@ -11,6 +11,36 @@ import { updateHintText, updateGameState, updateBoard } from './update.js';
 import { playIllegal } from './sounds.js';
 import { tryEvaluation, makeEngineMove } from './eval.js';
 import { dotAndCircleContext, drawMoveOptions } from './dot_circle.js';
+import { difLineBtn, limitLineBtn } from './page.js';
+import { timeoutBtn } from './page_helpers.js';
+
+var finishedLimitedLine = false;
+
+function prepareNextMove(move) {
+    setLastFen(getUnderscoredFen());
+    var data = game.move(move);
+    if (preMoves.length > 0) updateBoard(preMoveGame.fen(), false);
+    else updateBoard(game.fen(), false);
+    clearRightClickHighlights();
+    clearCanvas(arrowContext);
+    updateHintText(false);
+    setPlayedMoveInfo(data);
+    updateGameState(move, data.from, data.to);
+    // if (finished) console.log('Line is finished');
+    // else console.log('Your moves: ' + possibleMoves.join(', '));
+    if (preMoves.length != 0) attemptPreMove();
+};
+
+function makeLimitedLineMove() {
+    let curElement = document.getElementById(limitedLineId)
+    let parent = curElement.getAttribute('data-parent');
+    while (parent != getUnderscoredFen()) {
+        curElement = document.querySelectorAll("[data-own='" + parent + "']")[0];
+        parent = curElement.getAttribute('data-parent');
+    };
+    if (curElement == document.getElementById(limitedLineId)) finishedLimitedLine = true;
+    prepareNextMove(curElement.getAttribute('data-san'));
+};
 
 export function setPlayedMoveInfo(move) {
     var color = game.turn() == 'w' ? 'b' : 'w';
@@ -35,23 +65,17 @@ export function makeComputerMove() {
     if (keepPlaying) {
         makeEngineMove();
         return;
+    } else if (limitedLineId != '' && !finishedLimitedLine) {
+        if (getUnderscoredFen() != document.getElementById(limitedLineId).getAttribute('data-own')) {
+            window.setTimeout(makeLimitedLineMove, computerPauseTime);
+            return;
+        } else difLineBtn[0].disabled = false;
     };
     var randomIdx = Math.floor(Math.random() * possibleMoves.length);
     var move = possibleMoves[randomIdx];
     // console.log('Computer chose: ' + move);
     setOtherChoices(possibleMoves, randomIdx);
-    setLastFen(getUnderscoredFen());
-    var data = game.move(move);
-    if (preMoves.length > 0) updateBoard(preMoveGame.fen(), false);
-    else updateBoard(game.fen(), false);
-    clearRightClickHighlights();
-    clearCanvas(arrowContext);
-    updateHintText(false);
-    setPlayedMoveInfo(data);
-    updateGameState(move, data.from, data.to);
-    // if (finished) console.log('Line is finished');
-    // else console.log('Your moves: ' + possibleMoves.join(', '));
-    if (preMoves.length != 0) attemptPreMove();
+    prepareNextMove(move);
 };
 
 export function attemptPreMove() {
@@ -121,7 +145,7 @@ export function handleLegalMove(move, source, target, preMove) {
         setPlayedMoveInfo(move);
         updateGameState(move.san, source, target, false, preMove);
         if (preMove) modPreMoves('pop', source, target);
-        window.setTimeout(makeComputerMove, 500);
+        window.setTimeout(makeComputerMove, computerPauseTime);
         return;
     };
     updateGameState(move.san, source, target);
@@ -154,9 +178,9 @@ export function validateMove(move, source, target, before, checkedPromo, preMove
 };
 
 export function onDrop(source, target) {
-    if (source == 'offboard' || target == 'offboard') return 'snapback';
     setDraggedPieceSource(null);
     highlightBorder(target, target);
+    if (source == 'offboard' || target == 'offboard') return 'snapback';
     let preMovePushed = false;
     let preMove = false;
     if (isOppTurn() && page == 'practice') {
@@ -170,6 +194,7 @@ export function onDrop(source, target) {
         });
         setDraggedMoves([]);
     } else {
+        if (page == 'practice') timeoutBtn(limitLineBtn[0], computerPauseTime/1000);
         var before = game.fen();
         var move = game.move({
             from: source,
