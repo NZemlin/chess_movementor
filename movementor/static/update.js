@@ -1,5 +1,5 @@
 import { board, game } from './game.js';
-import { possibleMoves, keepPlaying, setPossibleMoves, setFinished, finished, freePlay, setKeepPlaying, draggedPieceSource } from './globals.js';
+import { possibleMoves, keepPlaying, setPossibleMoves, setFinished, finished, freePlay, setKeepPlaying, draggedPieceSource, limitedLineId } from './globals.js';
 import { page } from './constants.js';
 import { recolorNotation, fixStudyRows } from './visual_helpers.js';
 import { getLastMoveElement, getNextMoveColor } from './getters.js';
@@ -8,7 +8,7 @@ import { removeCapturedPieces, updateCapturedPieces } from './captured_pieces.js
 import { playSound } from './sounds.js';
 import { tryEvaluation } from './eval.js';
 import { createNewEngine } from './eval_helpers.js';
-import { keepPlayingBtn } from './page.js';
+import { finishedLimitedLine, nextLimitedMove } from './move.js';
 
 export function updateBoard(fen, animation) {
     board.position(fen, animation);
@@ -27,7 +27,10 @@ function updateSelectedMoveElement() {
 
 function updateAllowedMoves() {
     // console.log('Updating allowed moves');
-    if (keepPlaying || page == 'create') {
+    if (limitedLineId != '' && !finishedLimitedLine) {
+        setPossibleMoves([nextLimitedMove.getAttribute('data-san')]);
+        return;
+    } else if (keepPlaying || page == 'create') {
         setPossibleMoves(game.moves());
         return;
     };

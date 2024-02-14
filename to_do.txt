@@ -15,6 +15,7 @@ Add speedrun mode to practice
 Add consolidate feature
     - Play against multiple openings in a selected repertoire
 
+Implement consolidation of displayed lines with expanding clicks
 Upgrade stockfish
 Make register/login system more robust
 Clean up css

@@ -98,6 +98,45 @@ function modCastling(initial, info, source) {
     } else preMoveCastlingRights = initial;
 };
 
+function updatePreMoveGame() {
+    updateBoard(game.fen(), false);
+    preMoveGame = new Chess(game.fen());
+    let castling = preMoveGame.fen().split(' ')[2];
+    let initial = [
+        castling.includes('K'),
+        castling.includes('Q'),
+        castling.includes('k'),
+        castling.includes('q'),
+    ];
+    for (let i = 0; i < preMoves.length; i ++) {
+        let info = preMoveGame.get(preMoves[i][0]);
+        let castleMove = false;
+        if (info.type == 'k') {
+            if (info.color == 'w' && preMoves[i][0] == 'e1') castleMove = ('g1c1'.includes(preMoves[i][1]));
+            else if (info.color == 'b' && preMoves[i][0] == 'e8') castleMove = ('g8c8'.includes(preMoves[i][1]));
+        };
+        modCastling(initial, info, preMoves[i][0]);
+        initial = preMoveCastlingRights;
+        preMoveGame.remove(preMoves[i][0]);
+        preMoveGame.remove(preMoves[i][1]);
+        preMoveGame.put({ type: ((preMoves[i][2] != '') ? preMoves[i][2] : info.type), color: info.color }, preMoves[i][1]);
+        highlightPremove(preMoves[i][0], preMoves[i][1]);
+        if (castleMove) {
+            let rookSquares = '';
+            if (preMoves[i][1] == 'g1') rookSquares = 'h1f1';
+            if (preMoves[i][1] == 'c1') rookSquares = 'a1d1';
+            if (preMoves[i][1] == 'g8') rookSquares = 'h8f8';
+            if (preMoves[i][1] == 'c8') rookSquares = 'a8d8';
+            preMoveGame.remove(rookSquares.slice(0, 2));
+            preMoveGame.remove(rookSquares.slice(-2));
+            preMoveGame.put({ type: 'r', color: info.color }, rookSquares.slice(-2));
+        };
+    };
+    updateBoard(preMoveGame.fen(), false);
+    playMoveSelf();
+    highlightLastMove();
+};
+
 export function modPreMoves(action, source='', target='', promotion='') {
     if (action == 'clear') {
         preMoves = [];
@@ -106,53 +145,21 @@ export function modPreMoves(action, source='', target='', promotion='') {
         clearPremoveHighlights();
         updateBoard(game.fen(), false);
         limitLineBtn[0].disabled = false;
+        return;
     } else if (action == 'pop') {
+        if (preMoves.length == 1) {
+            modPreMoves('clear');
+            return;
+        };
         preMoves.shift();
         clearPremoveHighlights(source, target);
-        limitLineBtn[0].disabled = (preMoves.length != 0);
+        limitLineBtn[0].disabled = true;
     } else if (action == 'push') {
         preMoves.push([source, target, promotion]);
         highlightPremove(source, target);
         limitLineBtn[0].disabled = true;
     };
-    if (action == 'pop' || action == 'push') {
-        updateBoard(game.fen(), false);
-        preMoveGame = new Chess(game.fen());
-        let castling = preMoveGame.fen().split(' ')[2];
-        let initial = [
-            castling.includes('K'),
-            castling.includes('Q'),
-            castling.includes('k'),
-            castling.includes('q'),
-        ];
-        for (let i = 0; i < preMoves.length; i ++) {
-            let info = preMoveGame.get(preMoves[i][0]);
-            let castleMove = false;
-            if (info.type == 'k') {
-                if (info.color == 'w' && preMoves[i][0] == 'e1') castleMove = ('g1c1'.includes(preMoves[i][1]));
-                else if (info.color == 'b' && preMoves[i][0] == 'e8') castleMove = ('g8c8'.includes(preMoves[i][1]));
-            };
-            modCastling(initial, info, preMoves[i][0]);
-            initial = preMoveCastlingRights;
-            preMoveGame.remove(preMoves[i][0]);
-            preMoveGame.remove(preMoves[i][1]);
-            preMoveGame.put({ type: ((preMoves[i][2] != '') ? preMoves[i][2] : info.type), color: info.color }, preMoves[i][1]);
-            highlightPremove(preMoves[i][0], preMoves[i][1]);
-            if (castleMove) {
-                let rookSquares = '';
-                if (preMoves[i][1] == 'g1') rookSquares = 'h1f1';
-                if (preMoves[i][1] == 'c1') rookSquares = 'a1d1';
-                if (preMoves[i][1] == 'g8') rookSquares = 'h8f8';
-                if (preMoves[i][1] == 'c8') rookSquares = 'a8d8';
-                preMoveGame.remove(rookSquares.slice(0, 2));
-                preMoveGame.remove(rookSquares.slice(-2));
-                preMoveGame.put({ type: 'r', color: info.color }, rookSquares.slice(-2));
-            };
-        };
-        updateBoard(preMoveGame.fen(), false);
-        playMoveSelf();
-        highlightLastMove();
-    };
+    updatePreMoveGame();
 };
 
 export function setDraggedPieceSource(source) {

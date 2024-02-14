@@ -174,13 +174,14 @@ export function checkKeyPractice(e) {
     };
 };
 
-function nearestMainlineParent(element) {
+export function nearestMainlineParent(element) {
     var stop = element.getAttribute('data-mainline') === 'true';
+    var initialVariationStart = element.getAttribute('data-variation-start') === 'true'
     while (!stop) {
         var fen = element.getAttribute('data-parent');
         element = document.querySelectorAll("[data-own='" + fen + "']")[0];
-        stop = (element.getAttribute('data-mainline') === 'true' ||
-                element.getAttribute('data-variation-start') === 'true');
+        stop = ((!initialVariationStart && element.getAttribute('data-variation-start') === 'true') ||
+                element.getAttribute('data-mainline') === 'true');
     };
     return [element];
 };

@@ -1,6 +1,6 @@
 import { config, game, isOppTurn } from './game.js';
 import { possibleMoves, finished, isPromoting, limitedLineId, preMoves, modPreMoves, setLastFen, setOtherChoices, setKeepPlaying, keepPlaying, setDraggedPieceSource, draggedPieceSource, preMoveGame, draggedMoves, setDraggedMoves } from './globals.js';
-import { computerPauseTime, page } from './constants.js';
+import { squareClass, computerPauseTime, page } from './constants.js';
 import { scrollIfNeeded } from './visual_helpers.js';
 import { getBoardFen, getMoveNum, getPlayedSelected, getUnderscoredFen } from './getters.js';
 import { arrowContext } from './arrow.js';
@@ -11,10 +11,11 @@ import { updateHintText, updateGameState, updateBoard } from './update.js';
 import { playIllegal } from './sounds.js';
 import { tryEvaluation, makeEngineMove } from './eval.js';
 import { dotAndCircleContext, drawMoveOptions } from './dot_circle.js';
-import { difLineBtn, limitLineBtn } from './page.js';
+import { difLineBtn, limitLineBtn, nearestMainlineParent } from './page.js';
 import { timeoutBtn } from './page_helpers.js';
 
-var finishedLimitedLine = false;
+export var finishedLimitedLine = false;
+export var nextLimitedMove = document.getElementById('0');
 
 function prepareNextMove(move) {
     setLastFen(getUnderscoredFen());
@@ -33,16 +34,24 @@ function prepareNextMove(move) {
 
 function makeLimitedLineMove() {
     let curElement = document.getElementById(limitedLineId)
-    let parent = curElement.getAttribute('data-parent');
-    while (parent != getUnderscoredFen()) {
-        curElement = document.querySelectorAll("[data-own='" + parent + "']")[0];
-        parent = curElement.getAttribute('data-parent');
+    let parent;
+    while (true) {
+        if (curElement.getAttribute('data-variation-start') == 'true') parent = nearestMainlineParent(curElement)[0].getAttribute('data-own');
+        else parent = curElement.getAttribute('data-parent');
+        if (parent != getUnderscoredFen()) {
+            nextLimitedMove = curElement;
+            curElement = document.querySelectorAll("[data-own='" + parent + "']")[0];
+        } else break;
     };
     if (curElement == document.getElementById(limitedLineId)) finishedLimitedLine = true;
     prepareNextMove(curElement.getAttribute('data-san'));
 };
 
 export function setPlayedMoveInfo(move) {
+    if (move.to == draggedPieceSource) $(window).trigger({
+        type: 'mousedown',
+        button: 2,
+    });
     var color = game.turn() == 'w' ? 'b' : 'w';
     var moveNum = (getMoveNum() - (color == 'b'));
     var element = document.getElementById(color + moveNum);
@@ -179,7 +188,8 @@ export function validateMove(move, source, target, before, checkedPromo, preMove
 
 export function onDrop(source, target) {
     setDraggedPieceSource(null);
-    highlightBorder(target, target);
+    $('#myBoard').find('.' + squareClass).removeClass('border-highlight-light');
+    $('#myBoard').find('.' + squareClass).removeClass('border-highlight-dark');
     if (source == 'offboard' || target == 'offboard') return 'snapback';
     let preMovePushed = false;
     let preMove = false;

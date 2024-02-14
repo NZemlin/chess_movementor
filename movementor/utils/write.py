@@ -19,7 +19,7 @@ class PGNWriter():
             h1_link = f'<a href="/{name}/{other}">{other.capitalize()} the {name}&nbsp;-></a>'
         elif page == 'practice':
             h1_title = f'Play Against Stockfish'
-            h1_link = f'<a href="/create">Create an Analysis&nbsp;-></a>'
+            h1_link = f'<a href="/create_analysis">Create an Analysis&nbsp;-></a>'
         else:
             h1_title = 'Create an Analysis'
             h1_link = '<a href="/free_play/practice">Play Against Stockfish&nbsp;-></a>'
@@ -117,7 +117,7 @@ class PGNWriter():
                         <p>The right arrow key takes you to the next mainline move of the current variation you're on</p>
                         <p>The down arrow key takes you through the list of sidelines (if any) that branch off the move that you're on</p>
                         <p>The up and left arrow keys take you to the previous move of the current variation that you're on</p>
-                        <p>The spacebar key takes you to the nearest previous move that started a variation of was part of the mainline</p>
+                        <p>The spacebar key takes you to the nearest previous move that started a variation or was part of the mainline</p>
                         <p>You can also click on the moves to take you directly to that FEN</p>
                         <p>Clicking and dragging the pieces to make the moves are limited to what's in your preparation until the end of the line</p>
                         <p>When you reach the end of the line, you can then play any move and go off of your preparation</p>
@@ -183,6 +183,9 @@ class PGNWriter():
                 <p>It will also only allow you to make moves that are included in your preparation</p>
                 <p>You can turn hints on or off to tell you what moves are allowed (based on your preparation) in the given position</p>
                 <p>Click different line to force the opponent to pick a different available move (if there is one)</p>
+                <p>Clicking the limit line button will remember your current position and restart the game</p>
+                <p>Until you click it again, the computer will always play the moves to bring you back to that position</p>
+                <p>Use this to practice specific lines of your opening if you have certain weaknesses</p>
                 <p>Traversing the already played moves is just with the left and right arrow keys, or by clicking them</p>
                 <p>When you reach the end of your preparation in whatever line was played, the option to continue the game pops up</p>
                 <p>Choose the difficulty that you'd like the engine to play at (from 0-20) if you want to continue</p>
