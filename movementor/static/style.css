@@ -129,7 +129,7 @@ span.move.selected, .played-selected {
     text-align: center;
 }
 
-#lineBtn, #copyBtn, #swapBtn, #restartBtn, #difLineBtn, #limitLineBtn, #hintBtn, #blitzBtn {
+#lineBtn, #copyBtn, #swapBtn, #restartBtn, #difLineBtn, #limitLineBtn, #hintBtn, #blitzBtn, #moveArrowBtn {
     margin-right: 3px;
 }
 

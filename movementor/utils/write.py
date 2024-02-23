@@ -1,3 +1,5 @@
+from chess import SQUARE_NAMES
+
 class PGNWriter():
     def __init__(self, parsed_dict = []):
         self.parsed_dict = parsed_dict
@@ -97,7 +99,8 @@ class PGNWriter():
             <div class="empty-row">
                 <button id="evalBarBtn" class="ignore">Hide Eval</button>
                 <button id="lineBtn" class="ignore">Hide Lines</button>
-                <button id="copyBtn">Copy {copy_button}</button>
+                <button id="moveArrowBtn" class="ignore">Show Moves</button>
+                <button id="copyBtn" class="ignore">Copy {copy_button}</button>
                 <button id="swapBtn" class="ignore">Swap</button>
                 <button id="restartBtn">Restart</button>
             </div>
@@ -373,6 +376,8 @@ class PGNWriter():
                        data-ep={str(move.ep).lower()}
                        data-color={('white' if not move.move.turn() else 'black')}
                        data-turn={move.turn_number()}
+                       data-source={SQUARE_NAMES[int(move.move.move.from_square)]}
+                       data-target={SQUARE_NAMES[int(move.move.move.to_square)]}
                        data-comment={move.comment}
                        class="move ignore">{move.move.san()}
                    </span>

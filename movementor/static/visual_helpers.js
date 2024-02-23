@@ -1,13 +1,14 @@
 import { config, newBoard } from "./game.js";
-import { page, notationClass } from "./constants.js";
+import { study, notationClass } from "./constants.js";
 import { lightOrDark } from "./highlight.js";
-import { lastKeyCode, evalBarBtn, lineBtn } from "./page.js";
+import { lastKeyCode } from "./page.js";
+import { evalBarBtn, lineBtn } from './buttons.js';
 import { arrowCanvas } from "./arrow.js";
 import { dotAndCircleCanvas } from "./dot_circle.js";
 
 export function scrollIfNeeded(element) {
     var observer;
-    var area = (page == 'study') ? ".moves-container-study" : ".move-list-container";
+    var area = (study) ? ".moves-container-study" : ".move-list-container";
     var container = document.querySelector(area);
     var options = {
         root: container,

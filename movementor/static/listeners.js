@@ -1,16 +1,16 @@
 import { config, game } from "./game.js";
 import { draggedPieceSource, finished, isPromoting, modPreMoves, preMoves } from "./globals.js";
-import { page, squareClass, pieceClass } from './constants.js';
+import { practice, squareClass, pieceClass } from './constants.js';
 import { getUnderscoredFen, getBoardFen } from './getters.js';
 import { modArrows } from "./arrow.js";
-import { dotAndCircleCanvas, dotAndCircleContext, drawMoveOptions } from './dot_circle.js';
+import { dotAndCircleContext, drawMoveOptions } from './dot_circle.js';
 import { initialPoint, finalPoint, clearCanvas, setInitialPoint, setFinalPoint } from './canvas_helper.js';
-import { clearRightClickHighlights, toggleRightClickHighlight, highlightBorder } from "./highlight.js";
+import { clearRightClickHighlights, toggleRightClickHighlight, highlightBorder, lightOrDark } from "./highlight.js";
 import { whichCheckKey, whichClickUpdate } from './page.js';
-import { arrowCanvas } from "./arrow.js";
-import { resFactor } from "./canvas_helper.js";
 import { clearPromotionOptions } from "./promotion.js";
 import { resizeCols } from "./visual_helpers.js";
+import { moveArrowBtn } from "./buttons.js";
+import { drawPossibleMoveArrows } from "./arrow.js";
 
 export var rightClickDownSquare;
 export var leftClickDownSquare;
@@ -23,26 +23,13 @@ export function setLeftClickDownSquare(square) {
     leftClickDownSquare = square;
 };
 
-function getMousePos(canvas, evt) {
-    var rect = canvas.getBoundingClientRect();
-    return {
-        x: Q(evt.clientX - rect.left),
-        y: Q(evt.clientY - rect.top),
-    };
-};
-
-function Q(x, d) {  // mid-tread quantiser
-    d = arrowCanvas.width/(resFactor*8);
-    return d*(Math.floor(x/d) + 0.5);
-};
-
 function onMouseDown(e) {
     let element = (e.target.classList.contains(squareClass)) ? e.target : e.target.parentElement;
     if (e.button == 0) setLeftClickDownSquare(element.getAttribute('data-square'));
     if (e.button == 2) {
         if (preMoves.length == 0 && !isPromoting) {
-            setInitialPoint(getMousePos(dotAndCircleCanvas, e));
-            setFinalPoint(getMousePos(dotAndCircleCanvas, e));
+            setInitialPoint(element.getAttribute('data-square'));
+            setFinalPoint(element.getAttribute('data-square'));
             setRightClickDownSquare(element);
         } else {
             if (preMoves.length > 0) modPreMoves('clear');
@@ -52,29 +39,27 @@ function onMouseDown(e) {
 };
 
 function onMouseMove(e) {
-    setFinalPoint(getMousePos(dotAndCircleCanvas, e));
+    let element = (e.target.classList.contains(squareClass)) ? e.target : e.target.parentElement;
+    if (element.classList.contains(squareClass)) setFinalPoint(element.getAttribute('data-square'));
+    else setFinalPoint(null);
 };
 
 function onMouseUp(e) {
     if (e.button == 2) {
         let element = (e.target.classList.contains(squareClass)) ? e.target : e.target.parentElement;
         if (rightClickDownSquare == element) toggleRightClickHighlight(element);
-        if ((initialPoint.x != null && initialPoint.y != null) &&
-            (initialPoint.x != finalPoint.x || initialPoint.y != finalPoint.y)) {
+        if ((initialPoint[0] != null && initialPoint[1] != null) &&
+            (initialPoint[0] != finalPoint[0] || initialPoint[1] != finalPoint[1])) {
             modArrows({
-                initial: initialPoint,
-                final: finalPoint,
+                initial: { x: initialPoint[0], y: initialPoint[1] },
+                final: { x: finalPoint[0], y: finalPoint[1] },
             }, true);
+            if (moveArrowBtn[0].innerHTML == 'Hide Moves') drawPossibleMoveArrows();
         };
     };
 };
 
 export function addListeners() {
-    // Prevent contextmenu on right-click
-    document.addEventListener('contextmenu', e => {
-        e.preventDefault();
-    });
-    
     // Clear legal/premove indicators and remove border highlights when right-clicking
     // while holding a piece
     document.addEventListener('mousedown', e=> {
@@ -83,6 +68,7 @@ export function addListeners() {
             var $board = $('#myBoard');
             $board.find('.' + squareClass).removeClass('border-highlight-light');
             $board.find('.' + squareClass).removeClass('border-highlight-dark');
+            $board.find('.square-' + draggedPieceSource).removeClass('highlight-' + lightOrDark(draggedPieceSource));
         };
     });
 
@@ -115,16 +101,21 @@ export function addListeners() {
 
     // Add traversal functions to move elements
     document.onkeydown = whichCheckKey();
-    var containerName = (page == 'practice') ? 'move-list-container' : 'moves-container-study';
+    var containerName = (practice) ? 'move-list-container' : 'moves-container-study';
     var container = document.getElementsByClassName(containerName)[0];
-    var moveName = (page == 'practice') ? 'played-move' : 'move';
+    var moveName = (practice) ? 'played-move' : 'move';
     container.addEventListener('click', e=> {
         if (e.target.classList.contains(moveName)) whichClickUpdate(e.target);
     });
     
     var board_wrapper = document.getElementById('board_wrapper');
 
-    if ('ontouchstart' in document.documentElement) {    
+    // Prevent contextmenu on right-click
+    board_wrapper.addEventListener('contextmenu', e => {
+        e.preventDefault();
+    });
+
+    if ('ontouchstart' in document.documentElement) {
         board_wrapper.addEventListener('touchstart', function() {
             document.documentElement.style.overflow = 'hidden';
         });
@@ -150,14 +141,15 @@ export function addListeners() {
         if (e.button == 0) {
             clearRightClickHighlights(true);
             modArrows();
+            if (moveArrowBtn[0].innerHTML == 'Hide Moves' && !finished) drawPossibleMoveArrows();
             if (isPromoting) {
                 if (!(e.target.classList.contains('promotionOption'))) clearPromotionOptions();
                 return;
             };
             if (!e.target.classList.contains(pieceClass) || getUnderscoredFen() != getBoardFen()) return;
             let pieceColor = e.target.getAttribute('data-piece')[0];
-            if ((page == 'practice' && !finished && pieceColor == config.orientation[0]) ||
-                (page != 'practice' && pieceColor == game.turn())) {
+            if ((practice && !finished && pieceColor == config.orientation[0]) ||
+                (!practice && pieceColor == game.turn())) {
                 highlightBorder(leftClickDownSquare);
                 drawMoveOptions();
             };

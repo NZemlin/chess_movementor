@@ -1,14 +1,17 @@
 import { Chess } from 'https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.js';
 import { game } from './game.js';
-import { computerPauseTime, page, startPosition } from './constants.js';
+import { computerPauseTime, practice, create, startPosition } from './constants.js';
 import { toggleDifLineBtn } from './page_helpers.js';
-import { restartBtn, limitLineBtn } from './page.js';
+import { restartBtn, limitLineBtn, moveArrowBtn } from './buttons.js';
 import { updateBoard, updateHintText, updateStatus } from './update.js';
 import { clearPremoveHighlights, highlightLastMove, highlightPremove } from './highlight.js';
 import { playMoveSelf } from './sounds.js';
+import { arrowContext, drawPossibleMoveArrows } from './arrow.js';
+import { clearCanvas } from './canvas_helper.js';
 
 export var lastFen = startPosition;
 export var possibleMoves = [];
+export var possibleMoveArrows = [];
 export var otherChoices = [];
 export var finished = false;
 export var keepPlaying = false;
@@ -16,7 +19,7 @@ export var isPromoting = false;
 export var isBlitzing = false;
 export var limitedLineId = '';
 export var freePlay = document.getElementById('0') == null;
-export var engineLevel = (page == 'practice') ? document.getElementById('skill-input').value : 0;
+export var engineLevel = (practice) ? document.getElementById('skill-input').value : 0;
 export var curEval = 0;
 export var preMoves = [];
 export var preMoveGame = null;
@@ -29,9 +32,20 @@ export function setLastFen(fen=startPosition) {
 };
 
 export function setPossibleMoves(moves) {
-    possibleMoves = moves;
-    if (page != 'create') toggleDifLineBtn(otherChoices.length == 0);
+    possibleMoves = [];
+    possibleMoveArrows = [];
+    if (!keepPlaying && !create) {
+        for (let i = 0; i != moves.length; i++) {
+            let source = moves[i].getAttribute('data-source');
+            let target = moves[i].getAttribute('data-target');
+            possibleMoveArrows.push([source, target]);
+            possibleMoves.push(moves[i].getAttribute('data-san'));
+        };
+    } else possibleMoves = moves;
+    if (!create) toggleDifLineBtn(otherChoices.length == 0);
     finished = false;
+    clearCanvas(arrowContext);
+    if (moveArrowBtn[0].innerHTML == 'Hide Moves') drawPossibleMoveArrows();
 };
 
 export function setOtherChoices(moves, index) {
@@ -53,12 +67,13 @@ export function setFinished(done) {
         return;
     };
     finished = done;
-    if (done && page == 'practice' && !game.game_over()) {
+    if (done && practice && !game.game_over()) {
         $('#skill-label')[0].style.display = 'inline-block';
         $('#skill-input')[0].style.display = 'inline-block';
         $('#keepPlayingBtn')[0].style.display = 'inline-block';
     };
     if (preMoves.length != 0) modPreMoves('clear');
+    clearCanvas(arrowContext);
 };
 
 export function setKeepPlaying(cont) {

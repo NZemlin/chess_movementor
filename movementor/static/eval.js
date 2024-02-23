@@ -8,7 +8,7 @@ import { arrowContext } from "./arrow.js";
 import { updateHintText, updateGameState, updateBoard } from "./update.js";
 import { setPlayedMoveInfo, attemptPreMove } from "./move.js";
 import { updateCapturedPieces } from "./captured_pieces.js";
-import { lineBtn } from "./page.js";
+import { lineBtn } from "./buttons.js";
 
 var evalEngine = null;
 var searchingOld = false;

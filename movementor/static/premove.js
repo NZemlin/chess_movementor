@@ -1,7 +1,7 @@
 import { game, isOppTurn } from "./game.js";
 import { getUnderscoredFen } from "./getters.js";
 import { preMoveGame, preMoveCastlingRights } from "./globals.js";
-import { page } from "./constants.js";
+import { practice } from "./constants.js";
 
 var up, left, down, right, upLeft, upRight, downLeft, downRight;
 
@@ -44,7 +44,7 @@ function rookMoves(fileNum, rankNum, max=7) {
 };
 
 export function dotAndCircleMoves(source, fen) {
-    if ((!isOppTurn() && fen == getUnderscoredFen().split('_')[0]) || page != 'practice') {
+    if ((!isOppTurn() && fen == getUnderscoredFen().split('_')[0]) || !practice) {
         return game.moves({
             square: source,
             verbose: true,

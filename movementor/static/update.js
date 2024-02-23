@@ -1,6 +1,6 @@
 import { board, game } from './game.js';
 import { possibleMoves, keepPlaying, setPossibleMoves, setFinished, finished, freePlay, setKeepPlaying, draggedPieceSource, limitedLineId } from './globals.js';
-import { page } from './constants.js';
+import { practice, create } from './constants.js';
 import { recolorNotation, fixStudyRows } from './visual_helpers.js';
 import { getLastMoveElement, getNextMoveColor } from './getters.js';
 import { highlightLastMove } from './highlight.js';
@@ -28,9 +28,9 @@ function updateSelectedMoveElement() {
 function updateAllowedMoves() {
     // console.log('Updating allowed moves');
     if (limitedLineId != '' && !finishedLimitedLine) {
-        setPossibleMoves([nextLimitedMove.getAttribute('data-san')]);
+        setPossibleMoves([nextLimitedMove]);
         return;
-    } else if (keepPlaying || page == 'create') {
+    } else if (keepPlaying || create) {
         setPossibleMoves(game.moves());
         return;
     };
@@ -42,7 +42,7 @@ function updateAllowedMoves() {
         return;
     };
     element = document.querySelectorAll("[data-own='" + fen + "']")[0];
-    curMoves.push(element.getAttribute('data-san'));
+    curMoves.push(element);
     if (getLastMoveElement().getAttribute('data-own') == getLastMoveElement().getAttribute('data-child-2')) {
         setPossibleMoves(curMoves);
         return;
@@ -51,14 +51,14 @@ function updateAllowedMoves() {
     while (fen != element.getAttribute('data-own')) {
         element = document.querySelectorAll("[data-own='" + fen + "']")[0];
         if (game.turn() != element.getAttribute('data-color')[0]) break;
-        curMoves.push(element.getAttribute('data-san'));
+        curMoves.push(element);
         fen = element.getAttribute('data-child-2');
     };
     setPossibleMoves(curMoves);
 };
 
 export function updateHintText(own='') {
-    if (page != 'practice') return;
+    if (!practice) return;
     document.getElementById('hints').innerHTML = (possibleMoves && own) ? ('Allowed moves are: ' + possibleMoves.join(', ')) : 'No hints currently';
 };
 
@@ -83,7 +83,7 @@ export function updateGameState(move='', source='', target='', mute=false, preMo
     updateHintText();
     updateStatus();
     // console.log('Game state updated')
-    // if (page == 'practice') console.log('----------------------------------------------------');
+    // if (practice) console.log('----------------------------------------------------');
     tryEvaluation();
 };
 
@@ -101,14 +101,14 @@ export function gameStart() {
     recolorNotation();
     playSound();
     removeCapturedPieces();
-    if (freePlay && page == 'practice') {
+    if (freePlay && practice) {
         startFreePlay();
         return;
-    } else if (!freePlay) setPossibleMoves([document.getElementById('0').getAttribute('data-san')]);
+    } else if (!freePlay) setPossibleMoves([document.getElementById('0')]);
     else setPossibleMoves(game.moves());
     updateStatus();
     // console.log('Game started');
-    // if (page == 'practice') console.log('----------------------------------------------------');
-    if (page != 'practice') fixStudyRows();
+    // if (practice) console.log('----------------------------------------------------');
+    if (!practice) fixStudyRows();
     tryEvaluation();
 };

@@ -30,6 +30,9 @@ SOFTWARE.
 
 */
 
+import { config } from "./game.js";
+import { squareSize } from "./constants.js";
+
 export var initialPoint = { x: null, y: null };
 export var finalPoint = { x: null, y: null };
 export var resFactor = 2;
@@ -50,10 +53,29 @@ export function clearCanvas(context) {
     context.clearRect(0, 0, context.canvas.width, context.canvas.height);
 };
 
-export function setInitialPoint(coords) {
-    initialPoint = coords;
+export function setInitialPoint(square) {
+    initialPoint = calcCoords(square);
 };
 
-export function setFinalPoint(coords) {
-    finalPoint = coords;
+export function setFinalPoint(square) {
+    finalPoint = calcCoords(square);
+};
+
+export function calcCoords(square) {
+    if (square == null) return null;
+    var fileNum = square[0].charCodeAt(0) - 97;
+    var rankNum = square[1];
+    var offsetX = (fileNum + 1) * 2.5;
+    if (config.orientation[0] == 'b') return [(squareSize/2) + ((squareSize) * (7 - fileNum)) + offsetX,
+                                              (squareSize/2) + ((squareSize) * (rankNum - 1))];
+    else return [(squareSize/2) + ((squareSize) * fileNum) + offsetX,
+                 (squareSize/2) + ((squareSize) * (8 - rankNum))];
+};
+
+export function getMousePos(canvas, evt) {
+    var rect = canvas.getBoundingClientRect();
+    return {
+        x: Q(evt.clientX - rect.left),
+        y: Q(evt.clientY - rect.top),
+    };
 };

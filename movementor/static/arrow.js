@@ -30,9 +30,11 @@ SOFTWARE.
 
 */
 
-import { boardWidth } from "./constants.js";
-import { changeResolution, resFactor, initialPoint, finalPoint, clearCanvas } from "./canvas_helper.js";
+import { boardWidth, squareSize } from "./constants.js";
+import { changeResolution, resFactor, initialPoint, finalPoint, clearCanvas, calcCoords } from "./canvas_helper.js";
 import { getBoardFen } from "./getters.js";
+import { possibleMoveArrows } from "./globals.js";
+import { moveArrowBtn } from "./buttons.js";
 
 export var arrowMemory = {};
 export var arrowCanvas = document.getElementById('arrow_canvas');
@@ -40,8 +42,8 @@ export var arrowContext = changeResolution(arrowCanvas, resFactor);
 arrowContext.strokeStyle = arrowContext.fillStyle = 'rgb(206,164,30)';
 arrowContext.lineJoin = 'butt';
 
-var offsetXArrow = -3;
-var offsetyArrow = -14;
+var offsetX = .75;
+var offsetY = 2;
 var arrowWidth = 25;
 
 export function setArrowContext() {
@@ -93,16 +95,23 @@ export function drawArrow(initial=initialPoint, final=finalPoint) {
         yFactor = Math.sign(final.y - initial.y)*Math.abs(xFactor)*slope_mag;
     };
 
+    let xInitialDiff = 0;
+    let yInitialDiff = 0;
+    if (initial.x < final.x) xInitialDiff += squareSize/2.35;
+    else if (initial.x > final.x) xInitialDiff -= squareSize/2.35;
+    if (initial.y < final.y) yInitialDiff += squareSize/2.35;
+    else if (initial.y > final.y) yInitialDiff -= squareSize/2.35;
+
     // draw line
     arrowContext.beginPath();
     arrowContext.lineCap = "square";
     arrowContext.lineWidth = 15;
-    arrowContext.moveTo(initial.x + offsetXArrow, initial.y + offsetyArrow);
-    arrowContext.lineTo(final.x - xFactor + offsetXArrow, final.y - yFactor + offsetyArrow);
+    arrowContext.moveTo(initial.x + offsetX + xInitialDiff, initial.y + offsetY + yInitialDiff);
+    arrowContext.lineTo(final.x - xFactor + offsetX, final.y - yFactor + offsetY);
     arrowContext.stroke();
 
     // draw arrow head
-    drawArrowHead(initial.x + offsetXArrow, initial.y + offsetyArrow, final.x - xFactor + offsetXArrow, final.y - yFactor + offsetyArrow, arrowWidth);
+    drawArrowHead(initial.x + offsetX + xInitialDiff, initial.y + offsetY + yInitialDiff, final.x - xFactor + offsetX, final.y - yFactor + offsetY, arrowWidth);
 };
 
 export function repeatArrow(arrow) {
@@ -159,4 +168,15 @@ export function swapArrows() {
         arrowMemory[key] = newArrows;
     };
     drawArrows();
+    if (moveArrowBtn[0].innerHTML == 'Hide Moves') drawPossibleMoveArrows();
+};
+
+export function drawPossibleMoveArrows() {
+    arrowContext.strokeStyle = arrowContext.fillStyle = 'rgb(206,100,30)';
+    for (let i = 0; i != possibleMoveArrows.length; i++) {
+        let initial = calcCoords(possibleMoveArrows[i][0]);
+        let final = calcCoords(possibleMoveArrows[i][1]);
+        drawArrow({ x: initial[0], y: initial[1] }, { x: final[0], y: final[1] });
+    };
+    arrowContext.strokeStyle = arrowContext.fillStyle = 'rgb(206,164,30)';
 };

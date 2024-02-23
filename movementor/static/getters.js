@@ -1,5 +1,5 @@
 import { game, fixFenEp } from "./game.js";
-import { page } from "./constants.js";
+import { practice } from "./constants.js";
 
 export function getMoveNum() {
     return parseInt(game.fen().split(' ').slice(-1));
@@ -18,7 +18,7 @@ export function getUnderscoredFen() {
 };
 
 export function getBoardFen() {
-    return (page == 'practice') ? getPlayedSelected().getAttribute('data-fen') : getUnderscoredFen();
+    return (practice) ? getPlayedSelected().getAttribute('data-fen') : getUnderscoredFen();
 };
 
 export function getLastMoveElement() {

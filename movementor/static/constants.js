@@ -1,7 +1,9 @@
-export var page = document.getElementById('page').getAttribute('data-page');
+export var study = document.getElementById('page').getAttribute('data-page') == 'study';
+export var practice = document.getElementById('page').getAttribute('data-page') == 'practice';
+export var drill = document.getElementById('page').getAttribute('data-page') == 'drill';
+export var create = document.getElementById('page').getAttribute('data-page') == 'create';
 export var boardWidth = 700;
-export var squareSizeX = 86.3;
-export var squareSizeY = 84.1;
+export var squareSize = 84;
 export var startPosition = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR_w_KQkq_-_0_1';
 export var startElement = document.getElementById('-1');
 export var boardClass= 'board-b72b1';

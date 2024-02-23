@@ -1,8 +1,8 @@
-import { page, startElement } from "./constants.js";
+import { practice, study, startElement } from "./constants.js";
 import { updateHintText } from "./update.js";
 import { getPlayedSelected, getSelected } from "./getters.js";
 import { limitedLineId, setFinished, setKeepPlaying } from "./globals.js";
-import { difLineBtn, limitLineBtn, keepPlayingBtn } from "./page.js";
+import { difLineBtn, limitLineBtn, keepPlayingBtn } from "./buttons.js";
 
 export function timeoutBtn(btn, time=1) {
     let before = btn.disabled;
@@ -13,14 +13,14 @@ export function timeoutBtn(btn, time=1) {
 };
 
 export function toggleDifLineBtn(done) {
-    if (page == 'study') return;
+    if (study) return;
     var difLineBtn = document.getElementById('difLineBtn');
     difLineBtn.innerHTML = done ? 'No Other Lines' : 'Different Line';
     difLineBtn.disabled = done || limitedLineId != '';
 };
 
 export function resetButtons() {
-    if (page == 'practice') {
+    if (practice) {
         $('#skill-label')[0].style.display = 'none';
         $('#skill-input')[0].style.display = 'none';
         keepPlayingBtn[0].style.display = 'none';
@@ -38,7 +38,7 @@ export function resetButtons() {
 };
 
 export function resetMoveList() {
-    if (page == 'study') {
+    if (study) {
         getSelected().classList.remove('selected');
         startElement.classList.add('selected');
         return;

@@ -8,12 +8,13 @@ Implement Chess.com account pairing and analysis of played games to selected rep
 Add improve prep feature
     - Looks to fill holes by suggesting to answer popular moves that aren't included
     - Looks to extend lines that don't go as deep as most others
-Add speedrun mode to practice
-    - Play through every line in prep in random order
-    - Record number/location of mistakes (accuracy)
-    - Record time (overall and keep track of slower lines)
 Add consolidate feature
     - Play against multiple openings in a selected repertoire
+Add drill mode
+    - Load a random position on opponent's turn
+    - Make opponent's move
+    - Record number and location of mistakes
+    - Record time (overall and keep track of slower moves)
 
 Implement consolidation of displayed lines with expanding clicks
 Upgrade stockfish

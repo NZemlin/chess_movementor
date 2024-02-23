@@ -118,11 +118,27 @@ def practice(name):
     # resp.headers['Cross-Origin-Opener-Policy'] = 'same-origin'
     # resp.headers['Cross-Origin-Embedder-Policy'] = 'require-corp'
     # return resp
+
     if name == 'free_play':
         name = 'Free Play'
     opening = get_opening(name)
 
     return render_template_string(parse_and_write_pgn(opening['title'], opening['pgn'], 'practice'))
+
+@bp.route('/<string:name>/drill', methods=('GET', 'POST'))
+@login_required
+def drill(name):
+    if request.method == 'POST':
+        return redirect(url_for('openings.index'))
+
+    # resp = make_response(render_template_string(p.writer.write_html(name, 'drill')))
+    # resp.headers['Cross-Origin-Opener-Policy'] = 'same-origin'
+    # resp.headers['Cross-Origin-Embedder-Policy'] = 'require-corp'
+    # return resp
+    
+    opening = get_opening(name)
+
+    return render_template_string(parse_and_write_pgn(opening['title'], opening['pgn'], 'drill'))
 
 @bp.route('/create_analysis', methods=('GET', 'POST'))
 @login_required

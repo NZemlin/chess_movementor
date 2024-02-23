@@ -1,10 +1,11 @@
 import { config, game, isOppTurn, swapBoard, resetBoard } from './game.js';
+import { copyBtn, restartBtn, difLineBtn, limitLineBtn, swapBtn, evalBarBtn, lineBtn, hintBtn, keepPlayingBtn, blitzBtn, moveArrowBtn } from './buttons.js';
 import { otherChoices, isBlitzing, freePlay, curEval, setLastFen, setPossibleMoves, setFinished, setKeepPlaying, setIsBlitzing, setLimitedLineId, setEngineLevel, modPreMoves } from './globals.js';
-import { page, startPosition, startElement, computerPauseTime } from './constants.js';
+import { practice, study, startPosition, startElement, computerPauseTime } from './constants.js';
 import { scrollIfNeeded, resizeCols } from './visual_helpers.js';
 import { timeoutBtn, resetButtons, resetMoveList } from './page_helpers.js';
 import { getSelected, getPlayedSelected, getUnderscoredFen, getBoardFen } from './getters.js';
-import { drawArrows } from './arrow.js';
+import { drawArrows, drawPossibleMoveArrows } from './arrow.js';
 import { highlightLastMove, highlightRightClickedSquares, setHighlightedSquares, modRightClickedSquares } from './highlight.js';
 import { updateBoard, updateGameState, gameStart } from './update.js';
 import { makeComputerMove } from './move.js';
@@ -15,19 +16,9 @@ import { addListeners } from './listeners.js';
 import { updateCapturedPieces } from './captured_pieces.js';
 
 export var lastKeyCode;
-export var copyBtn = $('#copyBtn');
-export var restartBtn = $('#restartBtn');
-export var difLineBtn = $('#difLineBtn');
-export var limitLineBtn = $('#limitLineBtn');
-export var swapBtn = $('#swapBtn');
-export var evalBarBtn = $('#evalBarBtn');
-export var lineBtn = $('#lineBtn');
-export var hintBtn = $('#hintBtn');
-export var keepPlayingBtn = $('#keepPlayingBtn');
-export var blitzBtn = $('#blitzBtn');
 
 copyBtn.on('click', function() {
-    var text = (page == 'study') ? game.fen() : game.pgn();
+    var text = (study) ? game.fen() : game.pgn();
     navigator.clipboard.writeText(text);
     timeoutBtn(this, .1);
 });
@@ -39,10 +30,10 @@ restartBtn.on('click', function() {
     resetButtons();
     setHighlightedSquares();
     modRightClickedSquares();
-    modPreMoves('clear');
+    if (practice) modPreMoves('clear');
     gameStart();
     timeoutBtn(this, .1);
-    if (page == 'practice') window.setTimeout(makeComputerMove, computerPauseTime);
+    if (practice) window.setTimeout(makeComputerMove, computerPauseTime);
 });
   
 difLineBtn.on('click', function () {
@@ -67,9 +58,9 @@ limitLineBtn.on('click', function () {
 });
 
 swapBtn.on('click', function () {
-    modPreMoves('clear');
+    if (practice) modPreMoves('clear');
     swapBoard();
-    if (page == 'practice' && getBoardFen() == getUnderscoredFen()) window.setTimeout(makeComputerMove, computerPauseTime);
+    if (practice && getBoardFen() == getUnderscoredFen()) window.setTimeout(makeComputerMove, computerPauseTime);
     timeoutBtn(this);
 });
 
@@ -91,9 +82,9 @@ lineBtn.on('click', function () {
         var linesTableHeight = linesTable.offsetHeight + 13;
         linesTable.hidden = !linesTable.hidden;
     };
-    var containerName = (page != 'practice') ? 'moves-container-study' : 'move-list-container';
+    var containerName = (!practice) ? 'moves-container-study' : 'move-list-container';
     var container = document.getElementsByClassName(containerName)[0];
-    if (page == 'study') container.style.maxHeight = container.offsetHeight + linesTableHeight + 'px';
+    if (study) container.style.maxHeight = container.offsetHeight + linesTableHeight + 'px';
     else {
         container.style.height = parseInt(container.style.height.slice(0, -2)) + linesTableHeight + 'px';
         container.style.maxHeight = parseInt(container.style.height.slice(0, -2)) - 28 + (freePlay ? 30 : 0) + 'px';
@@ -131,12 +122,19 @@ blitzBtn.on('click', function () {
     timeoutBtn(this, .1);
 });
 
+moveArrowBtn.on('click', function () {
+    this.innerHTML = this.innerHTML == 'Show Moves' ? 'Hide Moves' : 'Show Moves';
+    if (this.innerHTML == 'Hide Moves') drawPossibleMoveArrows();
+    else drawArrows();
+    timeoutBtn(this, .1);
+});
+
 export function whichCheckKey() {
-    return (page == 'practice') ? checkKeyPractice : checkKeyStudy;
+    return (practice) ? checkKeyPractice : checkKeyStudy;
 };
 
 export function whichClickUpdate(element) {
-    return (page == 'practice') ? clickUpdatePractice(element) : clickUpdateStudy(element);
+    return (practice) ? clickUpdatePractice(element) : clickUpdateStudy(element);
 };
 
 export function clickUpdatePractice(element) {
@@ -255,11 +253,12 @@ export function checkKeyStudy(e) {
     };
 };
 
-if (freePlay && page == 'practice') {
+if (freePlay && practice) {
     evalBarBtn[0].click();
     lineBtn[0].click();
     document.getElementsByClassName('practice-buttons')[0].style.display = 'none';
     keepPlayingBtn[0].innerHTML = 'Play';
 };
+if (practice) moveArrowBtn[0].style.display = 'none';
 resizeCols();
 addListeners();

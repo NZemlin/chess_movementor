@@ -1,6 +1,6 @@
 import { config, game, isOppTurn } from './game.js';
 import { possibleMoves, finished, isPromoting, limitedLineId, preMoves, modPreMoves, setLastFen, setOtherChoices, setKeepPlaying, keepPlaying, setDraggedPieceSource, draggedPieceSource, preMoveGame, draggedMoves, setDraggedMoves } from './globals.js';
-import { squareClass, computerPauseTime, page } from './constants.js';
+import { squareClass, computerPauseTime, practice } from './constants.js';
 import { scrollIfNeeded } from './visual_helpers.js';
 import { getBoardFen, getMoveNum, getPlayedSelected, getUnderscoredFen } from './getters.js';
 import { arrowContext } from './arrow.js';
@@ -11,7 +11,8 @@ import { updateHintText, updateGameState, updateBoard } from './update.js';
 import { playIllegal } from './sounds.js';
 import { tryEvaluation, makeEngineMove } from './eval.js';
 import { dotAndCircleContext, drawMoveOptions } from './dot_circle.js';
-import { difLineBtn, limitLineBtn, nearestMainlineParent } from './page.js';
+import { nearestMainlineParent } from './page.js';
+import { difLineBtn, limitLineBtn } from './buttons.js';
 import { timeoutBtn } from './page_helpers.js';
 
 export var finishedLimitedLine = false;
@@ -105,15 +106,15 @@ export function attemptPreMove() {
 export function onDragStart(source, piece, position, orientation) {
     // Return false if game is over or promotion is being attempted
     if (game.game_over() || isPromoting) return false;
-    if (page != 'practice') {
+    if (!practice) {
         // Return false if picking up wrong side to move
         if ((game.turn() === 'w' && piece.search(/^b/) !== -1) ||
             (game.turn() === 'b' && piece.search(/^w/) !== -1)) return false;
     };
-    // if on practice page, only pick up own side and if
+    // If on practice page, only pick up own side and if
     // current board position is current game position and
     // if game is still going
-    if (page == 'practice') {
+    if (practice) {
         // Return false if line is finished and waiting for engine level selection
         if (finished) return false;
         // Return false if current position isn't from latest move
@@ -150,7 +151,7 @@ function handlePromotionAttempt(move, source, target, before, preMove=false) {
 
 export function handleLegalMove(move, source, target, preMove) {
     // console.log('A legal move was played: ' + move.san);
-    if (page == 'practice') {
+    if (practice) {
         setPlayedMoveInfo(move);
         updateGameState(move.san, source, target, false, preMove);
         if (preMove) modPreMoves('pop', source, target);
@@ -162,7 +163,7 @@ export function handleLegalMove(move, source, target, preMove) {
 
 export function validateMove(move, source, target, before, checkedPromo, preMove) {
     if (move === null || !(possibleMoves.includes(move.san))) {
-        if (page != 'practice' && finished && move != null) {
+        if (!practice && finished && move != null) {
             setKeepPlaying(true);
             handleLegalMove(move, source, target, false);
             return;
@@ -193,7 +194,7 @@ export function onDrop(source, target) {
     if (source == 'offboard' || target == 'offboard') return 'snapback';
     let preMovePushed = false;
     let preMove = false;
-    if (isOppTurn() && page == 'practice') {
+    if (isOppTurn() && practice) {
         preMove = true;
         draggedMoves.forEach(move => {
             if (move.slice(0, 2) == target) {
@@ -204,7 +205,7 @@ export function onDrop(source, target) {
         });
         setDraggedMoves([]);
     } else {
-        if (page == 'practice') timeoutBtn(limitLineBtn[0], computerPauseTime/1000);
+        if (practice) timeoutBtn(limitLineBtn[0], computerPauseTime/1000);
         var before = game.fen();
         var move = game.move({
             from: source,
