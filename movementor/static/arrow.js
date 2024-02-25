@@ -98,7 +98,10 @@ export function drawArrow(initial=initialPoint, final=finalPoint) {
 
     let xInitialDiff = 0;
     let yInitialDiff = 0;
-    let angle = Math.abs(Math.atan((initial.y - final.y) / (initial.x - final.x)))
+    let xChange = initial.x - final.x;
+    let xSquares = Math.floor(Math.abs(xChange/squareSize));
+    if (xChange != 0) xChange += (initial.x < final.x ? xSquares*2.5 : xSquares*-2.5);
+    let angle = Math.abs(Math.atan((initial.y - final.y) / xChange));
     let xCorrection = Math.cos(angle) * initialCorrection;
     let yCorrection = Math.sin(angle) * initialCorrection;
     xInitialDiff += (initial.x < final.x) ? xCorrection : -xCorrection;
