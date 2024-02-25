@@ -45,6 +45,7 @@ arrowContext.lineJoin = 'butt';
 var offsetX = .75;
 var offsetY = 2;
 var arrowWidth = 25;
+var initialCorrection = squareSize/2.35;
 
 export function setArrowContext() {
     arrowContext = changeResolution(arrowCanvas, resFactor);
@@ -97,10 +98,11 @@ export function drawArrow(initial=initialPoint, final=finalPoint) {
 
     let xInitialDiff = 0;
     let yInitialDiff = 0;
-    if (initial.x < final.x) xInitialDiff += squareSize/2.35;
-    else if (initial.x > final.x) xInitialDiff -= squareSize/2.35;
-    if (initial.y < final.y) yInitialDiff += squareSize/2.35;
-    else if (initial.y > final.y) yInitialDiff -= squareSize/2.35;
+    let angle = Math.abs(Math.atan((initial.y - final.y) / (initial.x - final.x)))
+    let xCorrection = Math.cos(angle) * initialCorrection;
+    let yCorrection = Math.sin(angle) * initialCorrection;
+    xInitialDiff += (initial.x < final.x) ? xCorrection : -xCorrection;
+    yInitialDiff += (initial.y < final.y) ? yCorrection : -yCorrection;
 
     // draw line
     arrowContext.beginPath();
