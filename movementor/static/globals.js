@@ -6,8 +6,7 @@ import { restartBtn, limitLineBtn, moveArrowBtn } from './buttons.js';
 import { updateBoard, updateHintText, updateStatus } from './update.js';
 import { clearPremoveHighlights, highlightLastMove, highlightPremove } from './highlight.js';
 import { playMoveSelf } from './sounds.js';
-import { arrowContext, drawPossibleMoveArrows } from './arrow.js';
-import { clearCanvas } from './canvas_helper.js';
+import { drawArrows, drawPossibleMoveArrows } from './arrow.js';
 
 export var lastFen = startPosition;
 export var possibleMoves = [];
@@ -44,7 +43,7 @@ export function setPossibleMoves(moves) {
     } else possibleMoves = moves;
     if (!create) toggleDifLineBtn(otherChoices.length == 0);
     finished = false;
-    clearCanvas(arrowContext);
+    drawArrows();
     if (moveArrowBtn[0].innerHTML == 'Hide Moves') drawPossibleMoveArrows();
 };
 
@@ -73,7 +72,7 @@ export function setFinished(done) {
         $('#keepPlayingBtn')[0].style.display = 'inline-block';
     };
     if (preMoves.length != 0) modPreMoves('clear');
-    clearCanvas(arrowContext);
+    drawArrows();
 };
 
 export function setKeepPlaying(cont) {

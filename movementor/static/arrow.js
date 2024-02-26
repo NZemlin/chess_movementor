@@ -184,7 +184,7 @@ export function swapArrows() {
 };
 
 export function drawPossibleMoveArrows() {
-    arrowContext.strokeStyle = arrowContext.fillStyle = 'rgba(206,164,30,0.75)';
+    arrowContext.strokeStyle = arrowContext.fillStyle = 'rgba(200,125,100,0.75)';
     for (let i = 0; i != possibleMoveArrows.length; i++) {
         let initial = calcCoords(possibleMoveArrows[i][0]);
         let final = calcCoords(possibleMoveArrows[i][1]);
