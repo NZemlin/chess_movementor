@@ -42,10 +42,11 @@ export var arrowContext = changeResolution(arrowCanvas, resFactor);
 arrowContext.strokeStyle = arrowContext.fillStyle = 'rgb(206,164,30)';
 arrowContext.lineJoin = 'butt';
 
-var offsetX = .75;
+var offsetX = 0.25;
 var offsetY = 2;
 var arrowWidth = 25;
-var initialCorrection = squareSize/2.35;
+var initialCorrection = squareSize/2.25;
+var finalCorrection = squareSize/4.25;
 
 export function setArrowContext() {
     arrowContext = changeResolution(arrowCanvas, resFactor);
@@ -98,21 +99,27 @@ export function drawArrow(initial=initialPoint, final=finalPoint) {
 
     let xInitialDiff = 0;
     let yInitialDiff = 0;
+    let xFinalDiff = 0;
+    let yFinalDiff = 0;
     let xChange = initial.x - final.x;
     let xSquares = Math.floor(Math.abs(xChange/squareSize));
     if (xChange != 0) xChange += (initial.x < final.x ? xSquares*2.5 : xSquares*-2.5);
     let angle = Math.abs(Math.atan((initial.y - final.y) / xChange));
-    let xCorrection = Math.cos(angle) * initialCorrection;
-    let yCorrection = Math.sin(angle) * initialCorrection;
-    xInitialDiff += (initial.x < final.x) ? xCorrection : -xCorrection;
-    yInitialDiff += (initial.y < final.y) ? yCorrection : -yCorrection;
+    let xInitialCorrection = Math.cos(angle) * initialCorrection;
+    let yInitialCorrection = Math.sin(angle) * initialCorrection;
+    xInitialDiff += (initial.x < final.x) ? xInitialCorrection : -xInitialCorrection;
+    yInitialDiff += (initial.y < final.y) ? yInitialCorrection : -yInitialCorrection;
+    let xFinalCorrection = Math.cos(angle) * finalCorrection;
+    let yFinalCorrection = Math.sin(angle) * finalCorrection;
+    xFinalDiff += (initial.x < final.x) ? xFinalCorrection : -xFinalCorrection;
+    yFinalDiff += (initial.y < final.y) ? yFinalCorrection : -yFinalCorrection;
 
     // draw line
     arrowContext.beginPath();
     arrowContext.lineCap = "square";
     arrowContext.lineWidth = 15;
     arrowContext.moveTo(initial.x + offsetX + xInitialDiff, initial.y + offsetY + yInitialDiff);
-    arrowContext.lineTo(final.x - xFactor + offsetX, final.y - yFactor + offsetY);
+    arrowContext.lineTo(final.x - xFactor + offsetX - xFinalDiff, final.y - yFactor + offsetY - yFinalDiff);
     arrowContext.stroke();
 
     // draw arrow head
@@ -177,7 +184,7 @@ export function swapArrows() {
 };
 
 export function drawPossibleMoveArrows() {
-    arrowContext.strokeStyle = arrowContext.fillStyle = 'rgb(206,100,30)';
+    arrowContext.strokeStyle = arrowContext.fillStyle = 'rgba(206,164,30,0.75)';
     for (let i = 0; i != possibleMoveArrows.length; i++) {
         let initial = calcCoords(possibleMoveArrows[i][0]);
         let final = calcCoords(possibleMoveArrows[i][1]);
