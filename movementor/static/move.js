@@ -1,24 +1,32 @@
 import { config, game, isOppTurn } from './game.js';
 import { possibleMoves, finished, isPromoting, limitedLineId, preMoves, modPreMoves, setLastFen, setOtherChoices, setKeepPlaying, keepPlaying, setDraggedPieceSource, draggedPieceSource, preMoveGame, draggedMoves, setDraggedMoves } from './globals.js';
-import { squareClass, computerPauseTime, practice } from './constants.js';
+import { computerPauseTime, study, practice, drill } from './constants.js';
 import { scrollIfNeeded } from './visual_helpers.js';
 import { getBoardFen, getMoveNum, getPlayedSelected, getUnderscoredFen } from './getters.js';
 import { arrowContext } from './arrow.js';
 import { clearCanvas } from './canvas_helper.js';
-import { lightOrDark,clearRightClickHighlights, highlightBorder } from './highlight.js';
+import { lightOrDark, clearRightClickHighlights, highlightBorder, clearBorderHighlights } from './highlight.js';
 import { opaqueBoardSquares, attemptPromotion, performPromotion } from './promotion.js';
 import { updateHintText, updateGameState, updateBoard } from './update.js';
 import { playIllegal } from './sounds.js';
 import { tryEvaluation, makeEngineMove } from './eval.js';
 import { dotAndCircleContext, drawMoveOptions } from './dot_circle.js';
-import { nearestMainlineParent } from './page.js';
-import { difLineBtn, limitLineBtn } from './buttons.js';
-import { timeoutBtn } from './page_helpers.js';
+import { nearestRealParent } from './page.js';
+import { difLineBtn, limitLineBtn, restartBtn } from './buttons.js';
+import { limitingDrillLine, loadRandomDrill } from './drill.js';
 
 export var finishedLimitedLine = false;
 export var nextLimitedMove = document.getElementById('0');
 
-function prepareNextMove(move) {
+export function setFinishedLimitedLine(done) {
+    finishedLimitedLine = done;
+};
+
+export function prepareNextMove(move) {
+    limitLineBtn[0].disabled = finished;
+    if (practice) {
+        restartBtn[0].disabled = preMoves.length > 0;
+    };
     setLastFen(getUnderscoredFen());
     var data = game.move(move);
     if (preMoves.length > 0) updateBoard(preMoveGame.fen(), false);
@@ -26,7 +34,7 @@ function prepareNextMove(move) {
     clearRightClickHighlights();
     clearCanvas(arrowContext);
     updateHintText(false);
-    setPlayedMoveInfo(data);
+    if (!drill) setPlayedMoveInfo(data);
     updateGameState(move, data.from, data.to);
     // if (finished) console.log('Line is finished');
     // else console.log('Your moves: ' + possibleMoves.join(', '));
@@ -37,8 +45,7 @@ function makeLimitedLineMove() {
     let curElement = document.getElementById(limitedLineId)
     let parent;
     while (true) {
-        if (curElement.getAttribute('data-variation-start') == 'true') parent = nearestMainlineParent(curElement)[0].getAttribute('data-own');
-        else parent = curElement.getAttribute('data-parent');
+        parent = nearestRealParent(curElement).getAttribute('data-own');
         if (parent != getUnderscoredFen()) {
             nextLimitedMove = curElement;
             curElement = document.querySelectorAll("[data-own='" + parent + "']")[0];
@@ -106,7 +113,7 @@ export function attemptPreMove() {
 export function onDragStart(source, piece, position, orientation) {
     // Return false if game is over or promotion is being attempted
     if (game.game_over() || isPromoting) return false;
-    if (!practice) {
+    if (!practice && (!drill || limitingDrillLine)) {
         // Return false if picking up wrong side to move
         if ((game.turn() === 'w' && piece.search(/^b/) !== -1) ||
             (game.turn() === 'b' && piece.search(/^w/) !== -1)) return false;
@@ -114,7 +121,7 @@ export function onDragStart(source, piece, position, orientation) {
     // If on practice page, only pick up own side and if
     // current board position is current game position and
     // if game is still going
-    if (practice) {
+    if (practice || (drill && !limitingDrillLine)) {
         // Return false if line is finished and waiting for engine level selection
         if (finished) return false;
         // Return false if current position isn't from latest move
@@ -159,6 +166,7 @@ export function handleLegalMove(move, source, target, preMove) {
         return;
     };
     updateGameState(move.san, source, target);
+    if (drill && !limitingDrillLine) window.setTimeout(loadRandomDrill, computerPauseTime);
 };
 
 export function validateMove(move, source, target, before, checkedPromo, preMove) {
@@ -182,6 +190,10 @@ export function validateMove(move, source, target, before, checkedPromo, preMove
             };
             $('#myBoard').find('.square-' + source).removeClass('highlight-' +  lightOrDark(source));
             if (preMove) modPreMoves('clear');
+            if (!drill) {
+                if (!study) limitLineBtn[0].disabled = false;
+                restartBtn[0].disabled = false;
+            };
             return 'snapback';
         };
     } else handleLegalMove(move, source, target, preMove);
@@ -189,8 +201,7 @@ export function validateMove(move, source, target, before, checkedPromo, preMove
 
 export function onDrop(source, target) {
     setDraggedPieceSource(null);
-    $('#myBoard').find('.' + squareClass).removeClass('border-highlight-light');
-    $('#myBoard').find('.' + squareClass).removeClass('border-highlight-dark');
+    clearBorderHighlights();
     if (source == 'offboard' || target == 'offboard') return 'snapback';
     let preMovePushed = false;
     let preMove = false;
@@ -198,14 +209,17 @@ export function onDrop(source, target) {
         preMove = true;
         draggedMoves.forEach(move => {
             if (move.slice(0, 2) == target) {
-                let promotionAttempt = (handlePromotionAttempt('', source, target, '', true));
+                let promotionAttempt = handlePromotionAttempt('', source, target, '', true);
                 if (promotionAttempt != null) modPreMoves('push', source, target);
                 preMovePushed = true;
             };
         });
         setDraggedMoves([]);
     } else {
-        if (practice) timeoutBtn(limitLineBtn[0], computerPauseTime/1000);
+        if (!drill) {
+            if (!study) limitLineBtn[0].disabled = true;
+            restartBtn[0].disabled = true;
+        };
         var before = game.fen();
         var move = game.move({
             from: source,

@@ -1,6 +1,6 @@
 import { board, game } from './game.js';
 import { possibleMoves, keepPlaying, setPossibleMoves, setFinished, finished, freePlay, setKeepPlaying, draggedPieceSource, limitedLineId } from './globals.js';
-import { practice, create } from './constants.js';
+import { practice, create, drill } from './constants.js';
 import { recolorNotation, fixStudyRows } from './visual_helpers.js';
 import { getLastMoveElement, getNextMoveColor } from './getters.js';
 import { highlightLastMove } from './highlight.js';
@@ -9,11 +9,13 @@ import { playSound } from './sounds.js';
 import { tryEvaluation } from './eval.js';
 import { createNewEngine } from './eval_helpers.js';
 import { finishedLimitedLine, nextLimitedMove } from './move.js';
+import { loadRandomDrill } from './drill.js';
+import { hintBtn, limitLineBtn } from './buttons.js';
 
 export function updateBoard(fen, animation) {
     board.position(fen, animation);
     let piece = $('#myBoard').find('.square-' + draggedPieceSource).children('img')[0];
-    if (draggedPieceSource != null && piece != null) piece.style.display = 'none';
+    if (piece != null) piece.style.display = 'none';
 };
 
 function updateSelectedMoveElement() {
@@ -58,7 +60,7 @@ function updateAllowedMoves() {
 };
 
 export function updateHintText(own='') {
-    if (!practice) return;
+    if (!practice && !drill) return;
     document.getElementById('hints').innerHTML = (possibleMoves && own) ? ('Allowed moves are: ' + possibleMoves.join(', ')) : 'No hints currently';
 };
 
@@ -99,6 +101,14 @@ function startFreePlay() {
 
 export function gameStart() {
     recolorNotation();
+    if (drill) {
+        hintBtn[0].style.marginTop = '0px';
+        hintBtn[0].style.marginBottom = '0px';
+        limitLineBtn[0].style.marginTop = '0px';
+        limitLineBtn[0].style.marginBottom = '0px';
+        loadRandomDrill();
+        return;
+    };
     playSound();
     removeCapturedPieces();
     if (freePlay && practice) {

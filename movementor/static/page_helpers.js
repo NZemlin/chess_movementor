@@ -1,4 +1,4 @@
-import { practice, study, startElement } from "./constants.js";
+import { practice, study, drill, startElement } from "./constants.js";
 import { updateHintText } from "./update.js";
 import { getPlayedSelected, getSelected } from "./getters.js";
 import { limitedLineId, setFinished, setKeepPlaying } from "./globals.js";
@@ -13,7 +13,7 @@ export function timeoutBtn(btn, time=1) {
 };
 
 export function toggleDifLineBtn(done) {
-    if (study) return;
+    if (study || drill) return;
     var difLineBtn = document.getElementById('difLineBtn');
     difLineBtn.innerHTML = done ? 'No Other Lines' : 'Different Line';
     difLineBtn.disabled = done || limitedLineId != '';

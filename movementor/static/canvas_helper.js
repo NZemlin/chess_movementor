@@ -62,7 +62,7 @@ export function setFinalPoint(square) {
 };
 
 export function calcCoords(square) {
-    if (square == null) return null;
+    if (square == null) return [null, null];
     var fileNum = square[0].charCodeAt(0) - 97;
     var rankNum = square[1];
     var offsetX = (fileNum + 1) * 2.5;
@@ -70,12 +70,4 @@ export function calcCoords(square) {
                                               (squareSize/2) + ((squareSize) * (rankNum - 1))];
     else return [(squareSize/2) + ((squareSize) * fileNum) + offsetX,
                  (squareSize/2) + ((squareSize) * (8 - rankNum))];
-};
-
-export function getMousePos(canvas, evt) {
-    var rect = canvas.getBoundingClientRect();
-    return {
-        x: Q(evt.clientX - rect.left),
-        y: Q(evt.clientY - rect.top),
-    };
 };

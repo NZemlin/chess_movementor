@@ -8,6 +8,7 @@ class PGNWriter():
             'study': self.study,
             'practice': self.practice,
             'create': self.create,
+            'drill': self.drill,
         }
         
     def print_moves(self, name):
@@ -15,16 +16,18 @@ class PGNWriter():
             print(move_info.space, move_info.move_num_san, end='')
 
     def populate_shared(self, name, moves, page):
-        if page == 'study' or (page == 'practice' and name != 'Free Play'):
-            other = 'study' if page == 'practice' else 'practice'
-            h1_title = f'{page.capitalize()} the {name}'
-            h1_link = f'<a href="/{name}/{other}">{other.capitalize()} the {name}&nbsp;-></a>'
-        elif page == 'practice':
-            h1_title = f'Play Against Stockfish'
-            h1_link = f'<a href="/create_analysis">Create an Analysis&nbsp;-></a>'
+        h1_title = f'{page.capitalize()} the {name}'
+        h1_link = ''
+        if name == 'Free Play':
+            if page == 'practice':
+                h1_title = 'Play Against Stockfish'
+                h1_link = '<a href="/create_analysis">Create an Analysis</a>'
+            else:
+                h1_title = 'Create an Analysis'
+                h1_link = '<a href="/free_play/practice">Play Against Stockfish</a>'
         else:
-            h1_title = 'Create an Analysis'
-            h1_link = '<a href="/free_play/practice">Play Against Stockfish&nbsp;-></a>'
+            for pg in [pg for pg in ['study', 'practice', 'drill'] if pg != page]:
+                h1_link += f'<a href="/{name}/{pg}">{pg.capitalize()}</a>\n'
         self.shared['header_html'] = f'''
             <div class="container">
                 <div class="row">
@@ -117,9 +120,10 @@ class PGNWriter():
                     <div class="modal-body">
                         <h3>This page is used to visualize the branching of your lines and lets you traverse them with ease</h3>
                         <p>The current move that you're on will be highlighted</p>
+                        <p>The left arrow key take you to the previous move of the current variation that you're on</p>
                         <p>The right arrow key takes you to the next mainline move of the current variation you're on</p>
-                        <p>The down arrow key takes you through the list of sidelines (if any) that branch off the move that you're on</p>
-                        <p>The up and left arrow keys take you to the previous move of the current variation that you're on</p>
+                        <p>The up and down arrow key takes you through the list of sidelines (if any) that branch off the move that you're on</p>
+                        <p>The up arrow key will also take you to the previous move of the current variation if there are no other sidelines at that move</p>
                         <p>The spacebar key takes you to the nearest previous move that started a variation or was part of the mainline</p>
                         <p>You can also click on the moves to take you directly to that FEN</p>
                         <p>Clicking and dragging the pieces to make the moves are limited to what's in your preparation until the end of the line</p>
@@ -222,9 +226,9 @@ class PGNWriter():
             <div class="empty-row practice-buttons">
                 <button id="blitzBtn">Blitz: Off</button>
                 <button id="difLineBtn">Other Line</button>
-                <button id="limitLineBtn">Limit Line</button>
-                <button id="hintBtn" class="ignore">Hide Hints</button>
-                <span id="hints" class="text-wrap">No hints currently</span>
+                <button disabled id="limitLineBtn">Limit Line</button>
+                <button id="hintBtn" class="ignore">Show Hints</button>
+                <span hidden id="hints" class="text-wrap">No hints currently</span>
             </div>
         '''
         hidden_moves = f'''
@@ -355,6 +359,82 @@ class PGNWriter():
                                 {self.shared['status']}
                                 {comment}
                                 {create_moves}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        '''
+
+    def drill(self, name, moves, page):
+        modal_header = 'Drill Your Opening!'
+        modal_body = '''
+            <h3>This page allows you to drill moves in a particular opening you want to practice</h3>
+            <p>A random position that occurs in the given opening will be chosen</p>
+            <p>The opponent will make one of the available moves</p>
+            <p>It is then your turn to make the correct move</p>
+            <p>Use the hint button to display the solution after making a wrong move</p>
+            <p>Set the "Max Depth" value to restrict how it chooses the random position</p>
+            <p>For example, a max depth of 6 will only show you positions that occur in the given opening in the first 6 moves</p>
+            <p>If you want to only practice positions that occur ina  certain sideline, press the "Limit Line" button</p>
+            <p>This will start a new game where you can move both sides to set up the sideline that you want to drill</p>
+            <p>Arrows will show you the available moves in each position based on your opening</p>
+            <p>Once you've set up the sideline, press the "Set Line" button</p>
+            <p>Random positions will once again start being drilled, but now they will be either leading up to the chosen sideline or following after it</p>
+            <p>If you want to go back to the entire opening, press the "Any Line" button</p>
+
+        '''
+        modal = f'''
+            <div id="myModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>{modal_header}</h2>
+                        <span id="close" class="close">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        {modal_body}
+                    </div>
+                </div>
+            </div>
+        '''
+        hidden_moves = f'''
+            <div class="row moves-container-practice">
+            {self.shared['hidden_move']}
+        '''
+        for i, move_info in enumerate(moves):
+            hidden_moves += self.move_element(move_info, i, 'practice')
+        hidden_moves += '</div>'
+        drill_buttons = '''
+            <div class='empty-row'>
+                <button id="swapBtn" class="ignore">Swap</button>
+                <button id="limitLineBtn">Limit Line</button>
+                <button id="hintBtn" class="ignore">Show Hints</button>
+                <span hidden id="hints" class="text-wrap">No hints currently</span>
+            </div>
+        '''
+        depth_input = '''
+            <div class="row">
+                <label id="depth-label">Max Depth:
+                    <input type="number" id="depth-input" name="depth" min="1" max="25" value="5">
+                </label>
+            </div>
+        '''
+        return f'''
+                {modal}
+                <div hidden id="page" data-page={page}></div>
+                    <div class="container">
+                        <div class="row">
+                            <div class="eval-col">
+                                {self.shared['eval_bar']}
+                            </div>
+                            <div class="board-col">
+                                {self.shared['captured_canvases_and_board']}
+                                {hidden_moves}
+                            </div>
+                            <div class="moves-col">
+                                {drill_buttons}
+                                {self.shared['status']}
+                                {depth_input}
                             </div>
                         </div>
                     </div>

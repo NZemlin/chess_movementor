@@ -1,16 +1,17 @@
 import { config, game } from "./game.js";
 import { draggedPieceSource, finished, isPromoting, modPreMoves, preMoves } from "./globals.js";
-import { practice, squareClass, pieceClass } from './constants.js';
+import { practice, drill, squareClass, pieceClass } from './constants.js';
 import { getUnderscoredFen, getBoardFen } from './getters.js';
 import { modArrows } from "./arrow.js";
 import { dotAndCircleContext, drawMoveOptions } from './dot_circle.js';
 import { initialPoint, finalPoint, clearCanvas, setInitialPoint, setFinalPoint } from './canvas_helper.js';
-import { clearRightClickHighlights, toggleRightClickHighlight, highlightBorder, lightOrDark } from "./highlight.js";
+import { clearRightClickHighlights, toggleRightClickHighlight, highlightBorder, lightOrDark, clearBorderHighlights } from "./highlight.js";
 import { whichCheckKey, whichClickUpdate } from './page.js';
 import { clearPromotionOptions } from "./promotion.js";
 import { resizeCols } from "./visual_helpers.js";
 import { moveArrowBtn } from "./buttons.js";
 import { drawPossibleMoveArrows } from "./arrow.js";
+import { limitingDrillLine } from "./drill.js";
 
 export var rightClickDownSquare;
 export var leftClickDownSquare;
@@ -25,7 +26,17 @@ export function setLeftClickDownSquare(square) {
 
 function onMouseDown(e) {
     let element = (e.target.classList.contains(squareClass)) ? e.target : e.target.parentElement;
-    if (e.button == 0) setLeftClickDownSquare(element.getAttribute('data-square'));
+    if (e.button == 0) {
+        setLeftClickDownSquare(element.getAttribute('data-square'));
+        if (!e.target.classList.contains(pieceClass) || getUnderscoredFen() != getBoardFen()) return;
+        let pieceColor = e.target.getAttribute('data-piece')[0];
+        if (((practice || drill) && !finished && pieceColor == config.orientation[0]) ||
+            ((!practice && !drill) && pieceColor == game.turn()) ||
+            limitingDrillLine) {
+            highlightBorder(leftClickDownSquare);
+            drawMoveOptions();
+        };
+    };
     if (e.button == 2) {
         if (preMoves.length == 0 && !isPromoting) {
             setInitialPoint(element.getAttribute('data-square'));
@@ -54,9 +65,10 @@ function onMouseUp(e) {
                 initial: { x: initialPoint[0], y: initialPoint[1] },
                 final: { x: finalPoint[0], y: finalPoint[1] },
             }, true);
-            if (moveArrowBtn[0].innerHTML == 'Hide Moves') drawPossibleMoveArrows();
+            if ((!drill && moveArrowBtn[0].innerHTML == 'Hide Moves') || limitingDrillLine) drawPossibleMoveArrows();
         };
     };
+    clearBorderHighlights();
 };
 
 export function addListeners() {
@@ -65,10 +77,9 @@ export function addListeners() {
     document.addEventListener('mousedown', e=> {
         if (e.button == 2 && draggedPieceSource != null) {
             clearCanvas(dotAndCircleContext);
-            var $board = $('#myBoard');
-            $board.find('.' + squareClass).removeClass('border-highlight-light');
-            $board.find('.' + squareClass).removeClass('border-highlight-dark');
-            $board.find('.square-' + draggedPieceSource).removeClass('highlight-' + lightOrDark(draggedPieceSource));
+            setInitialPoint(null);
+            clearBorderHighlights();
+            $('#myboard').find('.square-' + draggedPieceSource).removeClass('highlight-' + lightOrDark(draggedPieceSource));
         };
     });
 
@@ -104,9 +115,11 @@ export function addListeners() {
     var containerName = (practice) ? 'move-list-container' : 'moves-container-study';
     var container = document.getElementsByClassName(containerName)[0];
     var moveName = (practice) ? 'played-move' : 'move';
-    container.addEventListener('click', e=> {
-        if (e.target.classList.contains(moveName)) whichClickUpdate(e.target);
-    });
+    if (!drill) {
+        container.addEventListener('click', e=> {
+            if (e.target.classList.contains(moveName)) whichClickUpdate(e.target);
+        });
+    };
     
     var board_wrapper = document.getElementById('board_wrapper');
 
@@ -127,39 +140,32 @@ export function addListeners() {
     // Record mouse coords on right-click mousedown
     board_wrapper.addEventListener("mousedown", onMouseDown);
     
-    // Draw arrow and add to memory on right-click mouseup
+    // Record mouse coords on mousemove
     board_wrapper.addEventListener("mousemove", onMouseMove);
     
-    // Record mouse coords on mousemove
+    // Draw arrow and add to memory on right-click mouseup
     board_wrapper.addEventListener("mouseup", onMouseUp);
 
-    // Erase right-click highlights/arrows and draw
-    // legal moves dots/circles on left-click mousedown
+    // Erase right-click highlights/arrows
     document.addEventListener('mousedown', e => {
         var ignore = document.getElementsByClassName('ignore');
         if ((Array.from(ignore)).includes(e.target)) return;
         if (e.button == 0) {
             clearRightClickHighlights(true);
             modArrows();
-            if (moveArrowBtn[0].innerHTML == 'Hide Moves' && !finished) drawPossibleMoveArrows();
-            if (isPromoting) {
-                if (!(e.target.classList.contains('promotionOption'))) clearPromotionOptions();
-                return;
-            };
-            if (!e.target.classList.contains(pieceClass) || getUnderscoredFen() != getBoardFen()) return;
-            let pieceColor = e.target.getAttribute('data-piece')[0];
-            if ((practice && !finished && pieceColor == config.orientation[0]) ||
-                (!practice && pieceColor == game.turn())) {
-                highlightBorder(leftClickDownSquare);
-                drawMoveOptions();
-            };
+            if ((!drill && moveArrowBtn[0].innerHTML == 'Hide Moves' && !finished) || limitingDrillLine) drawPossibleMoveArrows();
+            if (isPromoting && !(e.target.classList.contains('promotionOption'))) clearPromotionOptions();
         };
+        if (e.button == 2 && draggedPieceSource != null) $('#myBoard').find('.square-' + draggedPieceSource)
+                                                          .removeClass('highlight-' + lightOrDark(draggedPieceSource));
     });
 
     // Clear legal move dots and circles on mouseup
     document.addEventListener('mouseup', e => {
         if (e.button == 0) {
             clearCanvas(dotAndCircleContext);
+            if (draggedPieceSource != null) $('#myBoard').find('.square-' + draggedPieceSource)
+                                             .removeClass('highlight-' + lightOrDark(draggedPieceSource));
         };
     });
 };

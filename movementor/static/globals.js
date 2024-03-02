@@ -2,11 +2,12 @@ import { Chess } from 'https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/ch
 import { game } from './game.js';
 import { computerPauseTime, practice, create, startPosition } from './constants.js';
 import { toggleDifLineBtn } from './page_helpers.js';
-import { restartBtn, limitLineBtn, moveArrowBtn } from './buttons.js';
+import { restartBtn, limitLineBtn, moveArrowBtn, keepPlayingBtn } from './buttons.js';
 import { updateBoard, updateHintText, updateStatus } from './update.js';
 import { clearPremoveHighlights, highlightLastMove, highlightPremove } from './highlight.js';
 import { playMoveSelf } from './sounds.js';
 import { drawArrows, drawPossibleMoveArrows } from './arrow.js';
+import { limitingDrillLine } from './drill.js';
 
 export var lastFen = startPosition;
 export var possibleMoves = [];
@@ -33,7 +34,7 @@ export function setLastFen(fen=startPosition) {
 export function setPossibleMoves(moves) {
     possibleMoves = [];
     possibleMoveArrows = [];
-    if (!keepPlaying && !create) {
+    if (!keepPlaying && !create && typeof(moves[0]) != 'string') {
         for (let i = 0; i != moves.length; i++) {
             let source = moves[i].getAttribute('data-source');
             let target = moves[i].getAttribute('data-target');
@@ -43,8 +44,9 @@ export function setPossibleMoves(moves) {
     } else possibleMoves = moves;
     if (!create) toggleDifLineBtn(otherChoices.length == 0);
     finished = false;
+    if (!limitingDrillLine) return;
     drawArrows();
-    if (moveArrowBtn[0].innerHTML == 'Hide Moves') drawPossibleMoveArrows();
+    if (limitingDrillLine || moveArrowBtn[0].innerHTML == 'Hide Moves') drawPossibleMoveArrows();
 };
 
 export function setOtherChoices(moves, index) {
@@ -69,7 +71,7 @@ export function setFinished(done) {
     if (done && practice && !game.game_over()) {
         $('#skill-label')[0].style.display = 'inline-block';
         $('#skill-input')[0].style.display = 'inline-block';
-        $('#keepPlayingBtn')[0].style.display = 'inline-block';
+        keepPlayingBtn[0].style.display = 'inline-block';
     };
     if (preMoves.length != 0) modPreMoves('clear');
     drawArrows();

@@ -51,6 +51,16 @@ export function modRightClickedSquares(square='', add=true) {
     };
 };
 
+export function clearMoveHighlights() {
+    $board.find('.' + squareClass).removeClass('highlight-light');
+    $board.find('.' + squareClass).removeClass('highlight-dark');
+};
+
+export function clearBorderHighlights() {
+    $board.find('.' + squareClass).removeClass('border-highlight-light');
+    $board.find('.' + squareClass).removeClass('border-highlight-dark');
+};
+
 export function clearRightClickHighlights(erase=false) {
     $board.find('.' + squareClass).removeClass('highlight-right-click-light');
     $board.find('.' + squareClass).removeClass('highlight-right-click-dark');

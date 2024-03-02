@@ -30,11 +30,12 @@ SOFTWARE.
 
 */
 
-import { boardWidth, squareSize } from "./constants.js";
+import { boardWidth, squareSize, drill } from "./constants.js";
 import { changeResolution, resFactor, initialPoint, finalPoint, clearCanvas, calcCoords } from "./canvas_helper.js";
 import { getBoardFen } from "./getters.js";
 import { possibleMoveArrows } from "./globals.js";
 import { moveArrowBtn } from "./buttons.js";
+import { limitingDrillLine } from "./drill.js";
 
 export var arrowMemory = {};
 export var arrowCanvas = document.getElementById('arrow_canvas');
@@ -180,7 +181,7 @@ export function swapArrows() {
         arrowMemory[key] = newArrows;
     };
     drawArrows();
-    if (moveArrowBtn[0].innerHTML == 'Hide Moves') drawPossibleMoveArrows();
+    if ((!drill && moveArrowBtn[0].innerHTML == 'Hide Moves') || limitingDrillLine) drawPossibleMoveArrows();
 };
 
 export function drawPossibleMoveArrows() {

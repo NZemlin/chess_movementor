@@ -8,6 +8,7 @@ import { highlightLastMove,  highlightRightClickedSquares } from './highlight.js
 import { gameStart } from './update.js';
 import { swapCapturedPieces } from './captured_pieces.js';
 import { swapEvalBar, swapLines } from './eval_helpers.js';
+import { drill } from './constants.js';
 
 export var config = {
     draggable: true,
@@ -63,7 +64,7 @@ export function swapBoard() {
     highlightLastMove();
     highlightRightClickedSquares();
     swapEvalBar();
-    swapLines();
+    if (!drill) swapLines();
     swapCapturedPieces();
     swapArrows();
 };

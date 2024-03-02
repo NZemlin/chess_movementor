@@ -72,10 +72,12 @@ export function resizeCols() {
         boardWrapper.style.height = myBoard.offsetHeight + 'px';
         if (container.offsetWidth < 568) {
             config.showNotation = false;
-            if (evalBarBtn[0].innerHTML == 'Hide Eval') evalBarBtn[0].click();
-            if (lineBtn[0].innerHTML == 'Hide Lines') lineBtn[0].click();
-            evalBarBtn[0].style.display = 'none';
-            lineBtn[0].style.display = 'none';
+            if (!drill) {
+                if (evalBarBtn[0].innerHTML == 'Hide Eval') evalBarBtn[0].click();
+                if (lineBtn[0].innerHTML == 'Hide Lines') lineBtn[0].click();
+                evalBarBtn[0].style.display = 'none';
+                lineBtn[0].style.display = 'none';
+            };
         };
         newBoard();
         evalBar.style.height = myBoard.offsetHeight + 'px';

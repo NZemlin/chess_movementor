@@ -10,12 +10,12 @@ Add improve prep feature
     - Looks to extend lines that don't go as deep as most others
 Add consolidate feature
     - Play against multiple openings in a selected repertoire
-Add drill mode
-    - Load a random position on opponent's turn
-    - Make opponent's move
+Improve drill mode
+    - Allow limiting of lines (similar to practice mode)
     - Record number and location of mistakes
     - Record time (overall and keep track of slower moves)
 
+Implement traversal modals
 Implement consolidation of displayed lines with expanding clicks
 Upgrade stockfish
 Make register/login system more robust

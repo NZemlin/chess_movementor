@@ -1,19 +1,20 @@
 import { config, game, isOppTurn, swapBoard, resetBoard } from './game.js';
 import { copyBtn, restartBtn, difLineBtn, limitLineBtn, swapBtn, evalBarBtn, lineBtn, hintBtn, keepPlayingBtn, blitzBtn, moveArrowBtn } from './buttons.js';
 import { otherChoices, isBlitzing, freePlay, curEval, setLastFen, setPossibleMoves, setFinished, setKeepPlaying, setIsBlitzing, setLimitedLineId, setEngineLevel, modPreMoves } from './globals.js';
-import { practice, study, startPosition, startElement, computerPauseTime } from './constants.js';
+import { practice, study, drill, startPosition, startElement, computerPauseTime } from './constants.js';
 import { scrollIfNeeded, resizeCols } from './visual_helpers.js';
 import { timeoutBtn, resetButtons, resetMoveList } from './page_helpers.js';
 import { getSelected, getPlayedSelected, getUnderscoredFen, getBoardFen } from './getters.js';
 import { drawArrows, drawPossibleMoveArrows } from './arrow.js';
 import { highlightLastMove, highlightRightClickedSquares, setHighlightedSquares, modRightClickedSquares } from './highlight.js';
 import { updateBoard, updateGameState, gameStart } from './update.js';
-import { makeComputerMove } from './move.js';
+import { setFinishedLimitedLine, makeComputerMove } from './move.js';
 import { playMoveSelf, playMoveOpponent, playSound } from './sounds.js';
 import { displayEvaluation, tryEvaluation } from './eval.js';
 import { createNewEngine } from './eval_helpers.js';
 import { addListeners } from './listeners.js';
 import { updateCapturedPieces } from './captured_pieces.js';
+import { loadRandomDrill, limitDrillLine, limitingDrillLine } from './drill.js';
 
 export var lastKeyCode;
 
@@ -24,7 +25,7 @@ copyBtn.on('click', function() {
 });
 
 restartBtn.on('click', function() {
-    console.clear();
+    // console.clear();
     resetMoveList();
     resetBoard();
     resetButtons();
@@ -33,6 +34,7 @@ restartBtn.on('click', function() {
     if (practice) modPreMoves('clear');
     gameStart();
     timeoutBtn(this, .1);
+    setFinishedLimitedLine(false);
     if (practice) window.setTimeout(makeComputerMove, computerPauseTime);
 });
   
@@ -47,20 +49,35 @@ difLineBtn.on('click', function () {
     $('#keepPlayingBtn')[0].style.display = 'none';
     setPossibleMoves(otherChoices);
     this.disabled = true;
+    limitLineBtn[0].disabled = true;
     window.setTimeout(makeComputerMove, computerPauseTime);
 });
 
 limitLineBtn.on('click', function () {
-    setLimitedLineId((this.innerHTML == 'Limit Line') ? getSelected().id : '');
-    this.innerHTML = this.innerHTML == 'Limit Line' ? 'Any Line' : 'Limit Line';
-    restartBtn[0].click();
+    if (drill) {
+        if (this.innerHTML == 'Limit Line') {
+            this.innerHTML = 'Set Line';
+            limitDrillLine();
+        } else if (this.innerHTML == 'Set Line') {
+            this.innerHTML = 'Any Line';
+            limitDrillLine();
+        } else {
+            this.innerHTML = 'Limit Line';
+            loadRandomDrill('reset');
+        };
+    } else {
+        this.innerHTML = this.innerHTML == 'Limit Line' ? 'Any Line' : 'Limit Line';
+        setLimitedLineId((this.innerHTML == 'Any Line') ? getSelected().id : '');
+        restartBtn[0].click();
+    };
     timeoutBtn(this, .1);
 });
 
 swapBtn.on('click', function () {
     if (practice) modPreMoves('clear');
     swapBoard();
-    if (practice && getBoardFen() == getUnderscoredFen()) window.setTimeout(makeComputerMove, computerPauseTime);
+    if (drill && !limitingDrillLine) loadRandomDrill();
+    if ((practice || limitingDrillLine) && getBoardFen() == getUnderscoredFen()) window.setTimeout(makeComputerMove, computerPauseTime);
     timeoutBtn(this);
 });
 
@@ -130,11 +147,15 @@ moveArrowBtn.on('click', function () {
 });
 
 export function whichCheckKey() {
-    return (practice) ? checkKeyPractice : checkKeyStudy;
+    if (practice) return checkKeyPractice;
+    else if (study) return checkKeyStudy;
+    else return;
 };
 
 export function whichClickUpdate(element) {
-    return (practice) ? clickUpdatePractice(element) : clickUpdateStudy(element);
+    if (practice) return clickUpdatePractice(element);
+    else if (study) return clickUpdateStudy(element);
+    else return;
 };
 
 export function clickUpdatePractice(element) {
@@ -173,22 +194,41 @@ export function checkKeyPractice(e) {
 };
 
 export function nearestMainlineParent(element) {
-    var stop = element.getAttribute('data-mainline') === 'true';
-    var initialVariationStart = element.getAttribute('data-variation-start') === 'true'
+    let stop = false;
+    let color = element.getAttribute('data-color');
+    let turn = element.getAttribute('data-turn');
     while (!stop) {
         var fen = element.getAttribute('data-parent');
         element = document.querySelectorAll("[data-own='" + fen + "']")[0];
-        stop = ((!initialVariationStart && element.getAttribute('data-variation-start') === 'true') ||
-                element.getAttribute('data-mainline') === 'true');
+        stop = (element.getAttribute('data-variation-start') === 'true' ||
+                element.getAttribute('data-mainline') === 'true') &&
+                ((color != element.getAttribute('data-color')) ||
+                 (turn != element.getAttribute('data-turn')));
     };
-    return [element];
+    return element;
+};
+
+export function nearestRealParent(element) {
+    let color = element.getAttribute('data-color');
+    while (true) {
+        var fen = element.getAttribute('data-parent');
+        element = document.querySelectorAll("[data-own='" + fen + "']")[0];
+        if (color != element.getAttribute('data-color')) break;
+    };
+    return element;
 };
 
 function requestedFen(keyCode, old) {
     var fen, msg;
     switch (keyCode) {
         case 32:
+            fen = nearestMainlineParent(getSelected()).getAttribute('data-own');
+            msg = 'No parent to current selected move';
+            break;
         case 37:
+            fen = nearestRealParent(getSelected()).getAttribute('data-own');
+            msg = 'No parent to current selected move';
+            break;
         case 38:
             if (old == document.getElementById('0')) {
                 fen = startPosition;
@@ -245,10 +285,7 @@ export function checkKeyStudy(e) {
         var result = requestedFen(e.keyCode, old[0]);
         if (result[0] == startPosition || result[0] == null) return;
         var element = document.querySelectorAll("[data-own='" + result[0] + "']");
-        if (element[0] != old[0]) {
-            if (e.keyCode == 32) element = nearestMainlineParent(element[0]);
-            clickUpdateStudy(element[0]);
-        };
+        if (element[0] != old[0]) clickUpdateStudy(element[0]);
         // } else console.log(result[1]);
     };
 };
