@@ -1,6 +1,6 @@
 import { Chess } from 'https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.js';
 import { game } from './game.js';
-import { computerPauseTime, practice, create, startPosition } from './constants.js';
+import { computerPauseTime, practice, edit, startPosition } from './constants.js';
 import { toggleDifLineBtn } from './page_helpers.js';
 import { restartBtn, limitLineBtn, moveArrowBtn, keepPlayingBtn } from './buttons.js';
 import { updateBoard, updateHintText, updateStatus } from './update.js';
@@ -34,7 +34,7 @@ export function setLastFen(fen=startPosition) {
 export function setPossibleMoves(moves) {
     possibleMoves = [];
     possibleMoveArrows = [];
-    if (!keepPlaying && !create && typeof(moves[0]) != 'string') {
+    if (!keepPlaying && !edit && typeof(moves[0]) != 'string') {
         for (let i = 0; i != moves.length; i++) {
             let source = moves[i].getAttribute('data-source');
             let target = moves[i].getAttribute('data-target');
@@ -42,7 +42,7 @@ export function setPossibleMoves(moves) {
             possibleMoves.push(moves[i].getAttribute('data-san'));
         };
     } else possibleMoves = moves;
-    if (!create) toggleDifLineBtn(otherChoices.length == 0);
+    if (!edit) toggleDifLineBtn(otherChoices.length == 0);
     finished = false;
     if (!limitingDrillLine) return;
     drawArrows();

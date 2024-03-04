@@ -7,7 +7,7 @@ class PGNWriter():
         self.functions = {
             'study': self.study,
             'practice': self.practice,
-            'create': self.create,
+            'edit': self.edit,
             'drill': self.drill,
         }
         
@@ -15,19 +15,19 @@ class PGNWriter():
         for move_info in self.parsed_dict[name]:
             print(move_info.space, move_info.move_num_san, end='')
 
-    def populate_shared(self, name, moves, page):
+    def populate_shared(self, name, pgn, moves, page):
         h1_title = f'{page.capitalize()} the {name}'
         h1_link = ''
         if name == 'Free Play':
-            if page == 'practice':
-                h1_title = 'Play Against Stockfish'
-                h1_link = '<a href="/create_analysis">Create an Analysis</a>'
-            else:
-                h1_title = 'Create an Analysis'
-                h1_link = '<a href="/free_play/practice">Play Against Stockfish</a>'
+            h1_title = 'Play Against Stockfish'
+            h1_link = '<a href="/new/edit">Create an Opening</a>'
+        elif name == 'new':
+            h1_title = 'Create an Opening'
+            h1_link = '<a href="/free_play/practice">Play Against Stockfish</a>'
         else:
-            for pg in [pg for pg in ['study', 'practice', 'drill'] if pg != page]:
-                h1_link += f'<a href="/{name}/{pg}">{pg.capitalize()}</a>\n'
+            for i, pg in enumerate([pg for pg in ['study', 'practice', 'drill', 'edit'] if pg != page]):
+                bar = '|' if i != 2 else ''
+                h1_link += f'<a href="/{name}/{pg}">{pg.capitalize()}</a> {bar} '
         self.shared['header_html'] = f'''
             <div class="container">
                 <div class="row">
@@ -40,6 +40,8 @@ class PGNWriter():
                 </div>
             </div>
             '''
+        self.shared['page'] = f'<div hidden id="page" data-page={page}></div>'
+        self.shared['pgn'] = f'''<div hidden id="pgn" data-pgn={pgn.replace(' ', '_')}></div>'''
         start_position = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR_w_KQkq_-_0_1'
         hidden_move_class = 'played-selected' if page == 'practice' else 'selected'
         child = moves[0].fen_dict['own'] if moves else ''
@@ -97,13 +99,12 @@ class PGNWriter():
                 <h2 id="status"></h2>
             </div>
         '''
-        copy_button = 'PGN' if page == 'practice' else 'FEN'
         self.shared['shared_buttons'] = f'''
             <div class="empty-row">
                 <button id="evalBarBtn" class="ignore">Hide Eval</button>
                 <button id="lineBtn" class="ignore">Hide Lines</button>
                 <button id="moveArrowBtn" class="ignore">Show Moves</button>
-                <button id="copyBtn" class="ignore">Copy {copy_button}</button>
+                <button id="copyBtn" class="ignore">Copy PGN</button>
                 <button id="swapBtn" class="ignore">Swap</button>
                 <button id="restartBtn">Restart</button>
             </div>
@@ -159,7 +160,8 @@ class PGNWriter():
                 study_moves += f'''<span> &nbsp; </span>'''
         return f'''
                 {modal}
-                <div hidden id="page" data-page={page}></div>
+                {self.shared['page']}
+                {self.shared['pgn']}
                     <div class="container">
                         <div class="row">
                             <div class="eval-col">
@@ -285,7 +287,8 @@ class PGNWriter():
         '''
         return f'''
                 {modal}
-                <div hidden id="page" data-page={page}></div>
+                {self.shared['page']}
+                {self.shared['pgn']}
                     <div class="container">
                         <div class="row">
                             <div class="eval-col">
@@ -316,7 +319,7 @@ class PGNWriter():
             </div>
         '''
     
-    def create(self, name, moves, page):
+    def edit(self, name, moves, page):
         modal = '''
             <div id="myModal" class="modal">
                 <div class="modal-content">
@@ -338,13 +341,14 @@ class PGNWriter():
                 <button id="commentBtn">Save</button>
             </div>
         '''
-        create_moves = f'''
+        edit_moves = f'''
             <div class="row moves-container-study">
                 {self.shared['hidden_move']}
         '''
         return f'''
                 {modal}
-                <div hidden id="page" data-page={page}></div>
+                {self.shared['page']}
+                {self.shared['pgn']}
                     <div class="container">
                         <div class="row">
                             <div class="eval-col">
@@ -358,7 +362,7 @@ class PGNWriter():
                                 {self.shared['lines_table']}
                                 {self.shared['status']}
                                 {comment}
-                                {create_moves}
+                                {edit_moves}
                             </div>
                         </div>
                     </div>
@@ -421,7 +425,8 @@ class PGNWriter():
         '''
         return f'''
                 {modal}
-                <div hidden id="page" data-page={page}></div>
+                {self.shared['page']}
+                {self.shared['pgn']}
                     <div class="container">
                         <div class="row">
                             <div class="eval-col">
@@ -463,8 +468,8 @@ class PGNWriter():
                    </span>
                 '''
     
-    def write_html(self, name, moves, page):
-        self.populate_shared(name, moves, page)
+    def write_html(self, name, pgn, moves, page):
+        self.populate_shared(name, pgn, moves, page)
         return '''
             {% extends "openings/chess.html" %}
 

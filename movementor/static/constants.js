@@ -1,7 +1,7 @@
 export const study = document.getElementById('page').getAttribute('data-page') == 'study';
 export const practice = document.getElementById('page').getAttribute('data-page') == 'practice';
 export const drill = document.getElementById('page').getAttribute('data-page') == 'drill';
-export const create = document.getElementById('page').getAttribute('data-page') == 'create';
+export const edit = document.getElementById('page').getAttribute('data-page') == 'edit';
 export const boardWidth = 700;
 export const squareSize = 84;
 export const startPosition = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR_w_KQkq_-_0_1';

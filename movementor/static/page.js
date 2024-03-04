@@ -19,9 +19,14 @@ import { loadRandomDrill, limitDrillLine, limitingDrillLine } from './drill.js';
 export var lastKeyCode;
 
 copyBtn.on('click', function() {
-    var text = (study) ? game.fen() : game.pgn();
+    if (this.innerHTML == 'Copied') return;
+    var pgn = document.getElementById('pgn').getAttribute('data-pgn');
+    var text = practice ? game.pgn() : pgn.replace(/_/g, ' ');
     navigator.clipboard.writeText(text);
-    timeoutBtn(this, .1);
+    this.innerHTML = 'Copied';
+    window.setTimeout(function() {
+        copyBtn[0].innerHTML = 'Copy PGN';
+    }, 1000);
 });
 
 restartBtn.on('click', function() {

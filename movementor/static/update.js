@@ -1,6 +1,6 @@
 import { board, game } from './game.js';
 import { possibleMoves, keepPlaying, setPossibleMoves, setFinished, finished, freePlay, setKeepPlaying, draggedPieceSource, limitedLineId } from './globals.js';
-import { practice, create, drill } from './constants.js';
+import { practice, edit, drill } from './constants.js';
 import { recolorNotation, fixStudyRows } from './visual_helpers.js';
 import { getLastMoveElement, getNextMoveColor } from './getters.js';
 import { highlightLastMove } from './highlight.js';
@@ -32,7 +32,7 @@ function updateAllowedMoves() {
     if (limitedLineId != '' && !finishedLimitedLine) {
         setPossibleMoves([nextLimitedMove]);
         return;
-    } else if (keepPlaying || create) {
+    } else if (keepPlaying || edit) {
         setPossibleMoves(game.moves());
         return;
     };

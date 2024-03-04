@@ -1,22 +1,20 @@
-Implement PGN builder
-    - Allow moves to be played and displayed
-    - Allow comments to be saved to current move/position
-    - Allow board to restart
-    - Allow analysis to be named and saved
-Implement analysis editor
 Implement Chess.com account pairing and analysis of played games to selected repertoire
 Add improve prep feature
     - Looks to fill holes by suggesting to answer popular moves that aren't included
     - Looks to extend lines that don't go as deep as most others
 Add consolidate feature
     - Play against multiple openings in a selected repertoire
+    
+Implement PGN editor
+    - Allow moves to be recorded/displayed/updated
+    - Allow comments/arrows/highlights to be recorded
+    - Allow opening to be named and saved
+
 Improve drill mode
-    - Allow limiting of lines (similar to practice mode)
     - Record number and location of mistakes
     - Record time (overall and keep track of slower moves)
 
 Implement traversal modals
-Implement consolidation of displayed lines with expanding clicks
 Upgrade stockfish
 Make register/login system more robust
 Clean up css

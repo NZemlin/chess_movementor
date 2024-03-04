@@ -35,9 +35,9 @@ def get_opening(name, check_author=True):
 def parse_and_write_pgn(name, pgn, page):
     if pgn:
         parser = PGNParser(chess.pgn.read_game(io.StringIO(pgn)), [])
-        return writer.write_html(name, parser.move_list, page)
+        return writer.write_html(name, pgn, parser.move_list, page)
     else:
-        return writer.write_html(name, [], page)
+        return writer.write_html(name, pgn, [], page)
 
 @bp.route('/', methods=('GET', 'POST',))
 @login_required
@@ -49,6 +49,9 @@ def index():
 
         if not title:
             error += 'Name is required.'
+
+        if title == 'new':
+            error += 'Choose a different name.'
             
         if not pgn:
             error += 'PGN is required.'
@@ -140,9 +143,9 @@ def drill(name):
 
     return render_template_string(parse_and_write_pgn(opening['title'], opening['pgn'], 'drill'))
 
-@bp.route('/create_analysis', methods=('GET', 'POST'))
+@bp.route('/<string:name>/edit', methods=('GET', 'POST'))
 @login_required
-def create_analysis():
+def edit(name):
     if request.method == 'POST':
         return redirect(url_for('openings.index'))
     
@@ -151,7 +154,11 @@ def create_analysis():
     # resp.headers['Cross-Origin-Embedder-Policy'] = 'require-corp'
     # return resp
 
-    return render_template_string(parse_and_write_pgn('', '', 'create'))
+    if name == 'new':
+        return render_template_string(parse_and_write_pgn(name, '', 'edit'))
+    else:
+        opening = get_opening(name)
+        return render_template_string(parse_and_write_pgn(opening['title'], opening['pgn'], 'edit'))
 
 @bp.route('/<string:name>/static/img/chesspieces/wikipedia/<string:image>', methods=('GET', 'POST'))
 @login_required
