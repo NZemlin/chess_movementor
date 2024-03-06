@@ -1,5 +1,5 @@
 import { config, newBoard } from "./game.js";
-import { study, notationClass } from "./constants.js";
+import { study, edit, notationClass } from "./constants.js";
 import { lightOrDark } from "./highlight.js";
 import { lastKeyCode } from "./page.js";
 import { evalBarBtn, lineBtn } from './buttons.js';
@@ -8,7 +8,7 @@ import { dotAndCircleCanvas } from "./dot_circle.js";
 
 export function scrollIfNeeded(element) {
     var observer;
-    var area = (study) ? ".moves-container-study" : ".move-list-container";
+    var area = (study || edit) ? ".moves-container-study" : ".move-list-container";
     var container = document.querySelector(area);
     var options = {
         root: container,

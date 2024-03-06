@@ -77,13 +77,13 @@ export function drawMoveOptions(fen='') {
     let scalar = (draggedMoves[0].promotion != null) ? 4 : 1;
     if ((!isOppTurn() && fen == getUnderscoredFen().split('_')[0]) || !practice) {    
         for (let i = 0; scalar*i < draggedMoves.length; i++) {
-            if (game.get(draggedMoves[scalar*i].to) != null) drawCircle(draggedMoves[scalar*i].to, squareSize/2 - 2.5);
+            if (game.get(draggedMoves[scalar*i].to)) drawCircle(draggedMoves[scalar*i].to, squareSize/2 - 2.5);
             else drawDot(draggedMoves[scalar*i].to, squareSize/6 - 1);
         };
     } else {
         let g = (preMoveGame == null) ? game : preMoveGame;
         for (let i = 0; scalar*i < draggedMoves.length; i++) {
-            if (g.get(draggedMoves[scalar*i]) != null) drawCircle(draggedMoves[scalar*i].slice(0, 2), squareSize/2 - 2.5);
+            if (g.get(draggedMoves[scalar*i])) drawCircle(draggedMoves[scalar*i].slice(0, 2), squareSize/2 - 2.5);
             else drawDot(draggedMoves[scalar*i].slice(0, 2), squareSize/6 - 1);
         };
     };

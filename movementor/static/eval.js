@@ -26,7 +26,7 @@ timer.onmessage = function (event) {
 export function displayEvaluation(dataEval) {
     // dataEval is always from white's perspective
     var mate, evalFloat, blackBarHeight;
-    if (game.game_over()) {
+    if (game.isGameOver()) {
         if (dataEval.length == 3) {
             evalFloat = (dataEval[0] == '1') ? 100 : -100;
             if (dataEval[0] == '1') blackBarHeight = (config.orientation == 'white') ? 0 : 100;
@@ -68,7 +68,7 @@ export function displayEvaluation(dataEval) {
         evalPopup.style.color = 'white';
         evalPopup.style.border = 'none';
     };
-    if (game.game_over()) {
+    if (game.isGameOver()) {
         evalNumOwn.style.color = (config.orientation == 'white') ? '#403d39' : 'white';
         evalNumOpp.style.color = (config.orientation == 'white') ? 'white' : '#403d39';
         let fractionText = '<sup>1</sup>&frasl;<sub>2</sub>';
@@ -182,8 +182,8 @@ export function playMessage(event) {
 };
 
 export function tryEvaluation() {
-    if (game.game_over()) {
-        if (game.in_checkmate()) {
+    if (game.isGameOver()) {
+        if (game.isCheckmate()) {
             if (getNextMoveColor() == 'black') setCurEval('1-0');
             else setCurEval('0-1');
         } else if (game.in_draw()) setCurEval('1/2-1/2');

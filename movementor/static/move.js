@@ -78,7 +78,7 @@ export function setPlayedMoveInfo(move) {
 };
 
 export function makeComputerMove() {
-    if (finished || game.game_over() || !isOppTurn()) return;
+    if (finished || game.isGameOver() || !isOppTurn()) return;
     if (keepPlaying) {
         makeEngineMove();
         return;
@@ -112,7 +112,7 @@ export function attemptPreMove() {
 
 export function onDragStart(source, piece, position, orientation) {
     // Return false if game is over or promotion is being attempted
-    if (game.game_over() || isPromoting) return false;
+    if (game.isGameOver() || isPromoting) return false;
     if (!practice && (!drill || limitingDrillLine)) {
         // Return false if picking up wrong side to move
         if ((game.turn() === 'w' && piece.search(/^b/) !== -1) ||
@@ -170,7 +170,7 @@ export function handleLegalMove(move, source, target, preMove) {
 };
 
 export function validateMove(move, source, target, before, checkedPromo, preMove) {
-    if (move === null || !(possibleMoves.includes(move.san))) {
+    if (move == null || !(possibleMoves.includes(move.san))) {
         if (!practice && finished && move != null) {
             setKeepPlaying(true);
             handleLegalMove(move, source, target, false);
@@ -191,7 +191,7 @@ export function validateMove(move, source, target, before, checkedPromo, preMove
             $('#myBoard').find('.square-' + source).removeClass('highlight-' +  lightOrDark(source));
             if (preMove) modPreMoves('clear');
             if (!drill) {
-                if (!study) limitLineBtn[0].disabled = false;
+                if (practice) limitLineBtn[0].disabled = false;
                 restartBtn[0].disabled = false;
             };
             return 'snapback';
@@ -217,7 +217,7 @@ export function onDrop(source, target) {
         setDraggedMoves([]);
     } else {
         if (!drill) {
-            if (!study) limitLineBtn[0].disabled = true;
+            if (practice) limitLineBtn[0].disabled = true;
             restartBtn[0].disabled = true;
         };
         var before = game.fen();

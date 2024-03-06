@@ -32,7 +32,7 @@ function updateAllowedMoves() {
     if (limitedLineId != '' && !finishedLimitedLine) {
         setPossibleMoves([nextLimitedMove]);
         return;
-    } else if (keepPlaying || edit) {
+    } else if (keepPlaying) {
         setPossibleMoves(game.moves());
         return;
     };
@@ -68,9 +68,9 @@ export function updateStatus() {
     // console.log('Updating status');
     var nextColor = getNextMoveColor().charAt(0).toUpperCase() + getNextMoveColor().slice(1);
     var status = nextColor + ' to move';
-    if (game.in_checkmate()) status = 'Game over, ' + nextColor + ' is in checkmate.';
-    else if (game.in_draw()) status = 'Game over, drawn position';
-    else if (game.in_check()) status += ', ' + nextColor + ' is in check';
+    if (game.isCheckmate()) status = 'Game over, ' + nextColor + ' is in checkmate.';
+    else if (game.isDraw()) status = 'Game over, drawn position';
+    else if (game.isCheck()) status += ', ' + nextColor + ' is in check';
     if (finished) status = '(This line is finished) ' + status;
     else if (keepPlaying && !freePlay) status = '(Out of prepared opening) ' + status;
     document.getElementById('status').innerHTML = status;

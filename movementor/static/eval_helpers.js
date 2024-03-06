@@ -1,4 +1,4 @@
-import { Chess } from 'https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.js';
+import { Chess } from './chess.js';
 import { curEval, keepPlaying, engineLevel } from './globals.js';
 import { config } from './game.js';
 import { getBoardFen } from './getters.js';

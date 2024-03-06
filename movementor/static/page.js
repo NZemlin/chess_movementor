@@ -1,7 +1,7 @@
 import { config, game, isOppTurn, swapBoard, resetBoard } from './game.js';
 import { copyBtn, restartBtn, difLineBtn, limitLineBtn, swapBtn, evalBarBtn, lineBtn, hintBtn, keepPlayingBtn, blitzBtn, moveArrowBtn } from './buttons.js';
-import { otherChoices, isBlitzing, freePlay, curEval, setLastFen, setPossibleMoves, setFinished, setKeepPlaying, setIsBlitzing, setLimitedLineId, setEngineLevel, modPreMoves } from './globals.js';
-import { practice, study, drill, startPosition, startElement, computerPauseTime } from './constants.js';
+import { pgn, otherChoices, isBlitzing, freePlay, curEval, setLastFen, setPossibleMoves, setFinished, setKeepPlaying, setIsBlitzing, setLimitedLineId, setEngineLevel, modPreMoves } from './globals.js';
+import { practice, study, drill, edit, startPosition, startElement, computerPauseTime } from './constants.js';
 import { scrollIfNeeded, resizeCols } from './visual_helpers.js';
 import { timeoutBtn, resetButtons, resetMoveList } from './page_helpers.js';
 import { getSelected, getPlayedSelected, getUnderscoredFen, getBoardFen } from './getters.js';
@@ -15,13 +15,13 @@ import { createNewEngine } from './eval_helpers.js';
 import { addListeners } from './listeners.js';
 import { updateCapturedPieces } from './captured_pieces.js';
 import { loadRandomDrill, limitDrillLine, limitingDrillLine } from './drill.js';
+import { populateGames } from './edit.js';
 
 export var lastKeyCode;
 
 copyBtn.on('click', function() {
     if (this.innerHTML == 'Copied') return;
-    var pgn = document.getElementById('pgn').getAttribute('data-pgn');
-    var text = practice ? game.pgn() : pgn.replace(/_/g, ' ');
+    var text = practice ? game.pgn() : pgn;
     navigator.clipboard.writeText(text);
     this.innerHTML = 'Copied';
     window.setTimeout(function() {
@@ -153,13 +153,13 @@ moveArrowBtn.on('click', function () {
 
 export function whichCheckKey() {
     if (practice) return checkKeyPractice;
-    else if (study) return checkKeyStudy;
+    else if (study || edit) return checkKeyStudy;
     else return;
 };
 
 export function whichClickUpdate(element) {
     if (practice) return clickUpdatePractice(element);
-    else if (study) return clickUpdateStudy(element);
+    else if (study || edit) return clickUpdateStudy(element);
     else return;
 };
 
@@ -214,6 +214,7 @@ export function nearestMainlineParent(element) {
 };
 
 export function nearestRealParent(element) {
+    if (element.id == '0') return document.getElementById(startElement);
     let color = element.getAttribute('data-color');
     while (true) {
         var fen = element.getAttribute('data-parent');
@@ -223,28 +224,34 @@ export function nearestRealParent(element) {
     return element;
 };
 
+function returnToStart() {
+    game.load(startPosition.replace(/_/g, ' '));
+    updateBoard(game.fen(), false);
+    highlightRightClickedSquares();
+    drawArrows();
+    updateGameState('', '', '', true);
+    startElement.classList.add('selected');
+    document.getElementById('comment').innerHTML = 'Comment:';
+    (config.orientation == 'w') ? playMoveOpponent() : playMoveSelf();
+    return startPosition;
+};
+
 function requestedFen(keyCode, old) {
     var fen, msg;
     switch (keyCode) {
         case 32:
-            fen = nearestMainlineParent(getSelected()).getAttribute('data-own');
+            if (old == document.getElementById('0')) fen = returnToStart();
+            else fen = nearestMainlineParent(getSelected()).getAttribute('data-own');
             msg = 'No parent to current selected move';
             break;
         case 37:
-            fen = nearestRealParent(getSelected()).getAttribute('data-own');
+            if (old == document.getElementById('0')) fen = returnToStart();
+            else fen = nearestRealParent(getSelected()).getAttribute('data-own');
             msg = 'No parent to current selected move';
             break;
         case 38:
-            if (old == document.getElementById('0')) {
-                fen = startPosition;
-                game.load(fen.replace(/_/g, ' '));
-                updateBoard(game.fen(), false);
-                highlightRightClickedSquares();
-                drawArrows();
-                updateGameState('', '', '', true);
-                startElement.classList.add('selected');
-                (config.orientation == 'w') ? playMoveOpponent() : playMoveSelf();
-            } else fen = old.getAttribute('data-parent');
+            if (old == document.getElementById('0')) fen = returnToStart();
+            else fen = old.getAttribute('data-parent');
             msg = 'No parent to current selected move';
             break;
         case 39:
@@ -272,7 +279,7 @@ export function clickUpdateStudy(element) {
     drawArrows();
     scrollIfNeeded(element);
     var comment = element.getAttribute('data-comment').replace(/_/g, ' ');
-    document.getElementById('comment').innerHTML = 'Comment: ' + ((comment != 'none') ? comment : '');
+    document.getElementById('comment').innerHTML = 'Comment:' + ((comment != 'none') ? ' ' + comment : '');
     var uci = element.getAttribute('data-uci');
     setKeepPlaying(false);
     updateGameState(element.getAttribute('data-san'), uci.slice(0, 2), uci.slice(2, 4));
@@ -295,12 +302,15 @@ export function checkKeyStudy(e) {
     };
 };
 
-if (freePlay && practice) {
-    evalBarBtn[0].click();
-    lineBtn[0].click();
-    document.getElementsByClassName('practice-buttons')[0].style.display = 'none';
-    keepPlayingBtn[0].innerHTML = 'Play';
+if (practice) {
+    moveArrowBtn[0].style.display = 'none';
+    if (freePlay) {
+        evalBarBtn[0].click();
+        lineBtn[0].click();
+        document.getElementsByClassName('practice-buttons')[0].style.display = 'none';
+        keepPlayingBtn[0].innerHTML = 'Play';
+    };
 };
-if (practice) moveArrowBtn[0].style.display = 'none';
+if (edit) populateGames();
 resizeCols();
 addListeners();
