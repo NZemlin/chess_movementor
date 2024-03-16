@@ -20,7 +20,6 @@ Make register/login system more robust
 Clean up css
 
 Sometimes uciToSan outputs null moves?
-Sometimes displayed lines aren't sorted by eval strength?
 
 Improve visuals
     - Make responsive

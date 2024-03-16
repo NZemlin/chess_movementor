@@ -1,4 +1,4 @@
-import { practice, study, drill, startElement } from "./constants.js";
+import { practice, study, edit, startElement } from "./constants.js";
 import { updateHintText } from "./update.js";
 import { getPlayedSelected, getSelected } from "./getters.js";
 import { limitedLineId, setFinished, setKeepPlaying } from "./globals.js";
@@ -13,7 +13,7 @@ export function timeoutBtn(btn, time=1) {
 };
 
 export function toggleDifLineBtn(done) {
-    if (study || drill) return;
+    if (!practice) return;
     var difLineBtn = document.getElementById('difLineBtn');
     difLineBtn.innerHTML = done ? 'No Other Lines' : 'Different Line';
     difLineBtn.disabled = done || limitedLineId != '';
@@ -38,8 +38,8 @@ export function resetButtons() {
 };
 
 export function resetMoveList() {
-    if (study) {
-        getSelected().classList.remove('selected');
+    if (study || edit) {
+        if (getSelected() != null) getSelected().classList.remove('selected');
         startElement.classList.add('selected');
         return;
     };
@@ -62,4 +62,13 @@ export function resetMoveList() {
     };
     getPlayedSelected().classList.remove('played-selected');
     startElement.classList.add('played-selected');
+};
+
+export function findClosestSmallerElementId(beforeId, elements) {
+    let max = 0;
+    for (let i = 0; i != elements.length; i++) {
+        let curId = parseInt(elements[i].id);
+        if (beforeId > curId && curId > max) max = curId;
+    };
+    return document.getElementById(String(max));
 };

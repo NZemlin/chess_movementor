@@ -11,6 +11,7 @@ import { createNewEngine } from './eval_helpers.js';
 import { finishedLimitedLine, nextLimitedMove } from './move.js';
 import { loadRandomDrill } from './drill.js';
 import { hintBtn, limitLineBtn } from './buttons.js';
+import { lastKeyCode } from './page.js';
 
 export function updateBoard(fen, animation) {
     board.position(fen, animation);
@@ -18,13 +19,35 @@ export function updateBoard(fen, animation) {
     if (piece != null) piece.style.display = 'none';
 };
 
-function updateSelectedMoveElement() {
+function updateSelectedMoveElement(elementId) {
     if (keepPlaying) return;
     // console.log('Updating selected move element');
     var old = document.getElementsByClassName('selected');
-    if (old.length != 0) old[0].classList.remove('selected');
-    var element = getLastMoveElement();
-    element.classList.add('selected');
+    if (old.length != 0) {
+        var beforeId = parseInt(old[0].id);
+        old[0].classList.remove('selected');
+    };
+    if (elementId != null) {
+        document.getElementById(elementId).classList.add('selected');
+        return;
+    }
+    let dir;
+    switch (lastKeyCode) {
+        case 32:
+        case 37:
+        case 38:
+            dir = 'less';
+            break;
+        case 39:
+        case 40:
+            dir = 'greater';
+            break;
+        default:
+            dir = '';
+            break;
+    };
+    var element = getLastMoveElement(beforeId, dir);
+    if (element != null) element.classList.add('selected');
 };
 
 function updateAllowedMoves() {
@@ -38,6 +61,10 @@ function updateAllowedMoves() {
     };
     var curMoves = [];
     var element = getLastMoveElement();
+    if (element == null && edit) {
+        setPossibleMoves(game.moves());
+        return;
+    };
     var fen = element.getAttribute('data-child-1');
     if (fen == element.getAttribute('data-own')) {
         setFinished(true);
@@ -76,10 +103,10 @@ export function updateStatus() {
     document.getElementById('status').innerHTML = status;
 };
 
-export function updateGameState(move='', source='', target='', mute=false, preMove=false) {
+export function updateGameState(move='', source='', target='', mute=false, preMove=false, elementId=null) {
     if (!mute) playSound(move);
     if (!preMove) highlightLastMove(source, target);
-    updateSelectedMoveElement();
+    updateSelectedMoveElement(elementId);
     updateCapturedPieces();
     updateAllowedMoves();
     updateHintText();

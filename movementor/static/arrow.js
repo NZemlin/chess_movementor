@@ -146,6 +146,7 @@ export function drawArrows() {
     for (let i = 0; i < arrows.length; i++) {
         drawArrow(arrows[i].initial, arrows[i].final);
     };
+    if ((!drill && moveArrowBtn[0].innerHTML == 'Hide Moves') || limitingDrillLine) drawPossibleMoveArrows();
 };
 
 export function modArrows(arrow='', add=true) {
@@ -181,7 +182,6 @@ export function swapArrows() {
         arrowMemory[key] = newArrows;
     };
     drawArrows();
-    if ((!drill && moveArrowBtn[0].innerHTML == 'Hide Moves') || limitingDrillLine) drawPossibleMoveArrows();
 };
 
 export function drawPossibleMoveArrows() {

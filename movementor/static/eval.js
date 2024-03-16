@@ -90,10 +90,6 @@ export function displayEvaluation(dataEval) {
 export function displayLines(lines=['', '', ''], evaluations=['', '', '']) {
     if (drill) return;
     // evaluations is always initially from white's perspective
-    if (getBoardFen().replace(/_/g, ' ').split(' ')[1] != config.orientation[0]) {
-        lines = lines.reverse();
-        evaluations = evaluations.reverse();
-    };
     var len = lines.length;
     for (let i = 0; i < 3; i++) {
         let curLineEval = document.getElementsByClassName("eval"+(i+1))[0];

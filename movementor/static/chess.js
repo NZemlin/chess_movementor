@@ -1240,6 +1240,7 @@ export class Chess {
 
     // failed to find move
     if (!moveObj) {
+      return
       if (typeof move === "string") {
         throw new Error(`Invalid move: ${move}`)
       } else {
@@ -1594,7 +1595,7 @@ export class Chess {
     return this._header
   }
 
-  loadPgn(pgn, { strict = false, newlineChar = "\r?\n" } = {}) {
+  loadPgn(pgn, { strict = false, newlineChar = "\r?\n", onlyParse = false } = {}) {
     function mask(str) {
       return str.replace(/\\/g, "\\")
     }
@@ -1747,9 +1748,16 @@ export class Chess {
       .replace(new RegExp(mask(newlineChar), "g"), " ")
 
     // delete recursive annotation variations
-    const ravRegex = /(\([^()]+\))+?/g
-    while (ravRegex.test(ms)) {
-      ms = ms.replace(ravRegex, "")
+    if (!onlyParse) {
+      const ravRegex = /(\([^()]+\))+?/g
+      while (ravRegex.test(ms)) {
+        ms = ms.replace(ravRegex, "")
+      }
+    } else {
+      function replacer(match) {
+        return [match[0], match[1]].join(' ')
+      }
+      ms = ms.replace(/(.)(\))/g, replacer)
     }
 
     // delete move numbers
@@ -1767,6 +1775,8 @@ export class Chess {
 
     // delete empty entries
     moves = moves.filter(move => move !== "")
+    
+    if (onlyParse) return moves
 
     let result = ""
 

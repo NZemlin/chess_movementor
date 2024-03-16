@@ -1,17 +1,17 @@
 import { Chess } from './chess.js';
 import { game } from './game.js';
-import { computerPauseTime, practice, edit, startPosition } from './constants.js';
+import { computerPauseTime, practice, edit, drill, startPosition } from './constants.js';
 import { toggleDifLineBtn } from './page_helpers.js';
-import { restartBtn, limitLineBtn, moveArrowBtn, keepPlayingBtn } from './buttons.js';
+import { restartBtn, limitLineBtn, keepPlayingBtn } from './buttons.js';
 import { updateBoard, updateHintText, updateStatus } from './update.js';
 import { clearPremoveHighlights, highlightLastMove, highlightPremove } from './highlight.js';
 import { playMoveSelf } from './sounds.js';
-import { drawArrows, drawPossibleMoveArrows } from './arrow.js';
-import { limitingDrillLine } from './drill.js';
+import { drawArrows } from './arrow.js';
 
 export var pgn = document.getElementById('pgn').getAttribute('data-pgn').replace(/_/g, ' ');
 export var lastFen = startPosition;
 export var possibleMoves = [];
+export var savedMoves = [];
 export var possibleMoveArrows = [];
 export var otherChoices = [];
 export var finished = false;
@@ -33,9 +33,10 @@ export function setLastFen(fen=startPosition) {
 };
 
 export function setPossibleMoves(moves) {
+    finished = false;
     possibleMoves = [];
     possibleMoveArrows = [];
-    if (!keepPlaying && typeof(moves[0]) != 'string') {
+    if (!keepPlaying && typeof(moves[0]) != 'string' && moves != game.moves()) {
         for (let i = 0; i != moves.length; i++) {
             let source = moves[i].getAttribute('data-source');
             let target = moves[i].getAttribute('data-target');
@@ -43,11 +44,11 @@ export function setPossibleMoves(moves) {
             possibleMoves.push(moves[i].getAttribute('data-san'));
         };
     } else possibleMoves = moves;
-    if (!edit) toggleDifLineBtn(otherChoices.length == 0);
-    finished = false;
-    if (!limitingDrillLine) return;
-    drawArrows();
-    if (limitingDrillLine || moveArrowBtn[0].innerHTML == 'Hide Moves') drawPossibleMoveArrows();
+    if (edit) {
+        savedMoves = possibleMoves;
+        possibleMoves = game.moves();
+    } else toggleDifLineBtn(otherChoices.length == 0);
+    if (!drill) drawArrows();
 };
 
 export function setOtherChoices(moves, index) {
@@ -75,6 +76,7 @@ export function setFinished(done) {
         keepPlayingBtn[0].style.display = 'inline-block';
     };
     if (preMoves.length != 0) modPreMoves('clear');
+    possibleMoveArrows = [];
     drawArrows();
 };
 

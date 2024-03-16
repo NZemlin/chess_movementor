@@ -3,9 +3,9 @@ import { copyBtn, restartBtn, difLineBtn, limitLineBtn, swapBtn, evalBarBtn, lin
 import { pgn, otherChoices, isBlitzing, freePlay, curEval, setLastFen, setPossibleMoves, setFinished, setKeepPlaying, setIsBlitzing, setLimitedLineId, setEngineLevel, modPreMoves } from './globals.js';
 import { practice, study, drill, edit, startPosition, startElement, computerPauseTime } from './constants.js';
 import { scrollIfNeeded, resizeCols } from './visual_helpers.js';
-import { timeoutBtn, resetButtons, resetMoveList } from './page_helpers.js';
+import { timeoutBtn, resetButtons, resetMoveList, findClosestSmallerElementId } from './page_helpers.js';
 import { getSelected, getPlayedSelected, getUnderscoredFen, getBoardFen } from './getters.js';
-import { drawArrows, drawPossibleMoveArrows } from './arrow.js';
+import { drawArrows } from './arrow.js';
 import { highlightLastMove, highlightRightClickedSquares, setHighlightedSquares, modRightClickedSquares } from './highlight.js';
 import { updateBoard, updateGameState, gameStart } from './update.js';
 import { setFinishedLimitedLine, makeComputerMove } from './move.js';
@@ -146,8 +146,7 @@ blitzBtn.on('click', function () {
 
 moveArrowBtn.on('click', function () {
     this.innerHTML = this.innerHTML == 'Show Moves' ? 'Hide Moves' : 'Show Moves';
-    if (this.innerHTML == 'Hide Moves') drawPossibleMoveArrows();
-    else drawArrows();
+    drawArrows();
     timeoutBtn(this, .1);
 });
 
@@ -157,9 +156,9 @@ export function whichCheckKey() {
     else return;
 };
 
-export function whichClickUpdate(element) {
+export function whichClickUpdate(element, clicked=false) {
     if (practice) return clickUpdatePractice(element);
-    else if (study || edit) return clickUpdateStudy(element);
+    else if (study || edit) return clickUpdateStudy(element, clicked);
     else return;
 };
 
@@ -204,7 +203,8 @@ export function nearestMainlineParent(element) {
     let turn = element.getAttribute('data-turn');
     while (!stop) {
         var fen = element.getAttribute('data-parent');
-        element = document.querySelectorAll("[data-own='" + fen + "']")[0];
+        let elements = document.querySelectorAll("[data-own='" + fen + "']");
+        element = findClosestSmallerElementId(parseInt(element.id), elements); 
         stop = (element.getAttribute('data-variation-start') === 'true' ||
                 element.getAttribute('data-mainline') === 'true') &&
                 ((color != element.getAttribute('data-color')) ||
@@ -218,7 +218,9 @@ export function nearestRealParent(element) {
     let color = element.getAttribute('data-color');
     while (true) {
         var fen = element.getAttribute('data-parent');
-        element = document.querySelectorAll("[data-own='" + fen + "']")[0];
+        let elements = document.querySelectorAll("[data-own='" + fen + "']");
+        if (elements.length > 1) element = findClosestSmallerElementId(parseInt(element.id), elements);
+        else element = elements[0];
         if (color != element.getAttribute('data-color')) break;
     };
     return element;
@@ -270,20 +272,20 @@ function requestedFen(keyCode, old) {
     return [fen, msg];
 };
 
-export function clickUpdateStudy(element) {
+export function clickUpdateStudy(element, clicked) {
     if (element == document.getElementsByClassName('selected')[0]) return;
     setLastFen(element.getAttribute('data-parent'));
     game.load(element.getAttribute('data-own').replace(/_/g, ' '));
     updateBoard(game.fen(), false);
     highlightRightClickedSquares();
-    drawArrows();
     scrollIfNeeded(element);
-    var comment = element.getAttribute('data-comment').replace(/_/g, ' ');
-    document.getElementById('comment').innerHTML = 'Comment:' + ((comment != 'none') ? ' ' + comment : '');
     var uci = element.getAttribute('data-uci');
     setKeepPlaying(false);
-    updateGameState(element.getAttribute('data-san'), uci.slice(0, 2), uci.slice(2, 4));
+    updateGameState(element.getAttribute('data-san'), uci.slice(0, 2), uci.slice(2, 4), false, false, (clicked ? element.id : null));
     updateCapturedPieces();
+    var comment = element.getAttribute('data-comment').replace(/_/g, ' ');
+    if (study) document.getElementById('comment').innerHTML = 'Comment:' + ((comment != 'none') ? ' ' + comment : '');
+    if (edit) document.getElementById('comment').value = comment != 'none' ? comment : '';
 };
 
 export function checkKeyStudy(e) {
