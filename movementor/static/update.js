@@ -30,7 +30,7 @@ function updateSelectedMoveElement(elementId) {
     if (elementId != null) {
         document.getElementById(elementId).classList.add('selected');
         return;
-    }
+    };
     let dir;
     switch (lastKeyCode) {
         case 32:

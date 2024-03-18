@@ -9,6 +9,7 @@ Implement PGN editor
     - Allow moves to be recorded/displayed/updated
     - Allow comments/arrows/highlights to be recorded
     - Allow opening to be named and saved
+    - Allow parsing of 'before' comments
 
 Improve drill mode
     - Record number and location of mistakes

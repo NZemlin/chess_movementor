@@ -6,9 +6,8 @@ import { decodeComment, turnNumber, firstDifIndex, fixWhiteComments } from './ed
 
 var games = [new Chess()];
 var curGameIdx = 0;
-var gameParents = {};
-var variationDepth = {};
-var combinedPGNs = {};
+var gameParents = {0: 0};
+var variationDepth = {0: 0};
 
 export function populateGames() {
     let moves = game.loadPgn(pgn, { onlyParse: true });
@@ -19,13 +18,14 @@ export function populateGames() {
             games[curGameIdx]._comments[games[curGameIdx].fen()] = comment;
             continue;
         };
-  
         const move = games[curGameIdx]._moveFromSan(moves[halfMove], false);
-  
         if (moves[halfMove][0] == '(') {
             let prevGameIdx = curGameIdx;
             games.push(new Chess());
+            let oldIdx = curGameIdx;
             curGameIdx = games.length - 1;
+            gameParents[curGameIdx] = oldIdx;
+            variationDepth[curGameIdx] = parseInt(variationDepth[String(gameParents[curGameIdx])]) + 1;
             games[curGameIdx].loadPgn(games[prevGameIdx].pgn());
             games[curGameIdx].undo();
             finishedLines.push(false);
@@ -50,42 +50,14 @@ export function populateGames() {
             games[curGameIdx]._incPositionCount(games[curGameIdx].fen());
         };
     };
-    populateGameDicts();
-    combinePGNs();
-};
-
-function populateGameDicts() {
-    for (let i = 0; i != games.length; i++) {
-        gameParents[String(i)] = null;
-        variationDepth[String(i)] = 0;
-        combinedPGNs[i] = games[i].pgn();
-    };
-    for (let i = 1; i != games.length; i++) {
-        let max = 0;
-        let maxParent = 0;
-        for (let j = 0; j != i; j++) {
-            let result = firstDifIndex(games[i].pgn(), games[j].pgn());
-            let idx = result[0] + 1;
-            let iOffset = result[1];
-            let turnNum = turnNumber(games[i].pgn(), idx + iOffset) +
-                          (games[i].pgn()[idx + iOffset - 2] == '.' ? 0 : .5);
-            if (turnNum > max) {
-                max = turnNum;
-                maxParent = j;
-            };
-        };
-        gameParents[String(i)] = maxParent;
-    };
-    for (let i = 1; i != games.length; i++) {
-        let cur = i;
-        while (gameParents[String(cur)] != null) {
-            cur = gameParents[String(cur)];
-            variationDepth[String(i)]++;
-        };
-    };
+    // console.log(combinePGNs());
 };
 
 function combinePGNs() {
+    let combinedPGNs = {};
+    for (let i = 0; i != games.length; i++) {
+        combinedPGNs[i] = games[i].pgn();
+    };
     let maxDepth = Math.max(...Object.values(variationDepth));
     for (let i = maxDepth; i >= 1; i--) {
         for (let j = games.length - 1; j != -1; j--) {
@@ -120,8 +92,7 @@ function combinePGNs() {
             combinedPGNs[gameParents[j]] = before + insert + after;
         };
     };
-    combinedPGNs[0] = fixWhiteComments(combinedPGNs[0]);
-    // console.log(combinedPGNs[0]);
+    return fixWhiteComments(combinedPGNs[0]);
 };
 
 export function addNewMove() {
