@@ -6,7 +6,7 @@ Add consolidate feature
     - Play against multiple openings in a selected repertoire
     
 Implement PGN editor
-    - Allow moves to be recorded/displayed/updated
+    - Allow moves to be recorded
     - Allow comments/arrows/highlights to be recorded
     - Allow opening to be named and saved
     - Allow parsing of 'before' comments

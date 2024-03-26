@@ -10,7 +10,8 @@ class PGNParser():
             index = len(self.move_list) - i - 1
             if not cur_move.move.is_mainline() and cur_move.space:
                 for prev_move in [move_info for move_info in self.move_list[index - 1:0:-1]]:
-                    if int(prev_move.turn_number()) <= int(cur_move.turn_number()):
+                    if ((int(prev_move.turn_number()) <= int(cur_move.turn_number())) and
+                        (prev_move.move.turn() == cur_move.move.turn())):
                         break
                     if prev_move.space:
                         prev_move.space = prev_move.space[0:len(cur_move.space)] + '|' + prev_move.space[len(cur_move.space) + 1:]

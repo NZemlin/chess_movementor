@@ -1,3 +1,5 @@
+import { games, gameParents, gameHistories, comments } from "./edit.js";
+
 export function toHex(s) {
     return Array.from(s)
         .map(function(c) {
@@ -109,4 +111,132 @@ export function fixWhiteComments(pgn) {
         };
     };
     return pgn;
+};
+
+export function firstDifMoveNum(a1, a2) {
+    for (let i = 0; i != Math.min(a1.length, a2.length); i++) {
+        if (a1[i]['san'] != a2[i]['san']) return i;
+    };
+};
+
+export function moveElement(move, idNum, child1, mainline, varStart, commentIdx) {
+    let comment = 'none';
+    if (commentIdx in comments) {
+        if (move['after'] in comments[commentIdx]) comment = comments[commentIdx][move['after']];
+    };
+    let moveEle = document.createElement('span');
+    moveEle.id = String(idNum);
+    moveEle.setAttribute('data-own', move['after'].replace(/ /g, '_'));
+    moveEle.setAttribute('data-parent', move['before'].replace(/ /g, '_'));
+    moveEle.setAttribute('data-child-1', child1['after'].replace(/ /g, '_'));
+    moveEle.setAttribute('data-child-2', move['after'].replace(/ /g, '_'));
+    moveEle.setAttribute('data-mainline', mainline);
+    moveEle.setAttribute('data-variation-start', varStart);
+    moveEle.setAttribute('data-san', move['san']);
+    moveEle.setAttribute('data-uci', move['lan']);
+    moveEle.setAttribute('data-ep', move['after'].split(' ')[3] == '-' ? 'false' : 'true');
+    moveEle.setAttribute('data-color', move['color'] == 'w' ? 'white' : 'black');
+    moveEle.setAttribute('data-turn', String(parseInt(move['after'].split(' ')[5]) - ((move['color'] == 'b') ? 1 : 0)));
+    moveEle.setAttribute('data-source', move['from']);
+    moveEle.setAttribute('data-target', move['to']);
+    moveEle.setAttribute('data-comment', comment);
+    moveEle.classList.add('move', 'ignore');
+    let sanText = document.createTextNode(move['san']);
+    moveEle.appendChild(sanText);
+    return moveEle;
+};
+
+export function calculateSpaces(idx, nextGameTurnDif, moveLines) {
+    let spaces = 0;
+    let children = moveLines[idx].children;
+    let inc = nextGameTurnDif % 2 != 0 ? 1 : 3;
+    for (let i = 0; i != children.length; i++) {
+        if (!children[i].innerHTML.startsWith(String(Math.floor((nextGameTurnDif + inc)/2)) + '.')) {
+            let count = (children[i].innerHTML.match(/&nbsp;/g) || []).length;
+            let temp = children[i].innerHTML.length;
+            temp -= count * 5;
+            spaces += temp;
+        } else return (spaces + 3);
+    };
+};
+
+export function createStartElement() {
+    let hidden = document.createElement('span');
+    hidden.hidden = true;
+    hidden.id = -1;
+    hidden.setAttribute('data-fen', 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR_w_KQkq_-_0_1');
+    hidden.setAttribute('data-own', 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR_w_KQkq_-_0_1');
+    hidden.setAttribute('data-parent', 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR_w_KQkq_-_0_1');
+    hidden.setAttribute('data-child-1', gameHistories[0][0]['after'].replace(/ /g, '_'));
+    hidden.setAttribute('data-child-2', gameHistories[0][0]['after'].replace(/ /g, '_'));
+    hidden.setAttribute('data-comment', 'none');
+    hidden.classList.add('move', 'selected');
+    return hidden;
+};
+
+export function findAllOrderedChildren(parent) {
+    let children = [];
+    for (let i = 0; i != games.length; i++) {
+        if (gameParents[i] == parent) children.push(i);
+    };
+    if (children.length == 0) return [];
+    else {
+        children.sort(function(a, b) {
+            return (firstDifMoveNum(gameHistories[parent], gameHistories[b]) -
+                    firstDifMoveNum(gameHistories[parent], gameHistories[a]));
+        });
+        let temp = [];
+        for (let i = 0; i != children.length; i++) {
+            temp.push(children[i]);
+            temp = temp.concat(findAllOrderedChildren(children[i]));
+        };
+        return temp;
+    };
+};
+
+export function addBarsAndFixAttributes() {
+    let moveLines = document.getElementsByClassName('moves-container-study')[0].children;
+    for (let i = moveLines.length - 1; i != 0; i--) {
+        let lowerSpaces = (moveLines[i].children[0].innerHTML.match(/&nbsp;|\|/g) || []).length;
+        if (lowerSpaces > 2) {
+            let start = i - 1;
+            for (let j = start; j != 0; j--) {
+                let higherSpaces = (moveLines[j].children[0].innerHTML.match(/&nbsp;|\|/g) || []).length;
+                if (higherSpaces <= lowerSpaces && start != j - 1) {
+                    for (let k = start; k != j; k--) {
+                        let spaces = moveLines[k].children[0].innerHTML.match(/&nbsp;|\|/g);
+                        spaces[lowerSpaces] = '|';
+                        moveLines[k].children[0].innerHTML = spaces.join('');
+                    };
+                    let lowerMove = moveLines[i].children[2];
+                    let upperMove = null;
+                    if (higherSpaces == lowerSpaces) upperMove = moveLines[j].children[(higherSpaces == 2 ? 1 : 2)];
+                    else {
+                        let turnNum = parseInt(lowerMove.getAttribute('data-turn'));
+                        let color = lowerMove.getAttribute('data-color');
+                        let i = 0;
+                        while (i != moveLines[j].children.length) {
+                            let curMove = moveLines[j].children[i];
+                            let curMoveTurnNum = parseInt(curMove.getAttribute('data-turn'));
+                            if (curMove.classList.contains('move') &&
+                                color != curMove.getAttribute('data-color') &&
+                                ((color == 'white' && curMoveTurnNum == turnNum - 1) ||
+                                 (color == 'black' && curMoveTurnNum == turnNum))) {
+                                upperMove = curMove;
+                                break;
+                            };
+                            i++;
+                            if (i == moveLines[j].children.length && upperMove == null) {
+                                j--;
+                                i = 0;
+                            };
+                        };
+                    };
+                    lowerMove.setAttribute('data-parent', upperMove.getAttribute('data-own'));
+                    upperMove.setAttribute('data-child-2', lowerMove.getAttribute('data-own'));
+                    break;
+                };
+            };
+        };
+    };
 };

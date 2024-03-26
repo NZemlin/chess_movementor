@@ -2,6 +2,8 @@ class MoveInfo():
     def __init__(self, move, space = ''):
         self.move = move
         self.space = space
+        if (int(self.turn_number()) >= 10 and len(self.space) > 1):
+            self.space += ' '
         self.fen_dict = {}
         self.populate_fen_dict()
         self.ep = (not self.move.board().has_legal_en_passant() and

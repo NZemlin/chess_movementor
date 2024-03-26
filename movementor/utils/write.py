@@ -342,24 +342,9 @@ class PGNWriter():
                 <button id="commentBtn">Save</button>
             </div>
         '''
-        edit_moves  = f'''
-            <div class="row moves-container-study">
-                {self.shared['hidden_move']}
-                <span class="moves-line">
+        move_container = f'''
+            <div class="row moves-container-study"></div>
         '''
-        line_num = 0
-        for i, move_info in enumerate(moves):
-            dark = ' dark-row' if (line_num % 2 == 0) else ''
-            if move_info.space:
-                edit_moves += f'''<span> {move_info.space.replace(' ', '&nbsp;')} </span>'''
-            if move_info.move_turn():
-                edit_moves += f'''<span>{move_info.move_turn()}&nbsp;</span>'''
-            edit_moves += self.move_element(move_info, i, 'study')
-            if move_info.new_line:
-                line_num += 1
-                edit_moves += f'''</span><span class="moves-line{dark}">'''
-            else:
-                edit_moves += f'''<span> &nbsp; </span>'''
         return f'''
                 {modal}
                 {self.shared['page']}
@@ -377,7 +362,7 @@ class PGNWriter():
                                 {self.shared['lines_table']}
                                 {self.shared['status']}
                                 {comment}
-                                {edit_moves}
+                                {move_container}
                             </div>
                         </div>
                     </div>
