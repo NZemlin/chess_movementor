@@ -117,9 +117,10 @@ export function firstDifMoveNum(a1, a2) {
     for (let i = 0; i != Math.min(a1.length, a2.length); i++) {
         if (a1[i]['san'] != a2[i]['san']) return i;
     };
+    return 0;
 };
 
-export function moveElement(move, idNum, child1, mainline, varStart, commentIdx) {
+export function moveElement(move, idNum, child1, gameIdx, mainline, varStart, lastMove, commentIdx) {
     let comment = 'none';
     if (commentIdx in comments) {
         if (move['after'] in comments[commentIdx]) comment = comments[commentIdx][move['after']];
@@ -130,8 +131,10 @@ export function moveElement(move, idNum, child1, mainline, varStart, commentIdx)
     moveEle.setAttribute('data-parent', move['before'].replace(/ /g, '_'));
     moveEle.setAttribute('data-child-1', child1['after'].replace(/ /g, '_'));
     moveEle.setAttribute('data-child-2', move['after'].replace(/ /g, '_'));
+    moveEle.setAttribute('data-game', gameIdx);
     moveEle.setAttribute('data-mainline', mainline);
     moveEle.setAttribute('data-variation-start', varStart);
+    moveEle.setAttribute('data-last-move', lastMove);
     moveEle.setAttribute('data-san', move['san']);
     moveEle.setAttribute('data-uci', move['lan']);
     moveEle.setAttribute('data-ep', move['after'].split(' ')[3] == '-' ? 'false' : 'true');
@@ -170,7 +173,7 @@ export function createStartElement() {
     hidden.setAttribute('data-child-1', gameHistories[0][0]['after'].replace(/ /g, '_'));
     hidden.setAttribute('data-child-2', gameHistories[0][0]['after'].replace(/ /g, '_'));
     hidden.setAttribute('data-comment', 'none');
-    hidden.classList.add('move', 'selected');
+    hidden.classList.add('move');
     return hidden;
 };
 
@@ -181,16 +184,32 @@ export function findAllOrderedChildren(parent) {
     };
     if (children.length == 0) return [];
     else {
-        children.sort(function(a, b) {
+        let sortedChildren = children.sort(function(a, b) {
             return (firstDifMoveNum(gameHistories[parent], gameHistories[b]) -
                     firstDifMoveNum(gameHistories[parent], gameHistories[a]));
         });
-        let temp = [];
-        for (let i = 0; i != children.length; i++) {
-            temp.push(children[i]);
-            temp = temp.concat(findAllOrderedChildren(children[i]));
+        let turnDifs = [];
+        for (let i = 0; i != sortedChildren.length; i++) {
+            let curMoveDif = Math.floor(firstDifMoveNum(gameHistories[parent], gameHistories[sortedChildren[i]])/2) + 1;
+            if (!(turnDifs.includes(curMoveDif))) turnDifs.push(curMoveDif);
         };
-        return temp;
+        let groupedChildren = [];
+        for (let i = 0; i != turnDifs.length; i++) {
+            groupedChildren.push(sortedChildren.filter(el => (Math.floor(firstDifMoveNum(gameHistories[parent], gameHistories[el])/2) + 1) == turnDifs[i]));
+        };
+        let resortedChildren = [];
+        for (let i = 0; i != groupedChildren.length; i++) {
+            resortedChildren = resortedChildren.concat(groupedChildren[i].sort(function(a, b) {
+                return (firstDifMoveNum(gameHistories[parent], gameHistories[a]) -
+                        firstDifMoveNum(gameHistories[parent], gameHistories[b]));
+            }));
+        };
+        let allChildren = [];
+        for (let i = 0; i != resortedChildren.length; i++) {
+            allChildren.push(resortedChildren[i]);
+            allChildren = allChildren.concat(findAllOrderedChildren(resortedChildren[i]));
+        };
+        return allChildren;
     };
 };
 
@@ -219,9 +238,10 @@ export function addBarsAndFixAttributes() {
                             let curMove = moveLines[j].children[i];
                             let curMoveTurnNum = parseInt(curMove.getAttribute('data-turn'));
                             if (curMove.classList.contains('move') &&
-                                color != curMove.getAttribute('data-color') &&
-                                ((color == 'white' && curMoveTurnNum == turnNum - 1) ||
-                                 (color == 'black' && curMoveTurnNum == turnNum))) {
+                                ((color == 'white' && turnNum == 1 && turnNum == curMoveTurnNum) ||
+                                 (color != curMove.getAttribute('data-color') &&
+                                  ((color == 'white' && curMoveTurnNum == turnNum - 1) ||
+                                   (color == 'black' && curMoveTurnNum == turnNum))))) {
                                 upperMove = curMove;
                                 break;
                             };

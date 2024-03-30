@@ -12,6 +12,7 @@ import { finishedLimitedLine, nextLimitedMove } from './move.js';
 import { loadRandomDrill } from './drill.js';
 import { hintBtn, limitLineBtn } from './buttons.js';
 import { lastKeyCode } from './page.js';
+import { addedLastMove, populateGames } from './edit.js';
 
 export function updateBoard(fen, animation) {
     board.position(fen, animation);
@@ -20,7 +21,7 @@ export function updateBoard(fen, animation) {
 };
 
 function updateSelectedMoveElement(elementId) {
-    if (keepPlaying) return;
+    if (keepPlaying || addedLastMove) return;
     // console.log('Updating selected move element');
     var old = document.getElementsByClassName('selected');
     if (old.length != 0) {
@@ -138,10 +139,11 @@ export function gameStart() {
     };
     playSound();
     removeCapturedPieces();
+    if (edit) populateGames();
     if (freePlay && practice) {
         startFreePlay();
         return;
-    } else if (!freePlay) setPossibleMoves([document.getElementById('0')]);
+    } else if (!freePlay || edit) setPossibleMoves([document.getElementById('0')]);
     else setPossibleMoves(game.moves());
     updateStatus();
     // console.log('Game started');

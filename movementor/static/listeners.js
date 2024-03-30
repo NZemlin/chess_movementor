@@ -117,7 +117,7 @@ export function addListeners() {
     var moveName = (practice) ? 'played-move' : 'move';
     if (!drill) {
         container.addEventListener('click', e=> {
-            if (e.target.classList.contains(moveName)) whichClickUpdate(e.target, true);
+            if (e.target.classList.contains(moveName)) whichClickUpdate(e.target);
         });
     };
     

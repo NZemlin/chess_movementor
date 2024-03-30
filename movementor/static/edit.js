@@ -5,10 +5,16 @@ import { game } from './game.js';
 import { decodeComment, turnNumber, firstDifIndex, fixWhiteComments,
          moveElement, firstDifMoveNum, calculateSpaces, createStartElement,
          findAllOrderedChildren, addBarsAndFixAttributes } from './edit_helpers.js';
-import { fixStudyRows } from './visual_helpers.js';
+import { fixStudyRows, scrollIfNeeded } from './visual_helpers.js';
+import { getSelected } from './getters.js';
 
 export var games, gameHistories, gameParents, comments;
+export var addedLastMove = false;
 var variationDepth, curGameIdx;
+
+export function setAddedLastMove(added) {
+    addedLastMove = added;
+};
 
 export function populateGames() {
     games = [new Chess()];
@@ -62,7 +68,7 @@ export function populateGames() {
         };
     };
     gameHistories[0] = games[0].history({ verbose: true });
-    generateHTML();
+    generateHTML(-1);
 };
 
 function generateVariations(idNum, nextGame, start) {
@@ -91,7 +97,7 @@ function generateVariations(idNum, nextGame, start) {
         } else {
             nextGameTurnDif = start;
             spaces = 4;
-        }
+        };
         if (spaces != 0 && (Math.floor(nextGameTurnDif/2) + 1) >= 10) spaces++;
         let curMoveLine = document.createElement('span');
         let spaceSpan = document.createElement('span');
@@ -111,7 +117,11 @@ function generateVariations(idNum, nextGame, start) {
                 curMoveLine.appendChild(turnNum);
             };
             let nextIdx = (j == gameHistories[variationGames[i]].length - 1 ? j : j + 1);
-            curMoveLine.appendChild(moveElement(gameHistories[variationGames[i]][j], idNum, gameHistories[variationGames[i]][nextIdx], 'false', j == nextGameTurnDif ? 'true' : 'false', i));
+            curMoveLine.appendChild(moveElement(gameHistories[variationGames[i]][j], idNum,
+                                                gameHistories[variationGames[i]][nextIdx],
+                                                variationGames[i], 'false',
+                                                j == nextGameTurnDif ? 'true' : 'false', 
+                                                j == nextIdx ? 'true' : 'false', i));
             idNum++;
             if (j != gameHistories[variationGames[i]].length) {
                 spaceSpan = document.createElement('span');
@@ -125,9 +135,9 @@ function generateVariations(idNum, nextGame, start) {
     return [idNum, Math.max(...variationGames) + 1, moveLines];
 };
 
-function generateHTML() {
+function generateHTML(selected=-1) {
     let container = document.getElementsByClassName('moves-container-study')[0];
-    container.appendChild(createStartElement());
+    container.replaceChildren(createStartElement());
     let spaceSpan = document.createElement('span');
     spaceSpan.appendChild(document.createTextNode('\u00A0'));
     let nextGame = 1;
@@ -154,7 +164,10 @@ function generateHTML() {
         turnNum.appendChild(turnNumText);
         curMoveLine.appendChild(turnNum);
         let nextIdx = (i == gameHistories[0].length - 1 ? i : i + 1);
-        curMoveLine.appendChild(moveElement(gameHistories[0][i], idNum, gameHistories[0][nextIdx], 'true', 'false', 0));
+        curMoveLine.appendChild(moveElement(gameHistories[0][i], idNum,
+                                            gameHistories[0][nextIdx], 0,
+                                            'true', 'false', 
+                                            i == nextIdx ? 'true' : 'false', 0));
         idNum++;
         if (i == nextGameTurnDif) {
             container.appendChild(curMoveLine);
@@ -170,13 +183,18 @@ function generateHTML() {
                     container.appendChild(moveLines[k]);
                 };
                 if (nextGame != games.length) nextGameTurnDif = firstDifMoveNum(gameHistories[0], gameHistories[nextGame]);
-                blackInterrupted = true;
+                blackInterrupted = i % 2 == 0;
             }
         };
     };
     container.appendChild(curMoveLine);
     addBarsAndFixAttributes();
     fixStudyRows();
+    let selectedEle = document.getElementsByClassName('selected');
+    if (selectedEle.length != 0) selectedEle[0].classList.remove('selected');
+    selectedEle = document.getElementById(String(selected));
+    selectedEle.classList.add('selected');
+    scrollIfNeeded(selectedEle);
 };
 
 function combinePGNs() {
@@ -221,6 +239,73 @@ function combinePGNs() {
     return fixWhiteComments(combinedPGNs[0]);
 };
 
-export function addNewMove() {
-    console.log('New move');
+export function addNewMove(move) {
+    addedLastMove = true;
+    let gameIdx = parseInt(getSelected().getAttribute('data-game'));
+    let turnIdx = (parseInt(getSelected().getAttribute('data-turn')) * 2) - ((getSelected().getAttribute('data-color') == 'white') ? 2 : 1);
+    let last = getSelected().getAttribute('data-last-move') == 'true';
+    let id = String(parseInt(getSelected().id) + 1);
+    if (!last) {
+        let newGame = new Chess();
+        if (id == 0) {
+            id = 1;
+            gameIdx = 0;
+            newGame.move(move);
+        } else {
+            while (true) {
+                if (document.getElementById(id).getAttribute('data-last-move') == 'true') {
+                    id = String(parseInt(id) + 1);
+                    break;
+                };
+                id = String(parseInt(id) + 1)
+            };
+            for (let i = 0; i <= turnIdx; i++) {
+                newGame.move(gameHistories[gameIdx][i].san);
+            };
+            newGame.move(move)
+        };
+        games = [
+            ...games.slice(0, gameIdx + 1),
+            newGame,
+            ...games.slice(gameIdx + 1)
+        ];
+        for (let i = 0; i != games.length; i++) {
+            if (gameParents[i] > gameIdx) gameParents[i]++;
+        };
+        gameHistories = [
+            ...gameHistories.slice(0, gameIdx + 1),
+            newGame.history({ verbose: true }),
+            ...gameHistories.slice(gameIdx + 1)
+        ];
+        gameParents = [
+            ...gameParents.slice(0, gameIdx + 1),
+            gameIdx,
+            ...gameParents.slice(gameIdx + 1)
+        ];
+        let newDepth = variationDepth[games[gameIdx]] == null ? 1 : variationDepth[games[gameIdx]] + 1;
+        variationDepth = [
+            ...variationDepth.slice(0, gameIdx + 1),
+            newDepth,
+            ...variationDepth.slice(gameIdx + 1)
+        ];
+        let newComments = {};
+        for (const [key, value] of Object.entries(comments)) {
+            if (key <= gameIdx) {
+                if (!(key in newComments)) newComments[key] = {};
+                for (const [_key, _value] of Object.entries(comments[key])) {
+                    newComments[key][_key] = _value;
+                };
+            } else {
+                if (!((key + 1) in newComments)) newComments[key + 1] = {};
+                for (const [_key, _value] of Object.entries(comments[key])) {
+                    newComments[key + 1][_key] = _value;
+                };
+            }
+        };
+    } else {
+        games[gameIdx].move(move);
+        gameHistories[gameIdx] = games[gameIdx].history({ verbose: true });
+    };
+    console.log(id)
+    generateHTML(id);
 };

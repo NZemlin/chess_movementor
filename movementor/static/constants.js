@@ -5,7 +5,7 @@ export const edit = document.getElementById('page').getAttribute('data-page') ==
 export const boardWidth = 700;
 export const squareSize = 84;
 export const startPosition = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR_w_KQkq_-_0_1';
-export const startElement = document.getElementById('-1');
+export const startElement = function () { return document.getElementById('-1') };
 export const boardClass= 'board-b72b1';
 export const squareClass = 'square-55d63';
 export const pieceClass = 'piece-417db';

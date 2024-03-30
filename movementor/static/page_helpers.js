@@ -40,7 +40,7 @@ export function resetButtons() {
 export function resetMoveList() {
     if (study || edit) {
         if (getSelected() != null) getSelected().classList.remove('selected');
-        startElement.classList.add('selected');
+        startElement().classList.add('selected');
         return;
     };
     var nums = document.getElementsByClassName('move-list-num');
@@ -61,7 +61,7 @@ export function resetMoveList() {
         darkRows[i].classList.remove('dark-row');
     };
     getPlayedSelected().classList.remove('played-selected');
-    startElement.classList.add('played-selected');
+    startElement().classList.add('played-selected');
 };
 
 export function findClosestSmallerElementId(beforeId, elements) {

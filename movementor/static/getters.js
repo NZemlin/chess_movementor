@@ -24,7 +24,7 @@ export function getBoardFen() {
 
 export function getLastMoveElement(beforeId=-2, dir='') {
     let elements = document.querySelectorAll("[data-own='" + getUnderscoredFen() + "']");
-    if (elements[0] == startElement) return startElement;
+    if (elements[0] == startElement()) return startElement();
     if (dir == 'greater') {
         for (let i = 0; i != elements.length; i++) {
             if (parseInt(elements[i].id) > beforeId) return elements[i];

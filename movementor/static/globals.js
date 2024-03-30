@@ -35,6 +35,7 @@ export function setLastFen(fen=startPosition) {
 export function setPossibleMoves(moves) {
     finished = false;
     possibleMoves = [];
+    savedMoves = [];
     possibleMoveArrows = [];
     if (!keepPlaying && typeof(moves[0]) != 'string' && moves != game.moves()) {
         for (let i = 0; i != moves.length; i++) {

@@ -1,6 +1,9 @@
 import { config, game, isOppTurn, swapBoard, resetBoard } from './game.js';
-import { copyBtn, restartBtn, difLineBtn, limitLineBtn, swapBtn, evalBarBtn, lineBtn, hintBtn, keepPlayingBtn, blitzBtn, moveArrowBtn } from './buttons.js';
-import { pgn, otherChoices, isBlitzing, freePlay, curEval, setLastFen, setPossibleMoves, setFinished, setKeepPlaying, setIsBlitzing, setLimitedLineId, setEngineLevel, modPreMoves } from './globals.js';
+import { copyBtn, restartBtn, difLineBtn, limitLineBtn, swapBtn,
+         evalBarBtn, lineBtn, hintBtn, keepPlayingBtn, blitzBtn, moveArrowBtn } from './buttons.js';
+import { pgn, otherChoices, isBlitzing, freePlay, curEval, setLastFen,
+         setPossibleMoves, setFinished, setKeepPlaying, setIsBlitzing,
+         setLimitedLineId, setEngineLevel, modPreMoves } from './globals.js';
 import { practice, study, drill, edit, startPosition, startElement, computerPauseTime } from './constants.js';
 import { scrollIfNeeded, resizeCols } from './visual_helpers.js';
 import { timeoutBtn, resetButtons, resetMoveList, findClosestSmallerElementId } from './page_helpers.js';
@@ -15,7 +18,7 @@ import { createNewEngine } from './eval_helpers.js';
 import { addListeners } from './listeners.js';
 import { updateCapturedPieces } from './captured_pieces.js';
 import { loadRandomDrill, limitDrillLine, limitingDrillLine } from './drill.js';
-import { populateGames } from './edit.js';
+import { setAddedLastMove } from './edit.js';
 
 export var lastKeyCode;
 
@@ -130,6 +133,7 @@ keepPlayingBtn.on('click', function () {
     limitLineBtn[0].style.display = 'none';
     setFinished(false);
     setKeepPlaying(true);
+    setAddedLastMove(false);
     updateGameState();
     if (evalBarBtn[0].innerHTML == 'Hide Eval') evalBarBtn[0].click();
     if (lineBtn[0].innerHTML == 'Hide Lines') lineBtn[0].click();
@@ -156,9 +160,9 @@ export function whichCheckKey() {
     else return;
 };
 
-export function whichClickUpdate(element, clicked=false) {
+export function whichClickUpdate(element) {
     if (practice) return clickUpdatePractice(element);
-    else if (study || edit) return clickUpdateStudy(element, clicked);
+    else if (study || edit) return clickUpdateStudy(element);
     else return;
 };
 
@@ -187,11 +191,11 @@ export function checkKeyPractice(e) {
     if (firstMove.style.visibility == 'hidden') return;
     var old = getPlayedSelected();
     if (e.keyCode == 37) {
-        if (old == startElement) return;
-        else if (old == firstMove) clickUpdatePractice(startElement);
+        if (old == startElement()) return;
+        else if (old == firstMove) clickUpdatePractice(startElement());
         else clickUpdatePractice(document.getElementById(old.getAttribute('data-prev-move')));
     } else if (e.keyCode == 39) {
-        var nextMove = (old == startElement) ? firstMove : document.getElementById(old.getAttribute('data-next-move'));
+        var nextMove = (old == startElement()) ? firstMove : document.getElementById(old.getAttribute('data-next-move'));
         if (nextMove.style.visibility != 'visible') return;
         clickUpdatePractice(nextMove);
     };
@@ -214,7 +218,7 @@ export function nearestMainlineParent(element) {
 };
 
 export function nearestRealParent(element) {
-    if (element.id == '0') return document.getElementById(startElement);
+    if (element.id == '0') return document.getElementById(startElement());
     let color = element.getAttribute('data-color');
     while (true) {
         var fen = element.getAttribute('data-parent');
@@ -231,8 +235,9 @@ function returnToStart() {
     updateBoard(game.fen(), false);
     highlightRightClickedSquares();
     drawArrows();
+    setAddedLastMove(false);
     updateGameState('', '', '', true);
-    startElement.classList.add('selected');
+    startElement().classList.add('selected');
     document.getElementById('comment').innerHTML = 'Comment:';
     (config.orientation == 'w') ? playMoveOpponent() : playMoveSelf();
     return startPosition;
@@ -272,7 +277,7 @@ function requestedFen(keyCode, old) {
     return [fen, msg];
 };
 
-export function clickUpdateStudy(element, clicked) {
+export function clickUpdateStudy(element) {
     if (element == document.getElementsByClassName('selected')[0]) return;
     setLastFen(element.getAttribute('data-parent'));
     game.load(element.getAttribute('data-own').replace(/_/g, ' '));
@@ -281,7 +286,8 @@ export function clickUpdateStudy(element, clicked) {
     scrollIfNeeded(element);
     var uci = element.getAttribute('data-uci');
     setKeepPlaying(false);
-    updateGameState(element.getAttribute('data-san'), uci.slice(0, 2), uci.slice(2, 4), false, false, (clicked ? element.id : null));
+    setAddedLastMove(false);
+    updateGameState(element.getAttribute('data-san'), uci.slice(0, 2), uci.slice(2, 4), false, false, (element != null ? element.id : null));
     updateCapturedPieces();
     var comment = element.getAttribute('data-comment').replace(/_/g, ' ');
     if (study) document.getElementById('comment').innerHTML = 'Comment:' + ((comment != 'none') ? ' ' + comment : '');
@@ -291,7 +297,7 @@ export function clickUpdateStudy(element, clicked) {
 export function checkKeyStudy(e) {
     lastKeyCode = e.keyCode;
     var old = document.getElementsByClassName('selected');
-    if (old.length == 0 || old[0] == startElement) {
+    if (old.length == 0 || old[0] == startElement()) {
         if (e.keyCode == '39') {
             clickUpdateStudy(document.getElementById('0'));
         } else return;
@@ -313,6 +319,5 @@ if (practice) {
         keepPlayingBtn[0].innerHTML = 'Play';
     };
 };
-if (edit) populateGames();
 resizeCols();
 addListeners();

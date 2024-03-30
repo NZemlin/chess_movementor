@@ -10,6 +10,7 @@ import { setPlayedMoveInfo, attemptPreMove } from "./move.js";
 import { updateCapturedPieces } from "./captured_pieces.js";
 import { lineBtn } from "./buttons.js";
 import { drill } from "./constants.js";
+import { setAddedLastMove } from "./edit.js";
 
 var evalEngine = null;
 var searchingOld = false;
@@ -170,6 +171,7 @@ export function playMessage(event) {
         clearCanvas(arrowContext);
         updateHintText(false);
         // console.log('Engine chose: ' + move.san);
+        setAddedLastMove(false);
         updateGameState(move.san, source, target);
         setPlayedMoveInfo(move);
         updateCapturedPieces();

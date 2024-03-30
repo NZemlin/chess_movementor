@@ -6,10 +6,13 @@ Add consolidate feature
     - Play against multiple openings in a selected repertoire
     
 Implement PGN editor
-    - Allow moves to be recorded
+    - Allow moves to be deleted
+    - Allow variations to be promoted/demoted
     - Allow comments/arrows/highlights to be recorded
     - Allow opening to be named and saved
     - Allow parsing of 'before' comments
+    - Fix parent/child allocation of case where white and
+          black variations follow off of the same move number
 
 Improve drill mode
     - Record number and location of mistakes
